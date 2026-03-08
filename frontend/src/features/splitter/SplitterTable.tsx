@@ -1,27 +1,16 @@
 import { Card } from '../../components/ui/Card';
-import { Minus, Plus } from 'lucide-react';
+import { Minus, Plus, Loader2 } from 'lucide-react';
 import { cn } from '../../lib/utils';
-import type { Bill } from '../../types';
-
-interface User {
-  id: number;
-  name: string;
-  avatar: string;
-}
-
-// Still using mock users until Group Management API is built
-const MOCK_USERS: User[] = [
-  { id: 1, name: 'Alice', avatar: 'A' },
-  { id: 2, name: 'Bob', avatar: 'B' },
-  { id: 3, name: 'Charlie', avatar: 'C' },
-];
+import type { Bill, Group } from '../../types';
+import { useAuth } from '../../context/AuthContext';
 
 interface SplitterTableProps {
   bill: Bill;
+  group?: Group | null;
   onUpdateShare: (itemId: number, userId: number, increment: number) => Promise<void>;
 }
 
-export function SplitterTable({ bill, onUpdateShare }: SplitterTableProps) {
+export function SplitterTable({ bill, group, onUpdateShare }: SplitterTableProps) {
   const getSubtotalForUser = (userId: number) => {
     let subtotal = 0;
     bill.items.forEach(item => {
@@ -39,9 +28,11 @@ export function SplitterTable({ bill, onUpdateShare }: SplitterTableProps) {
   };
 
   const totalBillSubtotal = bill.items.reduce((sum, item) => sum + item.unit_cost, 0);
-  const totalTax = totalBillSubtotal * 0.08; // Placeholder: use bill.total_tax when backend supports it
+  // Default tax/tip placeholders until backend supports it
+  const totalTax = bill.total_tax > 0 ? bill.total_tax : totalBillSubtotal * 0.08; 
   const totalTip = totalBillSubtotal * 0.20; // Placeholder
   const totalFees = totalTax + totalTip;
+  const billGrandTotal = totalBillSubtotal + totalFees;
 
   if (bill.items.length === 0) {
     return (
@@ -51,6 +42,25 @@ export function SplitterTable({ bill, onUpdateShare }: SplitterTableProps) {
     );
   }
 
+  if (!group) {
+    return (
+      <Card className="border-slate-200/60 dark:border-slate-700/50 shadow-lg text-center p-12 text-slate-500 dark:text-slate-400">
+        <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4 text-brand-500" />
+        Loading group members...
+      </Card>
+    );
+  }
+
+  const { currentUser } = useAuth();
+  
+  let users = group.members?.map(m => m.user) || [];
+  // Fallback so the table always has at least one column (specifically for groups created before the backend fix)
+  if (users.length === 0) {
+    users = [
+      { id: 999, name: currentUser?.displayName || 'You', email: currentUser?.email || '' }
+    ];
+  }
+
   return (
     <Card className="overflow-x-auto border-slate-200/60 dark:border-slate-700/50 shadow-lg" noPadding>
       <table className="w-full text-left border-collapse min-w-[650px]">
@@ -58,13 +68,13 @@ export function SplitterTable({ bill, onUpdateShare }: SplitterTableProps) {
           <tr className="bg-slate-50 dark:bg-slate-900/50 border-b border-slate-200/80 dark:border-slate-700 text-xs text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider">
             <th className="p-5 w-1/3 rounded-tl-[2rem]">Item Name</th>
             <th className="p-5 text-right w-1/6">Unit Cost</th>
-            {MOCK_USERS.map(user => (
+            {users.map(user => (
               <th key={user.id} className="p-5 text-center">
                 <div className="flex flex-col items-center gap-1.5 cursor-pointer group">
                   <div className="w-9 h-9 rounded-full bg-brand-100 dark:bg-brand-900/30 text-brand-700 dark:text-brand-300 flex items-center justify-center font-extrabold ring-2 ring-transparent group-hover:ring-brand-200 dark:group-hover:ring-brand-700 transition-all shadow-sm">
-                    {user.avatar}
+                    {user.name.charAt(0).toUpperCase()}
                   </div>
-                  <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">{user.name}</span>
+                  <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">{user.name.split(' ')[0]}</span>
                 </div>
               </th>
             ))}
@@ -75,7 +85,7 @@ export function SplitterTable({ bill, onUpdateShare }: SplitterTableProps) {
             <tr key={item.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-700/30 transition-colors group">
               <td className="p-5 font-semibold text-slate-800 dark:text-slate-200">{item.item_name}</td>
               <td className="p-5 text-right font-bold text-slate-700 dark:text-slate-300">${item.unit_cost.toFixed(2)}</td>
-              {MOCK_USERS.map(user => {
+              {users.map(user => {
                 const userShareObj = item.shares.find(s => s.user_id === user.id);
                 const currentShares = userShareObj ? userShareObj.share_count : 0;
                 
@@ -105,16 +115,18 @@ export function SplitterTable({ bill, onUpdateShare }: SplitterTableProps) {
         </tbody>
         <tfoot className="bg-slate-50 dark:bg-slate-900/50 border-t-2 border-slate-200/80 dark:border-slate-700">
           <tr>
-            <td colSpan={2} className="p-5 text-right font-extrabold text-slate-700 dark:text-slate-300 rounded-bl-[2rem]">Subtotal</td>
-            {MOCK_USERS.map(user => (
+            <td className="p-5 text-right font-extrabold text-slate-700 dark:text-slate-300 rounded-bl-[2rem]">Subtotal</td>
+            <td className="p-5 text-right font-extrabold text-slate-800 dark:text-slate-100 border-r border-slate-200/50 dark:border-slate-700/50">${totalBillSubtotal.toFixed(2)}</td>
+            {users.map(user => (
               <td key={user.id} className="p-5 text-center font-extrabold text-slate-800 dark:text-slate-100">
                 ${getSubtotalForUser(user.id).toFixed(2)}
               </td>
             ))}
           </tr>
           <tr>
-            <td colSpan={2} className="px-5 py-3 text-right font-bold text-slate-500 dark:text-slate-400 text-sm">Tax (8%) + Tip (20%)</td>
-            {MOCK_USERS.map(user => {
+            <td className="px-5 py-3 text-right font-bold text-slate-500 dark:text-slate-400 text-sm">Tax (8%) + Tip (20%)</td>
+            <td className="px-5 py-3 text-right font-bold text-slate-500 dark:text-slate-400 text-sm border-r border-slate-200/50 dark:border-slate-700/50">+${totalFees.toFixed(2)}</td>
+            {users.map(user => {
               const userSub = getSubtotalForUser(user.id);
               const userShareOfFees = totalBillSubtotal > 0 ? (userSub / totalBillSubtotal) * totalFees : 0;
               return (
@@ -125,8 +137,9 @@ export function SplitterTable({ bill, onUpdateShare }: SplitterTableProps) {
             })}
           </tr>
           <tr className="bg-brand-50/50 dark:bg-brand-900/10">
-            <td colSpan={2} className="p-5 text-right font-black text-brand-900 dark:text-brand-300 border-t border-brand-100 dark:border-brand-900/50 rounded-bl-[2rem]">Grand Total</td>
-            {MOCK_USERS.map(user => {
+            <td className="p-5 text-right font-black text-brand-900 dark:text-brand-300 border-t border-brand-100 dark:border-brand-900/50 rounded-bl-[2rem]">Grand Total</td>
+            <td className="p-5 text-right font-black text-brand-700 dark:text-brand-400 text-xl border-t border-brand-100 dark:border-brand-900/50 border-r border-brand-100/50 dark:border-brand-900/30">${billGrandTotal.toFixed(2)}</td>
+            {users.map(user => {
               const userSub = getSubtotalForUser(user.id);
               const userShareOfFees = totalBillSubtotal > 0 ? (userSub / totalBillSubtotal) * totalFees : 0;
               return (

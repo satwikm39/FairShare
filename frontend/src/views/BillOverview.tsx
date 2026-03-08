@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { Upload, FileText, CheckCircle2, Loader2 } from 'lucide-react';
 import { Card } from '../components/ui/Card';
@@ -11,7 +11,20 @@ export function BillOverview() {
   const { id } = useParams<{ id: string }>();
   // Default to 1 if no ID is provided, so it doesn't crash on invalid URLs
   const billId = parseInt(id || '1', 10);
-  const { bill, isLoading, error, uploadReceipt, updateShare } = useBill(billId);
+  const { bill, isLoading, error, fetchBill, uploadReceipt, updateShare } = useBill(billId);
+  const [group, setGroup] = useState<any>(null);
+
+  useEffect(() => {
+    fetchBill(billId);
+  }, [billId, fetchBill]);
+
+  useEffect(() => {
+    if (bill?.group_id) {
+      import('../services/groups').then(({ groupsService }) => {
+        groupsService.getGroup(bill.group_id).then(setGroup).catch(console.error);
+      });
+    }
+  }, [bill?.group_id]);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [uploadSuccess, setUploadSuccess] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -47,7 +60,7 @@ export function BillOverview() {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
         <div>
           <h1 className="text-4xl font-extrabold text-slate-900 dark:text-white tracking-tight">
-            {bill?.group_id ? `Group ${bill.group_id} Bill` : 'Miami Trip Dinner'}
+            {group?.name ? `${group.name} Bill` : (bill?.group_id ? `Group ${bill.group_id} Bill` : 'Miami Trip Dinner')}
           </h1>
           <p className="text-lg text-slate-500 dark:text-slate-400 mt-2 font-medium">Split your bill items exactly how they were ordered.</p>
         </div>
@@ -122,7 +135,7 @@ export function BillOverview() {
               </div>
             </Card>
           ) : bill ? (
-            <SplitterTable bill={bill} onUpdateShare={updateShare} />
+            <SplitterTable bill={bill} group={group} onUpdateShare={updateShare} />
           ) : (
             <Card className="border-slate-200/60 dark:border-slate-700/50 shadow-lg text-center p-12 text-slate-500 dark:text-slate-400">
               <div className="flex flex-col items-center justify-center gap-4">

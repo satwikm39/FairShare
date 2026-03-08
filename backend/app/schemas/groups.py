@@ -6,11 +6,25 @@ class GroupBase(BaseModel):
 class GroupCreate(GroupBase):
     pass
 
-class Group(GroupBase):
-    id: int
+from typing import List
+
+class GroupMemberResponse(BaseModel):
+    user_id: int
+    group_id: int
+    user: 'User'
 
     class Config:
         from_attributes = True
+
+class Group(GroupBase):
+    id: int
+    members: List[GroupMemberResponse] = []
+
+    class Config:
+        from_attributes = True
+
+from .users import User
+GroupMemberResponse.model_rebuild()
 
 class GroupMemberCreate(BaseModel):
     email: str

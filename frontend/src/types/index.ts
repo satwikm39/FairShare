@@ -1,6 +1,13 @@
+export interface GroupMemberResponse {
+  user_id: number;
+  group_id: number;
+  user: User;
+}
+
 export interface Group {
   id: number;
   name: string;
+  members: GroupMemberResponse[];
 }
 
 export interface User {

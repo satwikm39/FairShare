@@ -1,8 +1,10 @@
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from app import models, schemas
 
 def get_group(db: Session, group_id: int):
-    return db.query(models.Group).filter(models.Group.id == group_id).first()
+    return db.query(models.Group).options(
+        joinedload(models.Group.members).joinedload(models.GroupMember.user)
+    ).filter(models.Group.id == group_id).first()
 
 def get_groups(db: Session, skip: int = 0, limit: int = 100):
     return db.query(models.Group).offset(skip).limit(limit).all()

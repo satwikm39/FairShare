@@ -13,7 +13,9 @@ def create_group(
     db: Session = Depends(get_db),
     current_user: models.User = Depends(deps.get_current_user)
 ):
-    return crud.groups.create_group(db=db, group=group, user_id=current_user.id)
+    db_group = crud.groups.create_group(db=db, group=group, user_id=current_user.id)
+    # Refresh to get the eager loaded members
+    return crud.groups.get_group(db=db, group_id=db_group.id)
 
 @router.get("/", response_model=List[schemas.Group])
 def read_groups(
