@@ -95,8 +95,16 @@ async def upload_receipt(
     # 3. Analyze with Textract
     try:
         print(f"DEBUG: Calling Textract service")
-        parsed_items = aws_service.analyze_receipt_with_textract(s3_key)
-        print(f"DEBUG: Textract returned {len(parsed_items)} items")
+        parsed_data = aws_service.analyze_receipt_with_textract(s3_key)
+        parsed_items = parsed_data.get("items", [])
+        extracted_tax = parsed_data.get("tax", 0.0)
+        print(f"DEBUG: Textract returned {len(parsed_items)} items and ${extracted_tax} tax")
+        
+        # Update the bill with the extracted tax *before* saving items 
+        # so recalculate_bill_totals will use the new tax
+        if extracted_tax > 0:
+            crud.bills.update_bill(db=db, bill_id=bill_id, total_tax=extracted_tax)
+            
     except Exception as e:
          print(f"DEBUG ERROR: Textract failed: {e}")
          raise HTTPException(status_code=500, detail=f"Failed to parse image with Textract: {str(e)}")

@@ -41,10 +41,11 @@ def upload_image_to_s3(file_content: bytes, filename: str, content_type: str = N
     # Using the key is safer, but returning a formatted URL is common
     return unique_filename
 
-def analyze_receipt_with_textract(s3_object_key: str) -> List[Dict[str, Any]]:
+def analyze_receipt_with_textract(s3_object_key: str) -> Dict[str, Any]:
     """
     Calls AWS Textract to analyze an expense document residing in S3.
-    Parses the response to extract LineItemExpense fields (Item Name and Price).
+    Parses the response to extract LineItemExpense fields (Item Name and Price)
+    and SummaryFields (Tax).
     """
     if not S3_BUCKET_NAME:
         raise ValueError("S3_BUCKET_NAME environment variable is not set")
@@ -61,6 +62,7 @@ def analyze_receipt_with_textract(s3_object_key: str) -> List[Dict[str, Any]]:
     print(f"DEBUG: Received response from Textract. Response summary: {json.dumps({k: type(v).__name__ for k, v in response.items()})}")
     
     parsed_items = []
+    summary_data = {"tax": 0.0}
     
     # Parse Textract output
     expense_docs = response.get("ExpenseDocuments", [])
@@ -107,5 +109,24 @@ def analyze_receipt_with_textract(s3_object_key: str) -> List[Dict[str, Any]]:
                     })
 
     print(f"DEBUG: Total parsed items returned: {len(parsed_items)}")
-    return parsed_items
+    
+    # Extract Tax from SummaryFields
+    for expense_doc in expense_docs:
+        summary_fields = expense_doc.get("SummaryFields", [])
+        for field in summary_fields:
+            field_type = field.get("Type", {}).get("Text")
+            field_value = field.get("ValueDetection", {}).get("Text")
+            
+            if field_type == "TAX":
+                try:
+                    clean_tax = field_value.replace("$", "").replace(",", "")
+                    summary_data["tax"] = float(clean_tax)
+                    print(f"DEBUG: Parsed Tax: ${summary_data['tax']}")
+                except ValueError:
+                    print(f"DEBUG: Failed to parse tax string: {field_value}")
+                    
+    return {
+        "items": parsed_items,
+        "tax": summary_data["tax"]
+    }
 

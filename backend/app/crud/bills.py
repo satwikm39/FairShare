@@ -23,11 +23,30 @@ def update_bill(db: Session, bill_id: int, **kwargs):
         db.refresh(db_bill)
     return db_bill
 
+def recalculate_bill_totals(db: Session, bill_id: int):
+    db_bill = get_bill(db, bill_id)
+    if not db_bill:
+        return None
+        
+    items = db.query(models.BillItem).filter(models.BillItem.bill_id == bill_id).all()
+    subtotal = sum(item.unit_cost for item in items)
+    
+    db_bill.subtotal = subtotal
+    db_bill.grand_total = subtotal + db_bill.total_tax
+    
+    db.commit()
+    db.refresh(db_bill)
+    return db_bill
+
 def create_bill_item(db: Session, bill_id: int, item: schemas.BillItemCreate):
     db_item = models.BillItem(**item.model_dump(), bill_id=bill_id)
     db.add(db_item)
     db.commit()
     db.refresh(db_item)
+    
+    # Recalculate totals
+    recalculate_bill_totals(db, bill_id)
+    
     return db_item
 
 def update_bill_item(db: Session, item_id: int, item_update: schemas.BillItemUpdate):
@@ -38,6 +57,10 @@ def update_bill_item(db: Session, item_id: int, item_update: schemas.BillItemUpd
             setattr(db_item, key, value)
         db.commit()
         db.refresh(db_item)
+        
+        # Recalculate totals
+        recalculate_bill_totals(db, db_item.bill_id)
+        
     return db_item
 
 def add_item_share(db: Session, item_id: int, share: schemas.ItemShareCreate):
