@@ -11,6 +11,15 @@ def create_bill(db: Session, bill: schemas.BillCreate):
     db.refresh(db_bill)
     return db_bill
 
+def update_bill(db: Session, bill_id: int, **kwargs):
+    db_bill = get_bill(db, bill_id)
+    if db_bill:
+        for key, value in kwargs.items():
+            setattr(db_bill, key, value)
+        db.commit()
+        db.refresh(db_bill)
+    return db_bill
+
 def create_bill_item(db: Session, bill_id: int, item: schemas.BillItemCreate):
     db_item = models.BillItem(**item.model_dump(), bill_id=bill_id)
     db.add(db_item)

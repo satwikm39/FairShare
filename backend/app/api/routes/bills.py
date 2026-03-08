@@ -2,6 +2,8 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from app import schemas, crud
 from app.core.database import get_db
+from fastapi import UploadFile, File
+import app.services.aws as aws_service
 
 router = APIRouter()
 
@@ -26,3 +28,38 @@ def add_share_to_item(item_id: int, share: schemas.ItemShareCreate, db: Session 
     if db_user is None:
          raise HTTPException(status_code=404, detail="User not found")
     return crud.bills.add_item_share(db=db, item_id=item_id, share=share)
+
+@router.post("/{bill_id}/upload-receipt", response_model=list[schemas.BillItem])
+async def upload_receipt(bill_id: int, file: UploadFile = File(...), db: Session = Depends(get_db)):
+    # 1. Check if bill exists
+    db_bill = crud.bills.get_bill(db, bill_id=bill_id)
+    if db_bill is None:
+        raise HTTPException(status_code=404, detail="Bill not found")
+
+    # 2. Upload file to S3
+    try:
+        contents = await file.read()
+        s3_key = aws_service.upload_image_to_s3(contents, file.filename)
+    except Exception as e:
+         raise HTTPException(status_code=500, detail=f"Failed to upload image to S3: {str(e)}")
+
+    # Update bill's receipt_image_url
+    crud.bills.update_bill(db=db, bill_id=bill_id, receipt_image_url=s3_key)
+
+    # 3. Analyze with Textract
+    try:
+        parsed_items = aws_service.analyze_receipt_with_textract(s3_key)
+    except Exception as e:
+         raise HTTPException(status_code=500, detail=f"Failed to parse image with Textract: {str(e)}")
+
+    # 4. Save items to DB
+    saved_items = []
+    for item_data in parsed_items:
+        item_create = schemas.BillItemCreate(
+            item_name=item_data["item_name"],
+            unit_cost=item_data["unit_cost"]
+        )
+        saved_item = crud.bills.create_bill_item(db=db, bill_id=bill_id, item=item_create)
+        saved_items.append(saved_item)
+
+    return saved_items
