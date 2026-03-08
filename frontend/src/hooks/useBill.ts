@@ -89,6 +89,17 @@ export function useBill(initialBillId: number) {
     }
   };
 
+  const deleteBill = async () => {
+    setIsLoading(true);
+    try {
+      await billsService.deleteBill(initialBillId);
+    } catch (err: any) {
+      setError(err.response?.data?.detail || err.message || 'Failed to delete bill');
+      setIsLoading(false);
+      throw err;
+    }
+  };
+
   return {
     bill,
     isLoading,
@@ -96,6 +107,7 @@ export function useBill(initialBillId: number) {
     fetchBill,
     uploadReceipt,
     updateShare,
+    deleteBill,
     setBill // Expose setter for optimistic updates inside components if needed
   };
 }

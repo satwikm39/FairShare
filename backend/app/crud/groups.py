@@ -38,3 +38,10 @@ def add_user_to_group(db: Session, group_id: int, user_id: int):
     db.add(db_group_member)
     db.commit()
     return db_group_member
+
+def delete_group(db: Session, group_id: int):
+    db_group = get_group(db, group_id)
+    if db_group:
+        db.delete(db_group)
+        db.commit()
+    return db_group

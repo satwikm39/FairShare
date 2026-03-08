@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
-import { Upload, FileText, CheckCircle2, Loader2 } from 'lucide-react';
+import { useParams, Link } from 'react-router-dom';
+import { Upload, FileText, CheckCircle2, Loader2, ArrowLeft } from 'lucide-react';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { SplitterTable } from '../features/splitter/SplitterTable';
@@ -57,12 +57,17 @@ export function BillOverview() {
 
   return (
     <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-500">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
-        <div>
-          <h1 className="text-4xl font-extrabold text-slate-900 dark:text-white tracking-tight">
-            {group?.name ? `${group.name} Bill` : (bill?.group_id ? `Group ${bill.group_id} Bill` : 'Miami Trip Dinner')}
-          </h1>
-          <p className="text-lg text-slate-500 dark:text-slate-400 mt-2 font-medium">Split your bill items exactly how they were ordered.</p>
+      <div>
+        <Link to={bill?.group_id ? `/groups/${bill.group_id}` : '/dashboard'} className="inline-flex items-center text-sm font-medium text-brand-600 dark:text-brand-500 hover:text-brand-700 dark:hover:text-brand-400 mb-6 transition-colors">
+          <ArrowLeft className="w-4 h-4 mr-1" /> Back to Group
+        </Link>
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
+          <div>
+            <h1 className="text-4xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+              {isLoading && !bill ? 'Loading Bill...' : (group?.name ? `${group.name} Bill` : (bill?.group_id ? `Loading Group...` : 'Bill Details'))}
+            </h1>
+            <p className="text-lg text-slate-500 dark:text-slate-400 mt-2 font-medium">Split your bill items exactly how they were ordered.</p>
+          </div>
         </div>
       </div>
 

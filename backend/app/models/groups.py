@@ -9,8 +9,8 @@ class Group(Base):
     name = Column(String, index=True)
 
     # Relationships
-    members = relationship("GroupMember", back_populates="group")
-    bills = relationship("Bill", back_populates="group")
+    members = relationship("GroupMember", back_populates="group", cascade="all, delete-orphan")
+    bills = relationship("Bill", back_populates="group", cascade="all, delete-orphan")
 
 class GroupMember(Base):
     __tablename__ = "group_members"

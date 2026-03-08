@@ -26,6 +26,17 @@ export function useGroupDetails(groupId: number) {
     }
   }, [groupId]);
 
+  const deleteBillLocally = async (billId: number) => {
+    try {
+      const { billsService } = await import('../services/bills');
+      await billsService.deleteBill(billId);
+      setBills(prev => prev.filter(b => b.id !== billId));
+    } catch (err: any) {
+      setError(err.response?.data?.detail || err.message || 'Failed to delete bill');
+      throw err;
+    }
+  };
+
   useEffect(() => {
     fetchData();
   }, [fetchData]);
@@ -35,6 +46,7 @@ export function useGroupDetails(groupId: number) {
     bills,
     isLoading,
     error,
-    refresh: fetchData
+    refresh: fetchData,
+    deleteBill: deleteBillLocally
   };
 }

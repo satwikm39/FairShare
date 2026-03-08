@@ -27,6 +27,13 @@ export const groupsService = {
   },
 
   /**
+   * Delete a group
+   */
+  deleteGroup: async (groupId: number): Promise<void> => {
+    await api.delete(`/groups/${groupId}`);
+  },
+
+  /**
    * Add a user to a group by email
    */
   addMemberByEmail: async (groupId: number, email: string): Promise<void> => {

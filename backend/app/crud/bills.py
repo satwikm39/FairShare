@@ -47,3 +47,10 @@ def add_item_share(db: Session, item_id: int, share: schemas.ItemShareCreate):
     db.commit()
     db.refresh(db_share)
     return db_share
+
+def delete_bill(db: Session, bill_id: int):
+    db_bill = get_bill(db, bill_id)
+    if db_bill:
+        db.delete(db_bill)
+        db.commit()
+    return db_bill

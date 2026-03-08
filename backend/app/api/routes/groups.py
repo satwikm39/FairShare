@@ -34,6 +34,21 @@ def read_group(group_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Group not found")
     return db_group
 
+@router.delete("/{group_id}", status_code=204)
+def delete_group(
+    group_id: int, 
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(deps.get_current_user)
+):
+    # Depending on auth, you might want to check if the user is in the group
+    # db_group = crud.groups.get_group(db, group_id=group_id)
+    # user_in_group = any(m.user_id == current_user.id for m in db_group.members)
+    # if not user_in_group: raise HTTPException(status_code=403, detail="Not authorized")
+    db_group = crud.groups.delete_group(db=db, group_id=group_id)
+    if db_group is None:
+        raise HTTPException(status_code=404, detail="Group not found")
+    return None
+
 @router.post("/{group_id}/members/")
 def add_group_member(
     group_id: int, 

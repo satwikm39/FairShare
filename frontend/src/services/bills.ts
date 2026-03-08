@@ -11,6 +11,13 @@ export const billsService = {
   },
 
   /**
+   * Delete a bill
+   */
+  deleteBill: async (billId: number): Promise<void> => {
+    await api.delete(`/bills/${billId}`);
+  },
+
+  /**
    * Upload a receipt image for OCR processing via AWS Textract
    */
   uploadReceipt: async (billId: number, file: File): Promise<BillItem[]> => {

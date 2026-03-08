@@ -1,16 +1,19 @@
 import { useState } from 'react';
-import { Plus, Users, Loader2 } from 'lucide-react';
+import { Plus, Users, Loader2, Trash2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { useGroups } from '../hooks/useGroups';
 import { CreateGroupModal } from '../components/groups/CreateGroupModal';
+import { ConfirmModal } from '../components/ui/ConfirmModal';
 
 export function GroupDashboard() {
-  const { groups, isLoading, error, createGroup } = useGroups();
+  const { groups, isLoading, error, createGroup, deleteGroup } = useGroups();
   const [isCreating, setIsCreating] = useState(false);
-
   const [isModalOpen, setIsModalOpen] = useState(false);
+  
+  const [groupToDelete, setGroupToDelete] = useState<number | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const handleCreateGroup = async (name: string) => {
     setIsCreating(true);
@@ -22,6 +25,20 @@ export function GroupDashboard() {
       alert("Failed to create group.");
     } finally {
       setIsCreating(false);
+    }
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!groupToDelete) return;
+    setIsDeleting(true);
+    try {
+      await deleteGroup(groupToDelete);
+      setGroupToDelete(null);
+    } catch (e) {
+      console.error(e);
+      alert("Failed to delete group.");
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -55,24 +72,37 @@ export function GroupDashboard() {
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {groups.map(group => (
-            <Link to={`/groups/${group.id}`} key={group.id} className="block group h-full">
-              <Card className="h-full border border-slate-200/60 shadow-md group-hover:shadow-2xl group-hover:border-brand-200 transition-all duration-300">
-                <div className="flex flex-col h-full justify-between gap-6">
-                  <div>
-                    <h3 className="text-2xl font-bold text-slate-800 dark:text-slate-100 group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors">
-                      {group.name}
-                    </h3>
-                    <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400 mt-3 font-medium">
-                      <Users className="w-4 h-4" />
-                      <span>Multiple members</span> {/* Backend doesn't return member count yet */}
+            <div key={group.id} className="relative group">
+              <Link to={`/groups/${group.id}`} className="block h-full">
+                <Card className="h-full border border-slate-200/60 shadow-md group-hover:shadow-2xl group-hover:border-brand-200 transition-all duration-300">
+                  <div className="flex flex-col h-full justify-between gap-6">
+                    <div>
+                      <h3 className="text-2xl font-bold text-slate-800 dark:text-slate-100 group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors pr-8">
+                        {group.name}
+                      </h3>
+                      <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400 mt-3 font-medium">
+                        <Users className="w-4 h-4" />
+                        <span>Multiple members</span> {/* Backend doesn't return member count yet */}
+                      </div>
+                    </div>
+                    <div className="text-sm font-semibold text-slate-400">
+                      ID: {group.id}
                     </div>
                   </div>
-                  <div className="text-sm font-semibold text-slate-400">
-                    ID: {group.id}
-                  </div>
-                </div>
-              </Card>
-            </Link>
+                </Card>
+              </Link>
+              <button
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setGroupToDelete(group.id);
+                }}
+                className="absolute top-4 right-4 p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-full transition-colors z-10 opacity-0 group-hover:opacity-100"
+                aria-label="Delete group"
+              >
+                <Trash2 className="w-4 h-4" />
+              </button>
+            </div>
           ))}
           
             <button 
@@ -92,6 +122,17 @@ export function GroupDashboard() {
         isOpen={isModalOpen} 
         onClose={() => setIsModalOpen(false)} 
         onSubmit={handleCreateGroup} 
+      />
+
+      <ConfirmModal
+        isOpen={groupToDelete !== null}
+        onClose={() => setGroupToDelete(null)}
+        onConfirm={handleConfirmDelete}
+        title="Delete Group"
+        description="Are you sure you want to delete this group? All bills and items will be permanently deleted. This action cannot be undone."
+        confirmText="Delete Group"
+        isLoading={isDeleting}
+        variant="danger"
       />
     </div>
   );

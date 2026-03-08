@@ -35,6 +35,16 @@ export function useGroups() {
     }
   };
 
+  const deleteGroupLocally = async (groupId: number) => {
+    try {
+      await groupsService.deleteGroup(groupId);
+      setGroups(prev => prev.filter(g => g.id !== groupId));
+    } catch (err: any) {
+      setError(err.response?.data?.detail || err.message || 'Failed to delete group');
+      throw err;
+    }
+  };
+
   // Initially fetch groups when hook mounts
   useEffect(() => {
     fetchGroups();
@@ -45,6 +55,7 @@ export function useGroups() {
     isLoading,
     error,
     fetchGroups,
-    createGroup
+    createGroup,
+    deleteGroup: deleteGroupLocally
   };
 }

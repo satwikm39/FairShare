@@ -1,19 +1,23 @@
 import { useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { Plus, Receipt, Loader2, ArrowLeft } from 'lucide-react';
+import { Plus, Receipt, Loader2, ArrowLeft, Trash2 } from 'lucide-react';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { useGroupDetails } from '../hooks/useGroupDetails';
 import { groupsService } from '../services/groups';
 import { AddMemberModal } from '../components/groups/AddMemberModal';
+import { ConfirmModal } from '../components/ui/ConfirmModal';
 
 export function GroupDetails() {
   const { id } = useParams<{ id: string }>();
   const groupId = parseInt(id || '0', 10);
   const navigate = useNavigate();
-  const { group, bills, isLoading, error } = useGroupDetails(groupId);
+  const { group, bills, isLoading, error, deleteBill } = useGroupDetails(groupId);
   const [isCreatingBill, setIsCreatingBill] = useState(false);
   const [isAddMemberModalOpen, setIsAddMemberModalOpen] = useState(false);
+  
+  const [billToDelete, setBillToDelete] = useState<number | null>(null);
+  const [isDeletingBill, setIsDeletingBill] = useState(false);
 
   const handleCreateBill = async () => {
     setIsCreatingBill(true);
@@ -37,6 +41,20 @@ export function GroupDetails() {
       console.error(e);
       // If the backend returns a 404 or 400 from our recent changes, it will be caught here
       alert(e.response?.data?.detail || 'Failed to add friend.');
+    }
+  };
+
+  const handleConfirmDeleteBill = async () => {
+    if (!billToDelete) return;
+    setIsDeletingBill(true);
+    try {
+      await deleteBill(billToDelete);
+      setBillToDelete(null);
+    } catch (e) {
+      console.error(e);
+      alert("Failed to delete bill.");
+    } finally {
+      setIsDeletingBill(false);
     }
   };
 
@@ -99,24 +117,37 @@ export function GroupDetails() {
           </div>
         ) : (
           bills.map(bill => (
-            <Link to={`/bills/${bill.id}`} key={bill.id} className="block group h-full">
-              <Card className="h-full border border-slate-200/60 dark:border-slate-700/50 shadow-md group-hover:shadow-2xl group-hover:border-brand-200 dark:group-hover:border-brand-500/50 transition-all duration-300">
-                <div className="flex flex-col h-full justify-between gap-6">
-                  <div>
-                    <h3 className="text-2xl font-bold text-slate-800 dark:text-slate-100 group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors">
-                      Bill #{bill.id}
-                    </h3>
-                    <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400 mt-3 font-medium">
-                      <Receipt className="w-4 h-4" />
-                      <span>{bill.items?.length || 0} items</span>
+            <div key={bill.id} className="relative group/bill">
+              <Link to={`/bills/${bill.id}`} className="block h-full">
+                <Card className="h-full border border-slate-200/60 dark:border-slate-700/50 shadow-md group-hover/bill:shadow-2xl group-hover/bill:border-brand-200 dark:group-hover/bill:border-brand-500/50 transition-all duration-300">
+                  <div className="flex flex-col h-full justify-between gap-6">
+                    <div>
+                      <h3 className="text-2xl font-bold text-slate-800 dark:text-slate-100 group-hover/bill:text-brand-600 dark:group-hover/bill:text-brand-400 transition-colors">
+                        Bill #{bill.id}
+                      </h3>
+                      <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400 mt-3 font-medium">
+                        <Receipt className="w-4 h-4" />
+                        <span>{bill.items?.length || 0} items</span>
+                      </div>
+                    </div>
+                    <div className="text-xl font-bold text-brand-600 dark:text-brand-400">
+                      ${bill.grand_total.toFixed(2)}
                     </div>
                   </div>
-                  <div className="text-xl font-bold text-brand-600 dark:text-brand-400">
-                    ${bill.grand_total.toFixed(2)}
-                  </div>
-                </div>
-              </Card>
-            </Link>
+                </Card>
+              </Link>
+              <button
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setBillToDelete(bill.id);
+                }}
+                className="absolute top-4 right-4 p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-full transition-colors z-10 opacity-0 group-hover/bill:opacity-100"
+                aria-label="Delete bill"
+              >
+                <Trash2 className="w-4 h-4" />
+              </button>
+            </div>
           ))
         )}
       </div>
@@ -125,6 +156,17 @@ export function GroupDetails() {
         isOpen={isAddMemberModalOpen} 
         onClose={() => setIsAddMemberModalOpen(false)} 
         onSubmit={handleAddMember} 
+      />
+
+      <ConfirmModal
+        isOpen={billToDelete !== null}
+        onClose={() => setBillToDelete(null)}
+        onConfirm={handleConfirmDeleteBill}
+        title="Delete Bill"
+        description="Are you sure you want to delete this bill? All parsed items and split shares will be permanently deleted. This action cannot be undone."
+        confirmText="Delete Bill"
+        isLoading={isDeletingBill}
+        variant="danger"
       />
     </div>
   );

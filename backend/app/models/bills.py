@@ -14,7 +14,7 @@ class Bill(Base):
 
     # Relationships
     group = relationship("Group", back_populates="bills")
-    items = relationship("BillItem", back_populates="bill")
+    items = relationship("BillItem", back_populates="bill", cascade="all, delete-orphan")
 
 class BillItem(Base):
     __tablename__ = "bill_items"
@@ -26,7 +26,7 @@ class BillItem(Base):
 
     # Relationships
     bill = relationship("Bill", back_populates="items")
-    shares = relationship("ItemShare", back_populates="item")
+    shares = relationship("ItemShare", back_populates="item", cascade="all, delete-orphan")
 
 class ItemShare(Base):
     __tablename__ = "item_shares"
