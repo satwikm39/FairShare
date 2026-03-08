@@ -11,3 +11,6 @@ class Group(GroupBase):
 
     class Config:
         from_attributes = True
+
+class GroupMemberCreate(BaseModel):
+    email: str

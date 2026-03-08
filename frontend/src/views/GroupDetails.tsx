@@ -5,6 +5,7 @@ import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { useGroupDetails } from '../hooks/useGroupDetails';
 import { groupsService } from '../services/groups';
+import { AddMemberModal } from '../components/groups/AddMemberModal';
 
 export function GroupDetails() {
   const { id } = useParams<{ id: string }>();
@@ -12,6 +13,7 @@ export function GroupDetails() {
   const navigate = useNavigate();
   const { group, bills, isLoading, error } = useGroupDetails(groupId);
   const [isCreatingBill, setIsCreatingBill] = useState(false);
+  const [isAddMemberModalOpen, setIsAddMemberModalOpen] = useState(false);
 
   const handleCreateBill = async () => {
     setIsCreatingBill(true);
@@ -23,6 +25,18 @@ export function GroupDetails() {
       console.error(e);
       alert('Failed to create new bill.');
       setIsCreatingBill(false);
+    }
+  };
+
+  const handleAddMember = async (email: string) => {
+    try {
+      await groupsService.addMemberByEmail(groupId, email);
+      alert('Friend added to the group successfully!');
+      // In a real app we might refetch group members here to show them in the UI
+    } catch (e: any) {
+      console.error(e);
+      // If the backend returns a 404 or 400 from our recent changes, it will be caught here
+      alert(e.response?.data?.detail || 'Failed to add friend.');
     }
   };
 
@@ -57,14 +71,22 @@ export function GroupDetails() {
             <h1 className="text-4xl font-extrabold text-slate-900 tracking-tight">{group.name}</h1>
             <p className="text-lg text-slate-500 mt-2 font-medium">Manage this group's bills and expenses.</p>
           </div>
-          <Button 
-            className="gap-2 px-6 shadow-brand-500/20" 
-            onClick={handleCreateBill}
-            isLoading={isCreatingBill}
-          >
-            <Plus className="w-5 h-5" />
-            New Bill
-          </Button>
+          <div className="flex gap-3">
+            <Button 
+              variant="outline"
+              onClick={() => setIsAddMemberModalOpen(true)}
+            >
+              Add Friend
+            </Button>
+            <Button 
+              className="gap-2 px-6 shadow-brand-500/20" 
+              onClick={handleCreateBill}
+              isLoading={isCreatingBill}
+            >
+              <Plus className="w-5 h-5" />
+              New Bill
+            </Button>
+          </div>
         </div>
       </div>
 
@@ -98,6 +120,12 @@ export function GroupDetails() {
           ))
         )}
       </div>
+
+      <AddMemberModal 
+        isOpen={isAddMemberModalOpen} 
+        onClose={() => setIsAddMemberModalOpen(false)} 
+        onSubmit={handleAddMember} 
+      />
     </div>
   );
 }

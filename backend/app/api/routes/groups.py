@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from app import schemas, crud
+from app import schemas, crud, models
+from app.api import deps
 from app.core.database import get_db
 from typing import List
 
@@ -23,14 +24,27 @@ def read_group(group_id: int, db: Session = Depends(get_db)):
     return db_group
 
 @router.post("/{group_id}/members/")
-def add_group_member(group_id: int, user_id: int, db: Session = Depends(get_db)):
+def add_group_member(
+    group_id: int, 
+    member: schemas.GroupMemberCreate, 
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(deps.get_current_user)
+):
     db_group = crud.groups.get_group(db, group_id=group_id)
     if db_group is None:
         raise HTTPException(status_code=404, detail="Group not found")
-    db_user = crud.users.get_user(db, user_id=user_id)
+        
+    db_user = crud.users.get_user_by_email(db, email=member.email)
     if db_user is None:
-        raise HTTPException(status_code=404, detail="User not found")
-    return crud.groups.add_user_to_group(db=db, group_id=group_id, user_id=user_id)
+        raise HTTPException(status_code=404, detail=f"User with email {member.email} not found")
+        
+    # Check if already a member (could add to CRUD)
+    # For now, just add them
+    try:
+        return crud.groups.add_user_to_group(db=db, group_id=group_id, user_id=db_user.id)
+    except Exception as e:
+        # Catch potential UniqueViolation if already in group
+        raise HTTPException(status_code=400, detail="User is already a member of this group")
 
 @router.get("/{group_id}/bills/", response_model=List[schemas.Bill])
 def read_group_bills(group_id: int, db: Session = Depends(get_db)):

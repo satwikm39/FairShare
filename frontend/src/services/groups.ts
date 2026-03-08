@@ -27,10 +27,10 @@ export const groupsService = {
   },
 
   /**
-   * Add a user to a group
+   * Add a user to a group by email
    */
-  addMember: async (groupId: number, userId: number): Promise<void> => {
-    await api.post(`/groups/${groupId}/members/?user_id=${userId}`);
+  addMemberByEmail: async (groupId: number, email: string): Promise<void> => {
+    await api.post(`/groups/${groupId}/members/`, { email });
   },
 
   /**
