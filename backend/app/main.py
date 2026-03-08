@@ -5,8 +5,11 @@ from app.core.database import engine
 from app import models
 
 # Create the database tables
-models.users.Base.metadata.create_all(bind=engine)
-
+try:
+    models.users.Base.metadata.create_all(bind=engine)
+    print("✅ Database initialized successfully")
+except Exception as e:
+    print(f"❌ Database initialization failed: {e}")
 app = FastAPI(title="FairShare API")
 
 # Configure CORS for frontend

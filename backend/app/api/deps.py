@@ -14,8 +14,9 @@ if not firebase_admin._apps:
     try:
         # Relies on GOOGLE_APPLICATION_CREDENTIALS in env, or falls back gracefully
         firebase_admin.initialize_app()
+        print("✅ Firebase initialized successfully")
     except Exception as e:
-        print(f"Warning: Firebase Admin initialization failed: {e}. Set GOOGLE_APPLICATION_CREDENTIALS.")
+        print(f"❌ Firebase Admin initialization failed: {e}. Set GOOGLE_APPLICATION_CREDENTIALS.")
 
 def get_current_user(
     credentials: HTTPAuthorizationCredentials = Depends(security),
