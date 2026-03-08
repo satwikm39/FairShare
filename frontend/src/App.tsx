@@ -18,21 +18,25 @@ function PrivateRoute({ children }: { children: React.ReactNode }) {
   return currentUser ? <>{children}</> : <Navigate to="/login" />;
 }
 
+import { ThemeProvider } from './context/ThemeContext';
+
 function App() {
   return (
-    <AuthProvider>
-      <Router>
-        <Layout>
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/dashboard" element={<PrivateRoute><GroupDashboard /></PrivateRoute>} />
-            <Route path="/groups/:id" element={<PrivateRoute><GroupDetails /></PrivateRoute>} />
-            <Route path="/bills/:id" element={<PrivateRoute><BillOverview /></PrivateRoute>} />
-          </Routes>
-        </Layout>
-      </Router>
-    </AuthProvider>
+    <ThemeProvider defaultTheme="light" storageKey="fairshare-theme">
+      <AuthProvider>
+        <Router>
+          <Layout>
+            <Routes>
+              <Route path="/" element={<Home />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/dashboard" element={<PrivateRoute><GroupDashboard /></PrivateRoute>} />
+              <Route path="/groups/:id" element={<PrivateRoute><GroupDetails /></PrivateRoute>} />
+              <Route path="/bills/:id" element={<PrivateRoute><BillOverview /></PrivateRoute>} />
+            </Routes>
+          </Layout>
+        </Router>
+      </AuthProvider>
+    </ThemeProvider>
   );
 }
 

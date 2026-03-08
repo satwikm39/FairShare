@@ -5,10 +5,10 @@ export function Home() {
   return (
     <div className="flex flex-col items-center justify-center min-h-[80vh]">
       <div className="max-w-3xl text-center space-y-8">
-        <h1 className="text-5xl sm:text-7xl font-extrabold tracking-tight text-slate-900 leading-tight">
+        <h1 className="text-5xl sm:text-7xl font-extrabold tracking-tight text-slate-900 dark:text-white leading-tight">
           Split bills without the <span className="bg-gradient-to-r from-brand-500 to-brand-400 bg-clip-text text-transparent">headache</span>.
         </h1>
-        <p className="text-xl text-slate-600 max-w-xl mx-auto font-medium leading-relaxed">
+        <p className="text-xl text-slate-600 dark:text-slate-300 max-w-xl mx-auto font-medium leading-relaxed">
           Upload a receipt, tap to split items, and instantly know who owes what. FairShare does the math so you don't have to.
         </p>
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-6">
