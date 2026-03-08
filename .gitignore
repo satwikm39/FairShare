@@ -1,0 +1,16 @@
+PRD.md
+
+# Environment variables
+.env
+
+# Python
+backend/venv/
+__pycache__/
+*.py[cod]
+*$py.class
+*.db
+
+# Frontend
+frontend/node_modules/
+frontend/dist/
+frontend/.env
