@@ -7,7 +7,7 @@ from app import models
 # Create the database tables
 models.users.Base.metadata.create_all(bind=engine)
 
-app = FastAPI(title="Smart Bill Splitter API")
+app = FastAPI(title="FairShare API")
 
 # Configure CORS for frontend
 app.add_middleware(
@@ -20,7 +20,7 @@ app.add_middleware(
 
 @app.get("/")
 def read_root():
-    return {"message": "Welcome to the Smart Bill Splitter API"}
+    return {"message": "Welcome to the FairShare API"}
 
 @app.get("/health")
 def health_check():

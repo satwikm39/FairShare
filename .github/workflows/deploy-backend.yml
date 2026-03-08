@@ -34,4 +34,4 @@ jobs:
           file: ./backend/Dockerfile
           push: true
           # Replace 'yourdockerhubusername' with your actual Docker Hub username below
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/smart-bill-splitter-backend:${{ inputs.image_tag }}
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/fairshare-backend:${{ inputs.image_tag }}
