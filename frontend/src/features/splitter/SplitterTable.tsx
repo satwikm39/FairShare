@@ -7,7 +7,7 @@ import { useAuth } from '../../context/AuthContext';
 interface SplitterTableProps {
   bill: Bill;
   group?: Group | null;
-  onUpdateShare: (itemId: number, userId: number, increment: number) => Promise<void>;
+  onUpdateShare: (itemId: number, userId: number, increment: number) => void;
 }
 
 export function SplitterTable({ bill, group, onUpdateShare }: SplitterTableProps) {

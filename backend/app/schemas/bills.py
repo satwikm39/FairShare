@@ -15,6 +15,11 @@ class ItemShare(ItemShareBase):
     class Config:
         from_attributes = True
 
+class ItemShareUpdateBulk(BaseModel):
+    item_id: int
+    user_id: int
+    share_count: int
+
 class BillItemBase(BaseModel):
     item_name: str
     unit_cost: float

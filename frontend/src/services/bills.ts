@@ -50,4 +50,15 @@ export const billsService = {
     });
     return response.data;
   },
+
+  /**
+   * Bulk assign or update multiple shares across multiple items in a bill
+   */
+  updateItemSharesBulk: async (
+    billId: number,
+    shares: { item_id: number; user_id: number; share_count: number }[]
+  ): Promise<ItemShare[]> => {
+    const response = await api.post<ItemShare[]>(`/bills/${billId}/shares/bulk`, shares);
+    return response.data;
+  },
 };

@@ -11,7 +11,7 @@ export function BillOverview() {
   const { id } = useParams<{ id: string }>();
   // Default to 1 if no ID is provided, so it doesn't crash on invalid URLs
   const billId = parseInt(id || '1', 10);
-  const { bill, isLoading, error, fetchBill, uploadReceipt, updateShare } = useBill(billId);
+  const { bill, isLoading, error, fetchBill, uploadReceipt, updateShare, hasUnsavedChanges, isSavingShares, saveShares } = useBill(billId);
   const [group, setGroup] = useState<any>(null);
 
   useEffect(() => {
@@ -68,6 +68,17 @@ export function BillOverview() {
             </h1>
             <p className="text-lg text-slate-500 dark:text-slate-400 mt-2 font-medium">Split your bill items exactly how they were ordered.</p>
           </div>
+          {bill && hasUnsavedChanges && (
+             <Button 
+               variant="primary"
+               className="shadow-brand-500/20 gap-2 px-6"
+               onClick={saveShares}
+               isLoading={isSavingShares}
+             >
+               <CheckCircle2 className="w-5 h-5" />
+               Save Splits
+             </Button>
+          )}
         </div>
       </div>
 
@@ -140,7 +151,22 @@ export function BillOverview() {
               </div>
             </Card>
           ) : bill ? (
-            <SplitterTable bill={bill} group={group} onUpdateShare={updateShare} />
+            <>
+              <SplitterTable bill={bill} group={group} onUpdateShare={updateShare} />
+              {hasUnsavedChanges && (
+                <div className="mt-6 flex justify-end">
+                  <Button
+                    variant="primary"
+                    className="shadow-brand-500/20 gap-2 px-8"
+                    onClick={saveShares}
+                    isLoading={isSavingShares}
+                  >
+                    <CheckCircle2 className="w-5 h-5" />
+                    Save Splits
+                  </Button>
+                </div>
+              )}
+            </>
           ) : (
             <Card className="border-slate-200/60 dark:border-slate-700/50 shadow-lg text-center p-12 text-slate-500 dark:text-slate-400">
               <div className="flex flex-col items-center justify-center gap-4">

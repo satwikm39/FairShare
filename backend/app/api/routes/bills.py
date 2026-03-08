@@ -41,6 +41,19 @@ def add_share_to_item(item_id: int, share: schemas.ItemShareCreate, db: Session 
          raise HTTPException(status_code=404, detail="User not found")
     return crud.bills.add_item_share(db=db, item_id=item_id, share=share)
 
+@router.post("/{bill_id}/shares/bulk", response_model=list[schemas.ItemShare])
+def update_shares_bulk(
+    bill_id: int, 
+    shares: list[schemas.ItemShareUpdateBulk], 
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(deps.get_current_user)
+):
+    db_bill = crud.bills.get_bill(db, bill_id=bill_id)
+    if db_bill is None:
+        raise HTTPException(status_code=404, detail="Bill not found")
+        
+    return crud.bills.add_item_shares_bulk(db=db, bill_id=bill_id, shares=shares)
+
 @router.post("/{bill_id}/upload-receipt", response_model=list[schemas.BillItem])
 async def upload_receipt(
     bill_id: int, 

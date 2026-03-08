@@ -7,12 +7,16 @@ export function useBill(initialBillId: number) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [isSavingShares, setIsSavingShares] = useState(false);
+
   const fetchBill = useCallback(async (id: number = initialBillId) => {
     setIsLoading(true);
     setError(null);
     try {
       const data = await billsService.getBill(id);
       setBill(data);
+      setHasUnsavedChanges(false);
     } catch (err: any) {
       setError(err.response?.data?.detail || err.message || 'Failed to fetch bill');
     } finally {
@@ -21,7 +25,6 @@ export function useBill(initialBillId: number) {
   }, [initialBillId]);
 
   const uploadReceipt = async (file: File) => {
-    // If bill state isn't loaded yet, try to use the initial ID passed to the hook
     const targetBillId = bill?.id || initialBillId;
     
     if (!targetBillId) {
@@ -29,30 +32,19 @@ export function useBill(initialBillId: number) {
       return;
     }
     
-    console.log(`DEBUG: uploadReceipt hook starting for bill ID ${targetBillId}`);
     setIsLoading(true);
     setError(null);
     try {
-      console.log("DEBUG: Calling billsService.uploadReceipt...");
       const newItems = await billsService.uploadReceipt(targetBillId, file);
-      console.log("DEBUG: billsService returned newItems:", newItems);
       
-      if (!Array.isArray(newItems) || newItems.length === 0) {
-        console.warn("DEBUG WARNING: newItems is empty or not an array!");
-      }
-
-      // Optimistically update the bill with the new items
       setBill(prev => prev ? { ...prev, items: [...prev.items, ...newItems] } : null);
       
-      // If the bill was completely null before, we might need a full refetch here in a future PR,
-      // but typical flow means the bill was just loading. A refetch solves it robustly.
       if (!bill) {
         await fetchBill(targetBillId);
       }
       
       return newItems;
     } catch (err: any) {
-      console.error("DEBUG ERR: useBill uploadReceipt caught an error:", err);
       setError(err.response?.data?.detail || err.message || 'Failed to upload receipt');
       throw err;
     } finally {
@@ -60,32 +52,58 @@ export function useBill(initialBillId: number) {
     }
   };
 
-  const updateShare = async (itemId: number, userId: number, shareCount: number) => {
-    // We could do optimistic UI updates here, but for simplicity we'll just await the API
-    try {
-      const updatedShare = await billsService.updateItemShare(itemId, userId, shareCount);
+  const updateShare = (itemId: number, userId: number, shareCount: number) => {
+    setBill(prev => {
+      if (!prev) return null;
       
-      // Update local state without full refetch
-      setBill(prev => {
-        if (!prev) return null;
-        
-        const updatedItems = prev.items.map(item => {
-          if (item.id === itemId) {
-            // Remove old share for this user if it exists, add the new one
-            const filteredShares = item.shares.filter(s => s.user_id !== userId);
-            return {
-              ...item,
-              shares: [...filteredShares, updatedShare]
-            };
-          }
-          return item;
-        });
-
-        return { ...prev, items: updatedItems };
+      const updatedItems = prev.items.map(item => {
+        if (item.id === itemId) {
+          const filteredShares = item.shares.filter(s => s.user_id !== userId);
+          // Only add back the share if we are actually recording > 0, 
+          // or we just track it as 0 to explicitly send deletion to backend
+          const newShare = {
+            id: Date.now(), // temporary ID for frontend tracking
+            item_id: itemId,
+            user_id: userId,
+            share_count: shareCount
+          };
+          return {
+            ...item,
+            shares: [...filteredShares, newShare]
+          };
+        }
+        return item;
       });
+
+      return { ...prev, items: updatedItems };
+    });
+    setHasUnsavedChanges(true);
+  };
+
+  const saveShares = async () => {
+    if (!bill) return;
+    setIsSavingShares(true);
+    setError(null);
+    try {
+      // Gather all shares from all items to send in bulk
+      const sharesToSave = bill.items.flatMap(item => 
+        item.shares.map(s => ({
+          item_id: item.id,
+          user_id: s.user_id,
+          share_count: s.share_count
+        }))
+      );
+      
+      await billsService.updateItemSharesBulk(bill.id, sharesToSave);
+      setHasUnsavedChanges(false);
+      
+      // Optionally refetch to get real IDs, but not strictly necessary since UI works fine
+      // await fetchBill(bill.id);
     } catch (err: any) {
-      console.error("Failed to update share:", err);
-      // Ideally show a toast error here
+      setError(err.response?.data?.detail || err.message || 'Failed to save shares');
+      throw err;
+    } finally {
+      setIsSavingShares(false);
     }
   };
 
@@ -104,10 +122,13 @@ export function useBill(initialBillId: number) {
     bill,
     isLoading,
     error,
+    hasUnsavedChanges,
+    isSavingShares,
     fetchBill,
     uploadReceipt,
     updateShare,
+    saveShares,
     deleteBill,
-    setBill // Expose setter for optimistic updates inside components if needed
+    setBill
   };
 }

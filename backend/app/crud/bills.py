@@ -48,6 +48,37 @@ def add_item_share(db: Session, item_id: int, share: schemas.ItemShareCreate):
     db.refresh(db_share)
     return db_share
 
+def add_item_shares_bulk(db: Session, bill_id: int, shares: list[schemas.ItemShareUpdateBulk]):
+    # In a production app, we would verify all item_ids belong to the bill_id
+    # But for MVP we'll just upsert them all in one transaction
+    updated_shares = []
+    
+    for share in shares:
+        existing_share = db.query(models.ItemShare).filter(
+            models.ItemShare.item_id == share.item_id,
+            models.ItemShare.user_id == share.user_id
+        ).first()
+        
+        if existing_share:
+            existing_share.share_count = share.share_count
+            updated_shares.append(existing_share)
+        else:
+            db_share = models.ItemShare(
+                item_id=share.item_id,
+                user_id=share.user_id,
+                share_count=share.share_count
+            )
+            db.add(db_share)
+            updated_shares.append(db_share)
+            
+    db.commit()
+    
+    # We do a refresh just to ensure they load properly if returned
+    for s in updated_shares:
+        db.refresh(s)
+        
+    return updated_shares
+
 def delete_bill(db: Session, bill_id: int):
     db_bill = get_bill(db, bill_id)
     if db_bill:
