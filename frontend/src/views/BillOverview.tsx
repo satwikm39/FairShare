@@ -1,7 +1,7 @@
 import { Upload } from 'lucide-react';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
-import { SplitterTable } from '../components/splitter/SplitterTable';
+import { SplitterTable } from '../features/splitter/SplitterTable';
 
 export function BillOverview() {
   return (

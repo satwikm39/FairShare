@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Card } from '../ui/Card';
+import { Card } from '../../components/ui/Card';
 import { Minus, Plus } from 'lucide-react';
 import { cn } from '../../lib/utils';
 
