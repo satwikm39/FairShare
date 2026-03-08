@@ -30,6 +30,16 @@ def create_bill_item(db: Session, bill_id: int, item: schemas.BillItemCreate):
     db.refresh(db_item)
     return db_item
 
+def update_bill_item(db: Session, item_id: int, item_update: schemas.BillItemUpdate):
+    db_item = db.query(models.BillItem).filter(models.BillItem.id == item_id).first()
+    if db_item:
+        update_data = item_update.model_dump(exclude_unset=True)
+        for key, value in update_data.items():
+            setattr(db_item, key, value)
+        db.commit()
+        db.refresh(db_item)
+    return db_item
+
 def add_item_share(db: Session, item_id: int, share: schemas.ItemShareCreate):
     existing_share = db.query(models.ItemShare).filter(
         models.ItemShare.item_id == item_id,

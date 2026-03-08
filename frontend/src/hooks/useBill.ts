@@ -9,6 +9,7 @@ export function useBill(initialBillId: number) {
 
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [isSavingShares, setIsSavingShares] = useState(false);
+  const [modifiedItems, setModifiedItems] = useState<Record<number, { item_name?: string; unit_cost?: number }>>({});
 
   const fetchBill = useCallback(async (id: number = initialBillId) => {
     setIsLoading(true);
@@ -102,12 +103,31 @@ export function useBill(initialBillId: number) {
     setHasUnsavedChanges(true);
   };
 
+  const updateItemDetails = (itemId: number, name: string, cost: number) => {
+    setBill(prev => {
+      if (!prev) return null;
+      const updatedItems = prev.items.map(item => {
+        if (item.id === itemId) {
+          return { ...item, item_name: name, unit_cost: cost };
+        }
+        return item;
+      });
+      return { ...prev, items: updatedItems };
+    });
+
+    setModifiedItems(prev => ({
+      ...prev,
+      [itemId]: { item_name: name, unit_cost: cost }
+    }));
+    setHasUnsavedChanges(true);
+  };
+
   const saveShares = async () => {
     if (!bill) return;
     setIsSavingShares(true);
     setError(null);
     try {
-      // Gather all shares from all items to send in bulk
+      // 1. Save shares bulk
       const sharesToSave = bill.items.flatMap(item => 
         item.shares.map(s => ({
           item_id: item.id,
@@ -116,7 +136,16 @@ export function useBill(initialBillId: number) {
         }))
       );
       
-      await billsService.updateItemSharesBulk(bill.id, sharesToSave);
+      const sharePromise = billsService.updateItemSharesBulk(bill.id, sharesToSave);
+
+      // 2. Save any modified items
+      const itemUpdatePromises = Object.entries(modifiedItems).map(([itemId, data]) => 
+        billsService.updateItem(Number(itemId), data)
+      );
+
+      await Promise.all([sharePromise, ...itemUpdatePromises]);
+
+      setModifiedItems({});
       setHasUnsavedChanges(false);
       
       // Optionally refetch to get real IDs, but not strictly necessary since UI works fine
@@ -150,6 +179,7 @@ export function useBill(initialBillId: number) {
     uploadReceipt,
     updateShare,
     splitAllEqually,
+    updateItemDetails,
     saveShares,
     deleteBill,
     setBill

@@ -61,4 +61,15 @@ export const billsService = {
     const response = await api.post<ItemShare[]>(`/bills/${billId}/shares/bulk`, shares);
     return response.data;
   },
+
+  /**
+   * Update the details (name/cost) of a specific item
+   */
+  updateItem: async (
+    itemId: number,
+    data: { item_name?: string; unit_cost?: number }
+  ): Promise<BillItem> => {
+    const response = await api.put<BillItem>(`/bills/items/${itemId}`, data);
+    return response.data;
+  },
 };

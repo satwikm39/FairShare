@@ -10,9 +10,10 @@ interface SplitterTableProps {
   group?: Group | null;
   onUpdateShare: (itemId: number, userId: number, increment: number) => void;
   onSplitAllEqually?: (userIds: number[]) => void;
+  onUpdateItemDetails?: (itemId: number, name: string, cost: number) => void;
 }
 
-export function SplitterTable({ bill, group, onUpdateShare, onSplitAllEqually }: SplitterTableProps) {
+export function SplitterTable({ bill, group, onUpdateShare, onSplitAllEqually, onUpdateItemDetails }: SplitterTableProps) {
   const getSubtotalForUser = (userId: number) => {
     let subtotal = 0;
     bill.items.forEach(item => {
@@ -104,8 +105,32 @@ export function SplitterTable({ bill, group, onUpdateShare, onSplitAllEqually }:
             const isZeroShares = totalItemShares === 0;
             return (
               <tr key={item.id} className={cn("transition-colors group", isZeroShares ? "bg-red-50/80 dark:bg-red-900/20 hover:bg-red-100/80 dark:hover:bg-red-900/30 ring-1 ring-inset ring-red-200 dark:ring-red-800/60" : "hover:bg-slate-50/50 dark:hover:bg-slate-700/30")}>
-                <td className="p-5 font-semibold text-slate-800 dark:text-slate-200 border-r border-slate-200/50 dark:border-slate-700/50">{item.item_name}</td>
-                <td className="p-5 text-right font-bold text-slate-700 dark:text-slate-300 border-r border-slate-200/50 dark:border-slate-700/50">${item.unit_cost.toFixed(2)}</td>
+                <td className="p-3 border-r border-slate-200/50 dark:border-slate-700/50">
+                  <input
+                    type="text"
+                    value={item.item_name}
+                    onChange={(e) => onUpdateItemDetails?.(item.id, e.target.value, item.unit_cost)}
+                    className={cn(
+                      "w-full bg-transparent border-0 border-b border-transparent hover:border-slate-300 dark:hover:border-slate-600 focus:border-brand-500 focus:ring-0 px-2 py-1.5 font-semibold text-slate-800 dark:text-slate-200 transition-colors",
+                      !onUpdateItemDetails && "pointer-events-none"
+                    )}
+                    placeholder="Item Name"
+                  />
+                </td>
+                <td className="p-3 text-right border-r border-slate-200/50 dark:border-slate-700/50 relative">
+                  <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold">$</div>
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={item.unit_cost}
+                    onChange={(e) => onUpdateItemDetails?.(item.id, item.item_name, parseFloat(e.target.value) || 0)}
+                    className={cn(
+                      "w-24 bg-transparent border-0 border-b border-transparent hover:border-slate-300 dark:hover:border-slate-600 focus:border-brand-500 focus:ring-0 px-2 py-1.5 font-bold text-right text-slate-700 dark:text-slate-300 transition-colors",
+                      !onUpdateItemDetails && "pointer-events-none"
+                    )}
+                  />
+                </td>
                 {users.map((user, idx) => {
                   const userShareObj = item.shares.find(s => s.user_id === user.id);
                   const currentShares = userShareObj ? userShareObj.share_count : 0;

@@ -27,6 +27,10 @@ class BillItemBase(BaseModel):
 class BillItemCreate(BillItemBase):
     pass
 
+class BillItemUpdate(BaseModel):
+    item_name: Optional[str] = None
+    unit_cost: Optional[float] = None
+
 class BillItem(BillItemBase):
     id: int
     bill_id: int

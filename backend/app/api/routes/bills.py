@@ -41,6 +41,18 @@ def add_share_to_item(item_id: int, share: schemas.ItemShareCreate, db: Session 
          raise HTTPException(status_code=404, detail="User not found")
     return crud.bills.add_item_share(db=db, item_id=item_id, share=share)
 
+@router.put("/items/{item_id}", response_model=schemas.BillItem)
+def update_item_details(
+    item_id: int, 
+    item_update: schemas.BillItemUpdate, 
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(deps.get_current_user)
+):
+    db_item = crud.bills.update_bill_item(db=db, item_id=item_id, item_update=item_update)
+    if db_item is None:
+        raise HTTPException(status_code=404, detail="Bill item not found")
+    return db_item
+
 @router.post("/{bill_id}/shares/bulk", response_model=list[schemas.ItemShare])
 def update_shares_bulk(
     bill_id: int, 
