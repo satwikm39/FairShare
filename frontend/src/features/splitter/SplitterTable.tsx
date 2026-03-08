@@ -66,10 +66,10 @@ export function SplitterTable({ bill, group, onUpdateShare }: SplitterTableProps
       <table className="w-full text-left border-collapse min-w-[650px]">
         <thead>
           <tr className="bg-slate-50 dark:bg-slate-900/50 border-b border-slate-200/80 dark:border-slate-700 text-xs text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider">
-            <th className="p-5 w-1/3 rounded-tl-[2rem]">Item Name</th>
-            <th className="p-5 text-right w-1/6">Unit Cost</th>
-            {users.map(user => (
-              <th key={user.id} className="p-5 text-center">
+            <th className="p-5 w-1/3 rounded-tl-[2rem] border-r border-slate-200/50 dark:border-slate-700/50">Item Name</th>
+            <th className="p-5 text-right w-1/6 border-r border-slate-200/50 dark:border-slate-700/50">Unit Cost</th>
+            {users.map((user, idx) => (
+              <th key={user.id} className={cn("p-5 text-center", idx !== users.length - 1 && "border-r border-slate-200/50 dark:border-slate-700/50")}>
                 <div className="flex flex-col items-center gap-1.5 cursor-pointer group">
                   <div className="w-9 h-9 rounded-full bg-brand-100 dark:bg-brand-900/30 text-brand-700 dark:text-brand-300 flex items-center justify-center font-extrabold ring-2 ring-transparent group-hover:ring-brand-200 dark:group-hover:ring-brand-700 transition-all shadow-sm">
                     {user.name.charAt(0).toUpperCase()}
@@ -81,22 +81,25 @@ export function SplitterTable({ bill, group, onUpdateShare }: SplitterTableProps
           </tr>
         </thead>
         <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-          {bill.items.map(item => (
-            <tr key={item.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-700/30 transition-colors group">
-              <td className="p-5 font-semibold text-slate-800 dark:text-slate-200">{item.item_name}</td>
-              <td className="p-5 text-right font-bold text-slate-700 dark:text-slate-300">${item.unit_cost.toFixed(2)}</td>
-              {users.map(user => {
-                const userShareObj = item.shares.find(s => s.user_id === user.id);
-                const currentShares = userShareObj ? userShareObj.share_count : 0;
-                
-                return (
-                  <td key={user.id} className="p-5">
-                    <div className="flex items-center justify-center gap-2.5">
-                      <button 
-                        onClick={() => onUpdateShare(item.id, user.id, currentShares - 1)}
-                        className={cn("p-1.5 rounded-full transition-all active:scale-95", currentShares > 0 ? 'bg-slate-200 dark:bg-slate-600 hover:bg-slate-300 dark:hover:bg-slate-500 text-slate-700 dark:text-slate-200 shadow-sm' : 'bg-slate-100 dark:bg-slate-800 text-slate-300 dark:text-slate-600 cursor-default opacity-50')}
-                        disabled={currentShares === 0}
-                      >
+          {bill.items.map(item => {
+            const totalItemShares = item.shares.reduce((sum, share) => sum + share.share_count, 0);
+            const isZeroShares = totalItemShares === 0;
+            return (
+              <tr key={item.id} className={cn("transition-colors group", isZeroShares ? "bg-red-50/80 dark:bg-red-900/20 hover:bg-red-100/80 dark:hover:bg-red-900/30 ring-1 ring-inset ring-red-200 dark:ring-red-800/60" : "hover:bg-slate-50/50 dark:hover:bg-slate-700/30")}>
+                <td className="p-5 font-semibold text-slate-800 dark:text-slate-200 border-r border-slate-200/50 dark:border-slate-700/50">{item.item_name}</td>
+                <td className="p-5 text-right font-bold text-slate-700 dark:text-slate-300 border-r border-slate-200/50 dark:border-slate-700/50">${item.unit_cost.toFixed(2)}</td>
+                {users.map((user, idx) => {
+                  const userShareObj = item.shares.find(s => s.user_id === user.id);
+                  const currentShares = userShareObj ? userShareObj.share_count : 0;
+                  
+                  return (
+                    <td key={user.id} className={cn("p-5", idx !== users.length - 1 && "border-r border-slate-200/50 dark:border-slate-700/50")}>
+                      <div className="flex items-center justify-center gap-2.5">
+                        <button 
+                          onClick={() => onUpdateShare(item.id, user.id, currentShares - 1)}
+                          className={cn("p-1.5 rounded-full transition-all active:scale-95", currentShares > 0 ? 'bg-slate-200 dark:bg-slate-600 hover:bg-slate-300 dark:hover:bg-slate-500 text-slate-700 dark:text-slate-200 shadow-sm' : 'bg-slate-100 dark:bg-slate-800 text-slate-300 dark:text-slate-600 cursor-default opacity-50')}
+                          disabled={currentShares === 0}
+                        >
                          <Minus className="w-3.5 h-3.5" />
                       </button>
                       <span className="w-4 text-center font-extrabold text-slate-800 dark:text-slate-200 text-sm">{currentShares}</span>
@@ -111,39 +114,40 @@ export function SplitterTable({ bill, group, onUpdateShare }: SplitterTableProps
                 );
               })}
             </tr>
-          ))}
+            );
+          })}
         </tbody>
         <tfoot className="bg-slate-50 dark:bg-slate-900/50 border-t-2 border-slate-200/80 dark:border-slate-700">
           <tr>
-            <td className="p-5 text-right font-extrabold text-slate-700 dark:text-slate-300 rounded-bl-[2rem]">Subtotal</td>
+            <td className="p-5 text-right font-extrabold text-slate-700 dark:text-slate-300 rounded-bl-[2rem] border-r border-slate-200/50 dark:border-slate-700/50">Subtotal</td>
             <td className="p-5 text-right font-extrabold text-slate-800 dark:text-slate-100 border-r border-slate-200/50 dark:border-slate-700/50">${totalBillSubtotal.toFixed(2)}</td>
-            {users.map(user => (
-              <td key={user.id} className="p-5 text-center font-extrabold text-slate-800 dark:text-slate-100">
+            {users.map((user, idx) => (
+              <td key={user.id} className={cn("p-5 text-center font-extrabold text-slate-800 dark:text-slate-100", idx !== users.length - 1 && "border-r border-slate-200/50 dark:border-slate-700/50")}>
                 ${getSubtotalForUser(user.id).toFixed(2)}
               </td>
             ))}
           </tr>
           <tr>
-            <td className="px-5 py-3 text-right font-bold text-slate-500 dark:text-slate-400 text-sm">Tax (8%) + Tip (20%)</td>
+            <td className="px-5 py-3 text-right font-bold text-slate-500 dark:text-slate-400 text-sm border-r border-slate-200/50 dark:border-slate-700/50">Tax (8%) + Tip (20%)</td>
             <td className="px-5 py-3 text-right font-bold text-slate-500 dark:text-slate-400 text-sm border-r border-slate-200/50 dark:border-slate-700/50">+${totalFees.toFixed(2)}</td>
-            {users.map(user => {
+            {users.map((user, idx) => {
               const userSub = getSubtotalForUser(user.id);
               const userShareOfFees = totalBillSubtotal > 0 ? (userSub / totalBillSubtotal) * totalFees : 0;
               return (
-                <td key={user.id} className="px-5 py-3 text-center font-bold text-slate-500 dark:text-slate-400 text-sm">
+                <td key={user.id} className={cn("px-5 py-3 text-center font-bold text-slate-500 dark:text-slate-400 text-sm", idx !== users.length - 1 && "border-r border-slate-200/50 dark:border-slate-700/50")}>
                    +${userShareOfFees.toFixed(2)}
                 </td>
               );
             })}
           </tr>
           <tr className="bg-brand-50/50 dark:bg-brand-900/10">
-            <td className="p-5 text-right font-black text-brand-900 dark:text-brand-300 border-t border-brand-100 dark:border-brand-900/50 rounded-bl-[2rem]">Grand Total</td>
+            <td className="p-5 text-right font-black text-brand-900 dark:text-brand-300 border-t border-brand-100 dark:border-brand-900/50 rounded-bl-[2rem] border-r border-brand-100/50 dark:border-brand-900/30">Grand Total</td>
             <td className="p-5 text-right font-black text-brand-700 dark:text-brand-400 text-xl border-t border-brand-100 dark:border-brand-900/50 border-r border-brand-100/50 dark:border-brand-900/30">${billGrandTotal.toFixed(2)}</td>
-            {users.map(user => {
+            {users.map((user, idx) => {
               const userSub = getSubtotalForUser(user.id);
               const userShareOfFees = totalBillSubtotal > 0 ? (userSub / totalBillSubtotal) * totalFees : 0;
               return (
-                <td key={user.id} className="p-5 text-center font-black text-brand-700 dark:text-brand-400 text-xl border-t border-brand-100 dark:border-brand-900/50">
+                <td key={user.id} className={cn("p-5 text-center font-black text-brand-700 dark:text-brand-400 text-xl border-t border-brand-100 dark:border-brand-900/50", idx !== users.length - 1 && "border-r border-brand-100/50 dark:border-brand-900/30")}>
                   ${(userSub + userShareOfFees).toFixed(2)}
                 </td>
               );

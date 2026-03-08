@@ -25,6 +25,11 @@ export function BillOverview() {
       });
     }
   }, [bill?.group_id]);
+
+  const hasInvalidItems = bill?.items.some(item => {
+    const totalShares = item.shares.reduce((sum, share) => sum + share.share_count, 0);
+    return totalShares === 0;
+  }) ?? false;
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [uploadSuccess, setUploadSuccess] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -74,6 +79,8 @@ export function BillOverview() {
                className="shadow-brand-500/20 gap-2 px-6"
                onClick={saveShares}
                isLoading={isSavingShares}
+               disabled={hasInvalidItems || isSavingShares}
+               title={hasInvalidItems ? "All items must have at least one assigned share." : ""}
              >
                <CheckCircle2 className="w-5 h-5" />
                Save Splits
@@ -155,15 +162,24 @@ export function BillOverview() {
               <SplitterTable bill={bill} group={group} onUpdateShare={updateShare} />
               {hasUnsavedChanges && (
                 <div className="mt-6 flex justify-end">
-                  <Button
-                    variant="primary"
-                    className="shadow-brand-500/20 gap-2 px-8"
-                    onClick={saveShares}
-                    isLoading={isSavingShares}
-                  >
-                    <CheckCircle2 className="w-5 h-5" />
-                    Save Splits
-                  </Button>
+                  <div className="flex items-center gap-4">
+                    {hasInvalidItems && (
+                      <span className="text-sm font-medium text-red-500 dark:text-red-400">
+                        Please assign shares to all items highlighted in red.
+                      </span>
+                    )}
+                    <Button
+                      variant="primary"
+                      className="shadow-brand-500/20 gap-2 px-8"
+                      onClick={saveShares}
+                      isLoading={isSavingShares}
+                      disabled={hasInvalidItems || isSavingShares}
+                      title={hasInvalidItems ? "All items must have at least one assigned share." : ""}
+                    >
+                      <CheckCircle2 className="w-5 h-5" />
+                      Save Splits
+                    </Button>
+                  </div>
                 </div>
               )}
             </>
