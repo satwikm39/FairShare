@@ -1,10 +1,11 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-import models
-from database import engine
+from app.api.main import api_router
+from app.core.database import engine
+from app import models
 
 # Create the database tables
-models.Base.metadata.create_all(bind=engine)
+models.users.Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="Smart Bill Splitter API")
 
@@ -24,3 +25,6 @@ def read_root():
 @app.get("/health")
 def health_check():
     return {"status": "ok"}
+
+# Include the API routers
+app.include_router(api_router)

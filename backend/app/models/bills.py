@@ -1,37 +1,6 @@
 from sqlalchemy import Column, Integer, String, Float, ForeignKey
 from sqlalchemy.orm import relationship
-from database import Base
-
-class User(Base):
-    __tablename__ = "users"
-
-    id = Column(Integer, primary_key=True, index=True)
-    name = Column(String, index=True)
-    email = Column(String, unique=True, index=True)
-
-    # Relationships
-    group_memberships = relationship("GroupMember", back_populates="user")
-    item_shares = relationship("ItemShare", back_populates="user")
-
-class Group(Base):
-    __tablename__ = "groups"
-
-    id = Column(Integer, primary_key=True, index=True)
-    name = Column(String, index=True)
-
-    # Relationships
-    members = relationship("GroupMember", back_populates="group")
-    bills = relationship("Bill", back_populates="group")
-
-class GroupMember(Base):
-    __tablename__ = "group_members"
-
-    user_id = Column(Integer, ForeignKey("users.id"), primary_key=True)
-    group_id = Column(Integer, ForeignKey("groups.id"), primary_key=True)
-
-    # Relationships
-    user = relationship("User", back_populates="group_memberships")
-    group = relationship("Group", back_populates="members")
+from app.core.database import Base
 
 class Bill(Base):
     __tablename__ = "bills"
