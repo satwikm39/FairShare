@@ -32,6 +32,13 @@ def add_group_member(group_id: int, user_id: int, db: Session = Depends(get_db))
         raise HTTPException(status_code=404, detail="User not found")
     return crud.groups.add_user_to_group(db=db, group_id=group_id, user_id=user_id)
 
+@router.get("/{group_id}/bills/", response_model=List[schemas.Bill])
+def read_group_bills(group_id: int, db: Session = Depends(get_db)):
+    db_group = crud.groups.get_group(db, group_id=group_id)
+    if db_group is None:
+        raise HTTPException(status_code=404, detail="Group not found")
+    return crud.bills.get_bills_by_group(db=db, group_id=group_id)
+
 @router.post("/{group_id}/bills/", response_model=schemas.Bill)
 def create_bill_for_group(group_id: int, bill: schemas.BillCreate, db: Session = Depends(get_db)):
     db_group = crud.groups.get_group(db, group_id=group_id)

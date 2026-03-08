@@ -4,6 +4,9 @@ from app import models, schemas
 def get_bill(db: Session, bill_id: int):
     return db.query(models.Bill).filter(models.Bill.id == bill_id).first()
 
+def get_bills_by_group(db: Session, group_id: int):
+    return db.query(models.Bill).filter(models.Bill.group_id == group_id).all()
+
 def create_bill(db: Session, bill: schemas.BillCreate):
     db_bill = models.Bill(**bill.model_dump())
     db.add(db_bill)

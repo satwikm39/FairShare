@@ -10,6 +10,23 @@ export const api = axios.create({
   },
 });
 
+// Request interceptor to attach Firebase JWT token if available
+api.interceptors.request.use(async (config) => {
+  try {
+    const { auth } = await import('../config/firebase');
+    const user = auth.currentUser;
+    if (user) {
+      const token = await user.getIdToken();
+      config.headers['Authorization'] = `Bearer ${token}`;
+    }
+  } catch (err) {
+    console.error('Failed to attach Firebase token', err);
+  }
+  return config;
+}, (error) => {
+  return Promise.reject(error);
+});
+
 // Optionally add interceptors here for auth tokens or global error handling
 api.interceptors.response.use(
   (response) => response,

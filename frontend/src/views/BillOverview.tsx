@@ -1,4 +1,5 @@
 import { useState, useRef } from 'react';
+import { useParams } from 'react-router-dom';
 import { Upload, FileText, CheckCircle2, Loader2 } from 'lucide-react';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
@@ -7,8 +8,10 @@ import { useBill } from '../hooks/useBill';
 import { cn } from '../lib/utils';
 
 export function BillOverview() {
-  // Hardcoded ID 1 for demonstration purposes until routing with real IDs is fully integrated
-  const { bill, isLoading, error, uploadReceipt, updateShare } = useBill(1);
+  const { id } = useParams<{ id: string }>();
+  // Default to 1 if no ID is provided, so it doesn't crash on invalid URLs
+  const billId = parseInt(id || '1', 10);
+  const { bill, isLoading, error, uploadReceipt, updateShare } = useBill(billId);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [uploadSuccess, setUploadSuccess] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);

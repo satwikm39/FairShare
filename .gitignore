@@ -2,6 +2,10 @@ PRD.md
 
 # Environment variables
 .env
+frontend/.env
+backend/.env
+*-firebase-adminsdk-*.json
+firebase-adminsdk.json
 
 # Python
 backend/venv/

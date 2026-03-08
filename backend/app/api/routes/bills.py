@@ -1,8 +1,9 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from app import schemas, crud
+from app import schemas, crud, models
 from app.core.database import get_db
 from fastapi import UploadFile, File
+from app.api import deps
 import app.services.aws as aws_service
 
 router = APIRouter()
@@ -30,7 +31,12 @@ def add_share_to_item(item_id: int, share: schemas.ItemShareCreate, db: Session 
     return crud.bills.add_item_share(db=db, item_id=item_id, share=share)
 
 @router.post("/{bill_id}/upload-receipt", response_model=list[schemas.BillItem])
-async def upload_receipt(bill_id: int, file: UploadFile = File(...), db: Session = Depends(get_db)):
+async def upload_receipt(
+    bill_id: int, 
+    file: UploadFile = File(...), 
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(deps.get_current_user)
+):
     # 1. Check if bill exists
     db_bill = crud.bills.get_bill(db, bill_id=bill_id)
     if db_bill is None:

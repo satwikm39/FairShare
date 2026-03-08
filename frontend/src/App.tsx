@@ -4,17 +4,35 @@ import { Home } from './views/Home';
 import { GroupDashboard } from './views/GroupDashboard';
 import { BillOverview } from './views/BillOverview';
 
+import { GroupDetails } from './views/GroupDetails';
+
+import { Login } from './views/Login';
+import { AuthProvider, useAuth } from './context/AuthContext';
+import { Navigate } from 'react-router-dom';
+
+function PrivateRoute({ children }: { children: React.ReactNode }) {
+  const { currentUser, loading } = useAuth();
+  
+  if (loading) return null;
+  
+  return currentUser ? <>{children}</> : <Navigate to="/login" />;
+}
+
 function App() {
   return (
-    <Router>
-      <Layout>
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/dashboard" element={<GroupDashboard />} />
-          <Route path="/groups/:id" element={<BillOverview />} />
-        </Routes>
-      </Layout>
-    </Router>
+    <AuthProvider>
+      <Router>
+        <Layout>
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/dashboard" element={<PrivateRoute><GroupDashboard /></PrivateRoute>} />
+            <Route path="/groups/:id" element={<PrivateRoute><GroupDetails /></PrivateRoute>} />
+            <Route path="/bills/:id" element={<PrivateRoute><BillOverview /></PrivateRoute>} />
+          </Routes>
+        </Layout>
+      </Router>
+    </AuthProvider>
   );
 }
 

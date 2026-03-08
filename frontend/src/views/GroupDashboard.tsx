@@ -4,18 +4,19 @@ import { Link } from 'react-router-dom';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { useGroups } from '../hooks/useGroups';
+import { CreateGroupModal } from '../components/groups/CreateGroupModal';
 
 export function GroupDashboard() {
   const { groups, isLoading, error, createGroup } = useGroups();
   const [isCreating, setIsCreating] = useState(false);
 
-  const handleCreateGroup = async () => {
-    const name = window.prompt("Enter new group name:");
-    if (!name || name.trim() === "") return;
-    
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const handleCreateGroup = async (name: string) => {
     setIsCreating(true);
     try {
       await createGroup(name);
+      setIsModalOpen(false);
     } catch (e) {
       console.error(e);
       alert("Failed to create group.");
@@ -33,7 +34,7 @@ export function GroupDashboard() {
         </div>
         <Button 
           className="gap-2 px-6 shadow-brand-500/20" 
-          onClick={handleCreateGroup}
+          onClick={() => setIsModalOpen(true)}
           isLoading={isCreating}
         >
           <Plus className="w-5 h-5" />
@@ -74,8 +75,8 @@ export function GroupDashboard() {
             </Link>
           ))}
           
-          <button 
-            onClick={handleCreateGroup}
+            <button 
+            onClick={() => setIsModalOpen(true)}
             disabled={isCreating}
             className="h-full min-h-[200px] rounded-[2rem] border-2 border-dashed border-slate-300 hover:border-brand-400 hover:bg-brand-50/50 transition-all flex flex-col justify-center items-center text-slate-500 hover:text-brand-600 gap-4 group disabled:opacity-50"
           >
@@ -86,6 +87,12 @@ export function GroupDashboard() {
           </button>
         </div>
       )}
+
+      <CreateGroupModal 
+        isOpen={isModalOpen} 
+        onClose={() => setIsModalOpen(false)} 
+        onSubmit={handleCreateGroup} 
+      />
     </div>
   );
 }
