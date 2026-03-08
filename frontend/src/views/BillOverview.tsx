@@ -11,7 +11,7 @@ export function BillOverview() {
   const { id } = useParams<{ id: string }>();
   // Default to 1 if no ID is provided, so it doesn't crash on invalid URLs
   const billId = parseInt(id || '1', 10);
-  const { bill, isLoading, error, fetchBill, uploadReceipt, updateShare, splitAllEqually, updateItemDetails, hasUnsavedChanges, isSavingShares, saveShares } = useBill(billId);
+  const { bill, isLoading, error, fetchBill, uploadReceipt, updateShare, splitAllEqually, updateItemDetails, updateTax, hasUnsavedChanges, isSavingShares, saveShares } = useBill(billId);
   const [group, setGroup] = useState<any>(null);
 
   useEffect(() => {
@@ -69,8 +69,25 @@ export function BillOverview() {
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
           <div>
             <h1 className="text-4xl font-extrabold text-slate-900 dark:text-white tracking-tight">
-              {isLoading && !bill ? 'Loading Bill...' : (group?.name ? `${group.name} Bill` : (bill?.group_id ? `Loading Group...` : 'Bill Details'))}
+              {isLoading && !bill ? 'Loading Bill...' : (bill?.name || (group?.name ? `${group.name} Bill` : 'Bill Details'))}
             </h1>
+            {bill?.date && (
+              <p className="text-sm font-medium text-slate-500 dark:text-slate-400 mt-1 uppercase tracking-wider">
+                {new Date(bill.date).toLocaleDateString(undefined, {
+                  year: 'numeric',
+                  month: 'long',
+                  day: 'numeric'
+                })}
+              </p>
+            )}
+            {bill && (
+              <div className="mt-3 flex items-center gap-2">
+                <span className="text-xl font-bold text-slate-800 dark:text-slate-200">Grand Total:</span>
+                <span className="text-2xl font-black text-brand-600 dark:text-brand-400">
+                  ${bill.grand_total.toFixed(2)}
+                </span>
+              </div>
+            )}
             <p className="text-lg text-slate-500 dark:text-slate-400 mt-2 font-medium">Split your bill items exactly how they were ordered.</p>
           </div>
           {bill && hasUnsavedChanges && (
@@ -165,6 +182,7 @@ export function BillOverview() {
                 onUpdateShare={updateShare} 
                 onSplitAllEqually={splitAllEqually}
                 onUpdateItemDetails={updateItemDetails}
+                onUpdateTax={updateTax}
               />
               {hasUnsavedChanges && (
                 <div className="mt-6 flex justify-end">

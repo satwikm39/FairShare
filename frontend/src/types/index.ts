@@ -34,6 +34,8 @@ export interface BillItem {
 export interface Bill {
   id: number;
   group_id: number;
+  name: string | null;
+  date: string;
   total_tax: number;
   subtotal: number;
   grand_total: number;

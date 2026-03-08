@@ -11,9 +11,10 @@ interface SplitterTableProps {
   onUpdateShare: (itemId: number, userId: number, increment: number) => void;
   onSplitAllEqually?: (userIds: number[]) => void;
   onUpdateItemDetails?: (itemId: number, name: string, cost: number) => void;
+  onUpdateTax?: (tax: number) => void;
 }
 
-export function SplitterTable({ bill, group, onUpdateShare, onSplitAllEqually, onUpdateItemDetails }: SplitterTableProps) {
+export function SplitterTable({ bill, group, onUpdateShare, onSplitAllEqually, onUpdateItemDetails, onUpdateTax }: SplitterTableProps) {
   const getSubtotalForUser = (userId: number) => {
     let subtotal = 0;
     bill.items.forEach(item => {
@@ -31,10 +32,7 @@ export function SplitterTable({ bill, group, onUpdateShare, onSplitAllEqually, o
   };
 
   const totalBillSubtotal = bill.items.reduce((sum, item) => sum + item.unit_cost, 0);
-  // Default tax/tip placeholders until backend supports it
-  const totalTax = bill.total_tax > 0 ? bill.total_tax : totalBillSubtotal * 0.08; 
-  const totalTip = totalBillSubtotal * 0.20; // Placeholder
-  const totalFees = totalTax + totalTip;
+  const totalFees = bill.total_tax;
   const billGrandTotal = totalBillSubtotal + totalFees;
 
   if (bill.items.length === 0) {
@@ -171,8 +169,21 @@ export function SplitterTable({ bill, group, onUpdateShare, onSplitAllEqually, o
             ))}
           </tr>
           <tr>
-            <td className="px-5 py-3 text-right font-bold text-slate-500 dark:text-slate-400 text-sm border-r border-slate-200/50 dark:border-slate-700/50">Tax (8%) + Tip (20%)</td>
-            <td className="px-5 py-3 text-right font-bold text-slate-500 dark:text-slate-400 text-sm border-r border-slate-200/50 dark:border-slate-700/50">+${totalFees.toFixed(2)}</td>
+            <td className="px-5 py-3 text-right font-bold text-slate-500 dark:text-slate-400 text-sm border-r border-slate-200/50 dark:border-slate-700/50">Tax / Fees</td>
+            <td className="px-5 py-3 text-right font-bold text-slate-500 dark:text-slate-400 text-sm border-r border-slate-200/50 dark:border-slate-700/50 relative">
+              <div className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-400">$</div>
+              <input
+                type="number"
+                min="0"
+                step="0.01"
+                value={bill.total_tax}
+                onChange={(e) => onUpdateTax?.(parseFloat(e.target.value) || 0)}
+                className={cn(
+                  "w-20 bg-transparent border-0 border-b border-transparent hover:border-slate-300 dark:hover:border-slate-600 focus:border-brand-500 focus:ring-0 px-2 py-0.5 text-right transition-colors",
+                  !onUpdateTax && "pointer-events-none"
+                )}
+              />
+            </td>
             {users.map((user, idx) => {
               const userSub = getSubtotalForUser(user.id);
               const userShareOfFees = totalBillSubtotal > 0 ? (userSub / totalBillSubtotal) * totalFees : 0;

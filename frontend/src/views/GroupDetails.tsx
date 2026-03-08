@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { Plus, Receipt, Loader2, ArrowLeft, Trash2 } from 'lucide-react';
+import { Plus, Receipt, Loader2, ArrowLeft, Trash2, Edit2, Calendar, Check, X } from 'lucide-react';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { useGroupDetails } from '../hooks/useGroupDetails';
@@ -12,12 +12,73 @@ export function GroupDetails() {
   const { id } = useParams<{ id: string }>();
   const groupId = parseInt(id || '0', 10);
   const navigate = useNavigate();
-  const { group, bills, isLoading, error, deleteBill } = useGroupDetails(groupId);
+  const { group, bills, isLoading, error, refresh, deleteBill } = useGroupDetails(groupId);
   const [isCreatingBill, setIsCreatingBill] = useState(false);
   const [isAddMemberModalOpen, setIsAddMemberModalOpen] = useState(false);
   
   const [billToDelete, setBillToDelete] = useState<number | null>(null);
   const [isDeletingBill, setIsDeletingBill] = useState(false);
+
+  // Editing Bill State
+  const [editingBillId, setEditingBillId] = useState<number | null>(null);
+  const [editNameValue, setEditNameValue] = useState('');
+  const [editDateValue, setEditDateValue] = useState('');
+  const [isSavingName, setIsSavingName] = useState(false);
+
+  const startEditingBill = (e: React.MouseEvent, billId: number, currentName: string | null, currentDate: string | null) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setEditingBillId(billId);
+    setEditNameValue(currentName || '');
+    if (currentDate) {
+      try {
+        const d = new Date(currentDate);
+        setEditDateValue(d.toISOString().split('T')[0]);
+      } catch (err) {
+        setEditDateValue('');
+      }
+    } else {
+      setEditDateValue('');
+    }
+  };
+
+  const cancelEditingBill = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setEditingBillId(null);
+    setEditNameValue('');
+    setEditDateValue('');
+  };
+
+  const saveBillName = async (e: React.MouseEvent, billId: number) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    // Default to the original name if they save an empty string, or we could allow it
+    if (editNameValue.trim() === '') {
+      cancelEditingBill(e);
+      return;
+    }
+    
+    setIsSavingName(true);
+    try {
+      const { billsService } = await import('../services/bills');
+      const updateData: any = { name: editNameValue.trim() };
+      if (editDateValue) {
+        // Convert local date (YYYY-MM-DD) to ISO string expected by backend
+        updateData.date = new Date(`${editDateValue}T00:00:00`).toISOString();
+      }
+      await billsService.updateBill(billId, updateData);
+      // In a real app we would update the local cache, but we have a refresh helper
+      await refresh();
+      setEditingBillId(null);
+    } catch (err) {
+      console.error(err);
+      alert('Failed to update bill details.');
+    } finally {
+      setIsSavingName(false);
+    }
+  };
 
   const handleCreateBill = async () => {
     setIsCreatingBill(true);
@@ -108,9 +169,9 @@ export function GroupDetails() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="flex flex-col gap-4">
         {bills.length === 0 ? (
-          <div className="col-span-full text-center p-16 bg-slate-50 dark:bg-slate-900/50 rounded-3xl border border-dashed border-slate-300 dark:border-slate-700">
+          <div className="text-center p-16 bg-slate-50 dark:bg-slate-900/50 rounded-3xl border border-dashed border-slate-300 dark:border-slate-700">
             <Receipt className="w-12 h-12 text-slate-300 dark:text-slate-600 mx-auto mb-4" />
             <h3 className="text-xl font-bold text-slate-700 dark:text-slate-300">No bills yet</h3>
             <p className="text-slate-500 dark:text-slate-400 mt-2">Create a new bill to start splitting expenses.</p>
@@ -118,34 +179,115 @@ export function GroupDetails() {
         ) : (
           bills.map(bill => (
             <div key={bill.id} className="relative group/bill">
-              <Link to={`/bills/${bill.id}`} className="block h-full">
-                <Card className="h-full border border-slate-200/60 dark:border-slate-700/50 shadow-md group-hover/bill:shadow-2xl group-hover/bill:border-brand-200 dark:group-hover/bill:border-brand-500/50 transition-all duration-300">
-                  <div className="flex flex-col h-full justify-between gap-6">
-                    <div>
-                      <h3 className="text-2xl font-bold text-slate-800 dark:text-slate-100 group-hover/bill:text-brand-600 dark:group-hover/bill:text-brand-400 transition-colors">
-                        Bill #{bill.id}
-                      </h3>
-                      <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400 mt-3 font-medium">
-                        <Receipt className="w-4 h-4" />
-                        <span>{bill.items?.length || 0} items</span>
+              <Link to={`/bills/${bill.id}`} className="block">
+                <Card className="border border-slate-200/60 dark:border-slate-700/50 shadow-sm hover:shadow-md hover:border-brand-200 dark:hover:border-brand-500/50 transition-all duration-300 py-4 px-6">
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                    
+                    {/* Bill Info Section */}
+                    <div className="flex-1 min-w-0">
+                      
+                      {/* Name and Date Editing logic */}
+                      {editingBillId === bill.id ? (
+                        <div className="flex flex-col gap-2 mb-2" onClick={(e) => e.preventDefault()}>
+                          <div className="flex items-center gap-2">
+                            <input 
+                              type="text"
+                              value={editNameValue}
+                              onChange={(e) => setEditNameValue(e.target.value)}
+                              className="bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded px-2 py-1 text-lg font-bold text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-500/50 w-full max-w-xs"
+                              placeholder="Bill Name"
+                              autoFocus
+                            />
+                            <button
+                              onClick={(e) => saveBillName(e, bill.id)}
+                              disabled={isSavingName}
+                              className="p-1.5 text-green-600 hover:bg-green-50 dark:hover:bg-green-900/30 rounded shrink-0"
+                              title="Save details"
+                            >
+                              {isSavingName ? <Loader2 className="w-5 h-5 animate-spin" /> : <Check className="w-5 h-5" />}
+                            </button>
+                            <button
+                              onClick={cancelEditingBill}
+                              disabled={isSavingName}
+                              className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800 rounded shrink-0"
+                              title="Cancel"
+                            >
+                              <X className="w-5 h-5" />
+                            </button>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <input
+                              type="date"
+                              value={editDateValue}
+                              onChange={(e) => setEditDateValue(e.target.value)}
+                              onClick={(e) => {
+                                try {
+                                  if ('showPicker' in HTMLInputElement.prototype) {
+                                    (e.target as HTMLInputElement).showPicker();
+                                  }
+                                } catch (err) {}
+                              }}
+                              className="bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded px-2 py-1 text-sm font-medium text-slate-600 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-brand-500/50 w-full max-w-xs cursor-pointer"
+                            />
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-2 mb-1">
+                          <h3 className="text-xl font-bold text-slate-800 dark:text-slate-100 group-hover/bill:text-brand-600 dark:group-hover/bill:text-brand-400 transition-colors truncate">
+                            {bill.name || `Bill #${bill.id}`}
+                          </h3>
+                          <button
+                            onClick={(e) => startEditingBill(e, bill.id, bill.name, bill.date)}
+                            className="p-1.5 text-slate-400 hover:text-brand-600 hover:bg-brand-50 dark:hover:bg-brand-900/30 rounded opacity-0 group-hover/bill:opacity-100 transition-opacity"
+                            title="Edit bill details"
+                          >
+                            <Edit2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      )}
+
+                      {/* Items and Date metadata */}
+                      <div className="flex items-center gap-4 text-slate-500 dark:text-slate-400 text-sm font-medium">
+                        <span className="flex items-center gap-1.5">
+                          <Receipt className="w-4 h-4" />
+                          {bill.items?.length || 0} items
+                        </span>
+                        
+                        {bill.date && (
+                          <span className="flex items-center gap-1.5">
+                            <Calendar className="w-4 h-4" />
+                            {new Date(bill.date).toLocaleDateString(undefined, {
+                              year: 'numeric',
+                              month: 'short',
+                              day: 'numeric'
+                            })}
+                          </span>
+                        )}
                       </div>
                     </div>
-                    <div className="text-xl font-bold text-brand-600 dark:text-brand-400">
-                      ${bill.grand_total.toFixed(2)}
+
+                    {/* Grand Total Value */}
+                    <div className="flex items-center gap-6 sm:pr-10">
+                      <div className="text-2xl font-black text-brand-600 dark:text-brand-400">
+                        ${bill.grand_total.toFixed(2)}
+                      </div>
                     </div>
+
                   </div>
                 </Card>
               </Link>
+              
+              {/* Delete Button */}
               <button
                 onClick={(e) => {
                   e.preventDefault();
                   e.stopPropagation();
                   setBillToDelete(bill.id);
                 }}
-                className="absolute top-4 right-4 p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-full transition-colors z-10 opacity-0 group-hover/bill:opacity-100"
+                className="absolute top-1/2 -translate-y-1/2 right-4 p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/30 rounded transition-colors z-10 opacity-0 group-hover/bill:opacity-100"
                 aria-label="Delete bill"
               >
-                <Trash2 className="w-4 h-4" />
+                <Trash2 className="w-5 h-5" />
               </button>
             </div>
           ))

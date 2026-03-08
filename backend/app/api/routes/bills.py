@@ -15,6 +15,20 @@ def read_bill(bill_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Bill not found")
     return db_bill
 
+@router.put("/{bill_id}", response_model=schemas.Bill)
+def update_bill_details(
+    bill_id: int, 
+    bill_update: schemas.BillUpdate, 
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(deps.get_current_user)
+):
+    db_bill = crud.bills.get_bill(db, bill_id=bill_id)
+    if db_bill is None:
+        raise HTTPException(status_code=404, detail="Bill not found")
+    
+    update_data = bill_update.model_dump(exclude_unset=True)
+    return crud.bills.update_bill(db=db, bill_id=bill_id, **update_data)
+
 @router.delete("/{bill_id}", status_code=204)
 def delete_bill(
     bill_id: int, 

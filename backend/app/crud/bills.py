@@ -31,8 +31,17 @@ def recalculate_bill_totals(db: Session, bill_id: int):
     items = db.query(models.BillItem).filter(models.BillItem.bill_id == bill_id).all()
     subtotal = sum(item.unit_cost for item in items)
     
+    # Check if a custom tax was provided from OCR (or user input), otherwise use 8% placeholder
+    tax = db_bill.total_tax if db_bill.total_tax > 0 else (subtotal * 0.08)
+    # Applying the 20% tip placeholder matching frontend logic
+    tip = subtotal * 0.20
+    
     db_bill.subtotal = subtotal
-    db_bill.grand_total = subtotal + db_bill.total_tax
+    # Save the explicitly derived tax back if it was dynamic
+    if db_bill.total_tax == 0 and tax > 0:
+        db_bill.total_tax = tax
+    
+    db_bill.grand_total = subtotal + tax + tip
     
     db.commit()
     db.refresh(db_bill)

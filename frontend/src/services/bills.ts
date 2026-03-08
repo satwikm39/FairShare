@@ -18,6 +18,14 @@ export const billsService = {
   },
 
   /**
+   * Update a bill's details (e.g. name, date, total_tax)
+   */
+  updateBill: async (billId: number, data: { name?: string | null; date?: string; total_tax?: number }): Promise<Bill> => {
+    const response = await api.put<Bill>(`/bills/${billId}`, data);
+    return response.data;
+  },
+
+  /**
    * Upload a receipt image for OCR processing via AWS Textract
    */
   uploadReceipt: async (billId: number, file: File): Promise<BillItem[]> => {

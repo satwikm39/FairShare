@@ -10,6 +10,7 @@ export function useBill(initialBillId: number) {
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [isSavingShares, setIsSavingShares] = useState(false);
   const [modifiedItems, setModifiedItems] = useState<Record<number, { item_name?: string; unit_cost?: number }>>({});
+  const [modifiedTax, setModifiedTax] = useState<number | null>(null);
 
   const fetchBill = useCallback(async (id: number = initialBillId) => {
     setIsLoading(true);
@@ -122,6 +123,12 @@ export function useBill(initialBillId: number) {
     setHasUnsavedChanges(true);
   };
 
+  const updateTax = (tax: number) => {
+    setBill(prev => prev ? { ...prev, total_tax: tax } : null);
+    setModifiedTax(tax);
+    setHasUnsavedChanges(true);
+  };
+
   const saveShares = async () => {
     if (!bill) return;
     setIsSavingShares(true);
@@ -143,9 +150,16 @@ export function useBill(initialBillId: number) {
         billsService.updateItem(Number(itemId), data)
       );
 
-      await Promise.all([sharePromise, ...itemUpdatePromises]);
+      // 3. Save modified tax
+      let taxPromise = Promise.resolve() as Promise<any>;
+      if (modifiedTax !== null) {
+        taxPromise = billsService.updateBill(bill.id, { total_tax: modifiedTax });
+      }
+
+      await Promise.all([sharePromise, ...itemUpdatePromises, taxPromise]);
 
       setModifiedItems({});
+      setModifiedTax(null);
       setHasUnsavedChanges(false);
       
       // Optionally refetch to get real IDs, but not strictly necessary since UI works fine
@@ -169,6 +183,18 @@ export function useBill(initialBillId: number) {
     }
   };
 
+  const updateBillDetails = async (name: string | null, date: string) => {
+    if (!bill) return;
+    try {
+      const updatedBill = await billsService.updateBill(bill.id, { name, date });
+      setBill(prev => prev ? { ...prev, name: updatedBill.name, date: updatedBill.date } : null);
+      return updatedBill;
+    } catch (err: any) {
+      setError(err.response?.data?.detail || err.message || 'Failed to update bill details');
+      throw err;
+    }
+  };
+
   return {
     bill,
     isLoading,
@@ -180,8 +206,10 @@ export function useBill(initialBillId: number) {
     updateShare,
     splitAllEqually,
     updateItemDetails,
+    updateTax,
     saveShares,
     deleteBill,
+    updateBillDetails,
     setBill
   };
 }

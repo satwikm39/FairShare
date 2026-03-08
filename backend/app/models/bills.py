@@ -1,12 +1,15 @@
-from sqlalchemy import Column, Integer, String, Float, ForeignKey
+from sqlalchemy import Column, Integer, String, Float, ForeignKey, DateTime
 from sqlalchemy.orm import relationship
 from app.core.database import Base
+from datetime import datetime
 
 class Bill(Base):
     __tablename__ = "bills"
 
     id = Column(Integer, primary_key=True, index=True)
     group_id = Column(Integer, ForeignKey("groups.id"))
+    name = Column(String, nullable=True)
+    date = Column(DateTime, default=datetime.utcnow)
     total_tax = Column(Float, default=0.0)
     subtotal = Column(Float, default=0.0)
     grand_total = Column(Float, default=0.0)

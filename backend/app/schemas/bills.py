@@ -1,5 +1,6 @@
 from pydantic import BaseModel
 from typing import List, Optional
+from datetime import datetime
 
 class ItemShareBase(BaseModel):
     user_id: int
@@ -40,10 +41,16 @@ class BillItem(BillItemBase):
         from_attributes = True
 
 class BillBase(BaseModel):
+    name: Optional[str] = None
+    date: Optional[datetime] = None
     total_tax: float = 0.0
     subtotal: float = 0.0
     grand_total: float = 0.0
     receipt_image_url: Optional[str] = None
+
+class BillUpdate(BaseModel):
+    name: Optional[str] = None
+    date: Optional[datetime] = None
 
 class BillCreate(BillBase):
     group_id: int
