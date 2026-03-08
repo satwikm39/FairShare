@@ -80,6 +80,28 @@ export function useBill(initialBillId: number) {
     setHasUnsavedChanges(true);
   };
 
+  const splitAllEqually = (userIds: number[]) => {
+    setBill(prev => {
+      if (!prev) return null;
+      
+      const updatedItems = prev.items.map(item => {
+        const newShares = userIds.map((userId, index) => ({
+          id: Date.now() + item.id + index, // temporary ID for frontend tracking
+          item_id: item.id,
+          user_id: userId,
+          share_count: 1
+        }));
+        return {
+          ...item,
+          shares: newShares
+        };
+      });
+
+      return { ...prev, items: updatedItems };
+    });
+    setHasUnsavedChanges(true);
+  };
+
   const saveShares = async () => {
     if (!bill) return;
     setIsSavingShares(true);
@@ -127,6 +149,7 @@ export function useBill(initialBillId: number) {
     fetchBill,
     uploadReceipt,
     updateShare,
+    splitAllEqually,
     saveShares,
     deleteBill,
     setBill

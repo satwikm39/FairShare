@@ -1,5 +1,6 @@
 import { Card } from '../../components/ui/Card';
-import { Minus, Plus, Loader2 } from 'lucide-react';
+import { Minus, Plus, Loader2, Divide } from 'lucide-react';
+import { Button } from '../../components/ui/Button';
 import { cn } from '../../lib/utils';
 import type { Bill, Group } from '../../types';
 import { useAuth } from '../../context/AuthContext';
@@ -8,9 +9,10 @@ interface SplitterTableProps {
   bill: Bill;
   group?: Group | null;
   onUpdateShare: (itemId: number, userId: number, increment: number) => void;
+  onSplitAllEqually?: (userIds: number[]) => void;
 }
 
-export function SplitterTable({ bill, group, onUpdateShare }: SplitterTableProps) {
+export function SplitterTable({ bill, group, onUpdateShare, onSplitAllEqually }: SplitterTableProps) {
   const getSubtotalForUser = (userId: number) => {
     let subtotal = 0;
     bill.items.forEach(item => {
@@ -63,10 +65,26 @@ export function SplitterTable({ bill, group, onUpdateShare }: SplitterTableProps
 
   return (
     <Card className="overflow-x-auto border-slate-200/60 dark:border-slate-700/50 shadow-lg" noPadding>
+      <div className="p-4 border-b border-slate-200/80 dark:border-slate-700 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white dark:bg-slate-900 rounded-t-[2rem]">
+        <div>
+          <h3 className="font-bold text-slate-800 dark:text-slate-100">Bill Items</h3>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Edit shares or use auto-split.</p>
+        </div>
+        {onSplitAllEqually && (
+          <Button 
+            variant="secondary" 
+            onClick={() => onSplitAllEqually(users.map(u => u.id))} 
+            className="gap-2 shadow-sm text-xs h-9 px-4"
+          >
+            <Divide className="w-4 h-4 text-brand-500 dark:text-brand-400" />
+            Equally Split All
+          </Button>
+        )}
+      </div>
       <table className="w-full text-left border-collapse min-w-[650px]">
         <thead>
           <tr className="bg-slate-50 dark:bg-slate-900/50 border-b border-slate-200/80 dark:border-slate-700 text-xs text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider">
-            <th className="p-5 w-1/3 rounded-tl-[2rem] border-r border-slate-200/50 dark:border-slate-700/50">Item Name</th>
+            <th className="p-5 w-1/3 border-r border-slate-200/50 dark:border-slate-700/50">Item Name</th>
             <th className="p-5 text-right w-1/6 border-r border-slate-200/50 dark:border-slate-700/50">Unit Cost</th>
             {users.map((user, idx) => (
               <th key={user.id} className={cn("p-5 text-center", idx !== users.length - 1 && "border-r border-slate-200/50 dark:border-slate-700/50")}>

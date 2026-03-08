@@ -11,7 +11,7 @@ export function BillOverview() {
   const { id } = useParams<{ id: string }>();
   // Default to 1 if no ID is provided, so it doesn't crash on invalid URLs
   const billId = parseInt(id || '1', 10);
-  const { bill, isLoading, error, fetchBill, uploadReceipt, updateShare, hasUnsavedChanges, isSavingShares, saveShares } = useBill(billId);
+  const { bill, isLoading, error, fetchBill, uploadReceipt, updateShare, splitAllEqually, hasUnsavedChanges, isSavingShares, saveShares } = useBill(billId);
   const [group, setGroup] = useState<any>(null);
 
   useEffect(() => {
@@ -159,7 +159,12 @@ export function BillOverview() {
             </Card>
           ) : bill ? (
             <>
-              <SplitterTable bill={bill} group={group} onUpdateShare={updateShare} />
+              <SplitterTable 
+                bill={bill} 
+                group={group} 
+                onUpdateShare={updateShare} 
+                onSplitAllEqually={splitAllEqually} 
+              />
               {hasUnsavedChanges && (
                 <div className="mt-6 flex justify-end">
                   <div className="flex items-center gap-4">
