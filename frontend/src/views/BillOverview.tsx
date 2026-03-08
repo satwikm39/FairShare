@@ -53,7 +53,7 @@ export function BillOverview() {
               type="file" 
               ref={fileInputRef} 
               className="hidden" 
-              accept="image/*"
+              accept="image/jpeg, image/png, application/pdf"
               onChange={handleFileSelect}
             />
 
@@ -72,9 +72,9 @@ export function BillOverview() {
               </div>
               <div>
                 <p className={cn("font-semibold", selectedFile ? "text-brand-700" : "text-slate-700 group-hover:text-brand-700")}>
-                  {selectedFile ? selectedFile.name : "Click to select image"}
+                  {selectedFile ? selectedFile.name : "Click to select file"}
                 </p>
-                {!selectedFile && <p className="text-xs text-slate-500 mt-1">S3 & AWS Textract</p>}
+                {!selectedFile && <p className="text-xs text-slate-500 mt-1">JPEG, PNG, or PDF</p>}
               </div>
             </div>
 
@@ -105,13 +105,21 @@ export function BillOverview() {
         </div>
         
         <div className="lg:col-span-3">
-          {bill ? (
-            <SplitterTable bill={bill} onUpdateShare={updateShare} />
-          ) : (
+          {isLoading && !bill ? (
             <Card className="border-slate-200/60 shadow-lg text-center p-12 text-slate-500">
               <div className="flex flex-col items-center justify-center gap-4">
                 <Loader2 className="w-8 h-8 animate-spin text-brand-500" />
                 <p>Loading bill details...</p>
+              </div>
+            </Card>
+          ) : bill ? (
+            <SplitterTable bill={bill} onUpdateShare={updateShare} />
+          ) : (
+            <Card className="border-slate-200/60 shadow-lg text-center p-12 text-slate-500">
+              <div className="flex flex-col items-center justify-center gap-4">
+                <FileText className="w-12 h-12 text-slate-300" />
+                <p className="font-semibold text-lg text-slate-700">No Bill Found</p>
+                <p>Upload a receipt to start splitting the bill.</p>
               </div>
             </Card>
           )}
