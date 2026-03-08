@@ -21,15 +21,38 @@ export function useBill(initialBillId: number) {
   }, [initialBillId]);
 
   const uploadReceipt = async (file: File) => {
-    if (!bill) return;
+    // If bill state isn't loaded yet, try to use the initial ID passed to the hook
+    const targetBillId = bill?.id || initialBillId;
+    
+    if (!targetBillId) {
+      console.log("DEBUG: uploadReceipt hook called but `billId` is missing");
+      return;
+    }
+    
+    console.log(`DEBUG: uploadReceipt hook starting for bill ID ${targetBillId}`);
     setIsLoading(true);
     setError(null);
     try {
-      const newItems = await billsService.uploadReceipt(bill.id, file);
+      console.log("DEBUG: Calling billsService.uploadReceipt...");
+      const newItems = await billsService.uploadReceipt(targetBillId, file);
+      console.log("DEBUG: billsService returned newItems:", newItems);
+      
+      if (!Array.isArray(newItems) || newItems.length === 0) {
+        console.warn("DEBUG WARNING: newItems is empty or not an array!");
+      }
+
       // Optimistically update the bill with the new items
       setBill(prev => prev ? { ...prev, items: [...prev.items, ...newItems] } : null);
+      
+      // If the bill was completely null before, we might need a full refetch here in a future PR,
+      // but typical flow means the bill was just loading. A refetch solves it robustly.
+      if (!bill) {
+        await fetchBill(targetBillId);
+      }
+      
       return newItems;
     } catch (err: any) {
+      console.error("DEBUG ERR: useBill uploadReceipt caught an error:", err);
       setError(err.response?.data?.detail || err.message || 'Failed to upload receipt');
       throw err;
     } finally {

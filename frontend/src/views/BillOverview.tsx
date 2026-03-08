@@ -24,14 +24,20 @@ export function BillOverview() {
   };
 
   const handleUpload = async () => {
-    if (!selectedFile) return;
+    if (!selectedFile) {
+      console.log("DEBUG: handleUpload called but no selectedFile");
+      return;
+    }
     
+    console.log(`DEBUG: handleUpload starting for bill_id: ${billId}, file: ${selectedFile.name}`);
     try {
-      await uploadReceipt(selectedFile);
+      console.log("DEBUG: Calling uploadReceipt hook...");
+      const newItems = await uploadReceipt(selectedFile);
+      console.log("DEBUG: uploadReceipt hook completed successfully. Returned items:", newItems);
       setUploadSuccess(true);
       setSelectedFile(null); // Clear selected file after successful upload
     } catch (err) {
-      console.error(err);
+      console.error("DEBUG ERR: handleUpload caught an error:", err);
       // useBill hook manages the error state displayed in the UI
     }
   };

@@ -37,6 +37,7 @@ async def upload_receipt(
     db: Session = Depends(get_db),
     current_user: models.User = Depends(deps.get_current_user)
 ):
+    print(f"DEBUG: Upload route called for bill_id: {bill_id}")
     # 1. Check if bill exists
     db_bill = crud.bills.get_bill(db, bill_id=bill_id)
     if db_bill is None:
@@ -45,27 +46,38 @@ async def upload_receipt(
     # 2. Upload file to S3
     try:
         contents = await file.read()
-        s3_key = aws_service.upload_image_to_s3(contents, file.filename)
+        s3_key = aws_service.upload_image_to_s3(contents, file.filename, content_type=file.content_type)
+        print(f"DEBUG: S3 Upload success. Key: {s3_key}")
     except Exception as e:
+         print(f"DEBUG ERROR: S3 Upload failed: {e}")
          raise HTTPException(status_code=500, detail=f"Failed to upload image to S3: {str(e)}")
 
     # Update bill's receipt_image_url
-    crud.bills.update_bill(db=db, bill_id=bill_id, receipt_image_url=s3_key)
+    if s3_key:
+        crud.bills.update_bill(db=db, bill_id=bill_id, receipt_image_url=s3_key)
 
     # 3. Analyze with Textract
     try:
+        print(f"DEBUG: Calling Textract service")
         parsed_items = aws_service.analyze_receipt_with_textract(s3_key)
+        print(f"DEBUG: Textract returned {len(parsed_items)} items")
     except Exception as e:
+         print(f"DEBUG ERROR: Textract failed: {e}")
          raise HTTPException(status_code=500, detail=f"Failed to parse image with Textract: {str(e)}")
 
     # 4. Save items to DB
     saved_items = []
     for item_data in parsed_items:
-        item_create = schemas.BillItemCreate(
-            item_name=item_data["item_name"],
-            unit_cost=item_data["unit_cost"]
-        )
-        saved_item = crud.bills.create_bill_item(db=db, bill_id=bill_id, item=item_create)
-        saved_items.append(saved_item)
+        try:
+            item_create = schemas.BillItemCreate(
+                item_name=item_data["item_name"],
+                unit_cost=item_data["unit_cost"]
+            )
+            saved_item = crud.bills.create_bill_item(db=db, bill_id=bill_id, item=item_create)
+            saved_items.append(saved_item)
+            print(f"DEBUG: Successfully saved item to DB: {saved_item.id}")
+        except Exception as e:
+            print(f"DEBUG ERROR: Failed to save item to DB: {e}")
 
+    print(f"DEBUG: Returning {len(saved_items)} items to frontend")
     return saved_items
