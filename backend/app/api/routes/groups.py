@@ -8,12 +8,21 @@ from typing import List
 router = APIRouter()
 
 @router.post("/", response_model=schemas.Group)
-def create_group(group: schemas.GroupCreate, db: Session = Depends(get_db)):
-    return crud.groups.create_group(db=db, group=group)
+def create_group(
+    group: schemas.GroupCreate, 
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(deps.get_current_user)
+):
+    return crud.groups.create_group(db=db, group=group, user_id=current_user.id)
 
 @router.get("/", response_model=List[schemas.Group])
-def read_groups(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
-    groups = crud.groups.get_groups(db, skip=skip, limit=limit)
+def read_groups(
+    skip: int = 0, 
+    limit: int = 100, 
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(deps.get_current_user)
+):
+    groups = crud.groups.get_groups_for_user(db, user_id=current_user.id, skip=skip, limit=limit)
     return groups
 
 @router.get("/{group_id}", response_model=schemas.Group)
