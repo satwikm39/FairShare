@@ -1,22 +1,31 @@
 import os
+import json
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app import crud, schemas, models
 import firebase_admin
-from firebase_admin import auth
+from firebase_admin import auth, credentials
 
 security = HTTPBearer()
 
 # Initialize Firebase Admin
 if not firebase_admin._apps:
     try:
-        # Relies on GOOGLE_APPLICATION_CREDENTIALS in env, or falls back gracefully
-        firebase_admin.initialize_app()
-        print("✅ Firebase initialized successfully")
+        service_account_json = os.environ.get("FIREBASE_SERVICE_ACCOUNT_JSON")
+        if service_account_json:
+            # Cloud deployment: credentials stored as JSON string in env var
+            service_account_info = json.loads(service_account_json)
+            cred = credentials.Certificate(service_account_info)
+            firebase_admin.initialize_app(cred)
+            print("✅ Firebase initialized from FIREBASE_SERVICE_ACCOUNT_JSON env var")
+        else:
+            # Local development: relies on GOOGLE_APPLICATION_CREDENTIALS file path
+            firebase_admin.initialize_app()
+            print("✅ Firebase initialized from GOOGLE_APPLICATION_CREDENTIALS")
     except Exception as e:
-        print(f"❌ Firebase Admin initialization failed: {e}. Set GOOGLE_APPLICATION_CREDENTIALS.")
+        print(f"❌ Firebase Admin initialization failed: {e}")
 
 def get_current_user(
     credentials: HTTPAuthorizationCredentials = Depends(security),
