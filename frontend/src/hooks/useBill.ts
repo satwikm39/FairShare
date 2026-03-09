@@ -195,6 +195,19 @@ export function useBill(initialBillId: number) {
     }
   };
 
+  const addItem = async (itemName: string, unitCost: number) => {
+    if (!bill) return;
+    try {
+      const newItem = await billsService.addItem(bill.id, { item_name: itemName, unit_cost: unitCost });
+      // Append to local state immediately
+      setBill(prev => prev ? { ...prev, items: [...prev.items, newItem] } : null);
+      return newItem;
+    } catch (err: any) {
+      setError(err.response?.data?.detail || err.message || 'Failed to add item');
+      throw err;
+    }
+  };
+
   return {
     bill,
     isLoading,
@@ -207,6 +220,7 @@ export function useBill(initialBillId: number) {
     splitAllEqually,
     updateItemDetails,
     updateTax,
+    addItem,
     saveShares,
     deleteBill,
     updateBillDetails,

@@ -80,4 +80,15 @@ export const billsService = {
     const response = await api.put<BillItem>(`/bills/items/${itemId}`, data);
     return response.data;
   },
+
+  /**
+   * Manually add a new item to a bill
+   */
+  addItem: async (
+    billId: number,
+    item: { item_name: string; unit_cost: number }
+  ): Promise<BillItem> => {
+    const response = await api.post<BillItem>(`/bills/${billId}/items/`, item);
+    return response.data;
+  },
 };

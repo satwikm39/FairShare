@@ -1,5 +1,6 @@
+import { useState } from 'react';
 import { Card } from '../../components/ui/Card';
-import { Minus, Plus, Loader2, Divide } from 'lucide-react';
+import { Minus, Plus, Loader2, Divide, PlusCircle, Check, X } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
 import { cn } from '../../lib/utils';
 import type { Bill, Group } from '../../types';
@@ -12,9 +13,32 @@ interface SplitterTableProps {
   onSplitAllEqually?: (userIds: number[]) => void;
   onUpdateItemDetails?: (itemId: number, name: string, cost: number) => void;
   onUpdateTax?: (tax: number) => void;
+  onAddItem?: (name: string, cost: number) => Promise<void>;
 }
 
-export function SplitterTable({ bill, group, onUpdateShare, onSplitAllEqually, onUpdateItemDetails, onUpdateTax }: SplitterTableProps) {
+export function SplitterTable({ bill, group, onUpdateShare, onSplitAllEqually, onUpdateItemDetails, onUpdateTax, onAddItem }: SplitterTableProps) {
+  const [showAddRow, setShowAddRow] = useState(false);
+  const [newItemName, setNewItemName] = useState('');
+  const [newItemCost, setNewItemCost] = useState('');
+  const [isAddingItem, setIsAddingItem] = useState(false);
+
+  const handleAddItem = async () => {
+    if (!onAddItem || !newItemName.trim() || !newItemCost) return;
+    setIsAddingItem(true);
+    try {
+      await onAddItem(newItemName.trim(), parseFloat(newItemCost) || 0);
+      setNewItemName('');
+      setNewItemCost('');
+      setShowAddRow(false);
+    } finally {
+      setIsAddingItem(false);
+    }
+  };
+
+  const handleAddRowKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') handleAddItem();
+    if (e.key === 'Escape') { setShowAddRow(false); setNewItemName(''); setNewItemCost(''); }
+  };
   const getSubtotalForUser = (userId: number) => {
     let subtotal = 0;
     bill.items.forEach(item => {
@@ -157,6 +181,65 @@ export function SplitterTable({ bill, group, onUpdateShare, onSplitAllEqually, o
             </tr>
             );
           })}
+          {/* Add Item Row */}
+          {onAddItem && !showAddRow && (
+            <tr>
+              <td colSpan={2 + (bill.group_id ? 0 : 0)} className="p-3">
+                <button
+                  onClick={() => setShowAddRow(true)}
+                  className="flex items-center gap-2 text-sm font-semibold text-brand-600 dark:text-brand-400 hover:text-brand-700 dark:hover:text-brand-300 transition-colors px-2 py-1.5 rounded-lg hover:bg-brand-50 dark:hover:bg-brand-900/20"
+                >
+                  <PlusCircle className="w-4 h-4" />
+                  Add Item
+                </button>
+              </td>
+            </tr>
+          )}
+          {onAddItem && showAddRow && (
+            <tr className="bg-brand-50/50 dark:bg-brand-900/10 ring-1 ring-inset ring-brand-200 dark:ring-brand-800/60">
+              <td className="p-3 border-r border-slate-200/50 dark:border-slate-700/50">
+                <input
+                  autoFocus
+                  type="text"
+                  value={newItemName}
+                  onChange={e => setNewItemName(e.target.value)}
+                  onKeyDown={handleAddRowKeyDown}
+                  placeholder="Item name..."
+                  className="w-full bg-transparent border-0 border-b border-brand-300 dark:border-brand-700 focus:border-brand-500 focus:ring-0 px-2 py-1.5 font-semibold text-slate-800 dark:text-slate-200 placeholder:text-slate-400"
+                />
+              </td>
+              <td className="p-3 border-r border-slate-200/50 dark:border-slate-700/50 relative">
+                <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold">$</div>
+                <input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={newItemCost}
+                  onChange={e => setNewItemCost(e.target.value)}
+                  onKeyDown={handleAddRowKeyDown}
+                  placeholder="0.00"
+                  className="w-24 bg-transparent border-0 border-b border-brand-300 dark:border-brand-700 focus:border-brand-500 focus:ring-0 px-2 py-1.5 font-bold text-right text-slate-700 dark:text-slate-300 placeholder:text-slate-400"
+                />
+              </td>
+              <td colSpan={99} className="p-3">
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={handleAddItem}
+                    disabled={!newItemName.trim() || !newItemCost || isAddingItem}
+                    className="p-1.5 rounded-full bg-brand-500 hover:bg-brand-600 text-white transition-colors disabled:opacity-50 shadow-sm"
+                  >
+                    {isAddingItem ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
+                  </button>
+                  <button
+                    onClick={() => { setShowAddRow(false); setNewItemName(''); setNewItemCost(''); }}
+                    className="p-1.5 rounded-full bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-600 dark:text-slate-300 transition-colors"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+              </td>
+            </tr>
+          )}
         </tbody>
         <tfoot className="bg-slate-50 dark:bg-slate-900/50 border-t-2 border-slate-200/80 dark:border-slate-700">
           <tr>
