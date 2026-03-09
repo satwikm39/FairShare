@@ -21,6 +21,11 @@ def update_bill(db: Session, bill_id: int, **kwargs):
             setattr(db_bill, key, value)
         db.commit()
         db.refresh(db_bill)
+        
+        # If total_tax or anything else was modified, we should ensure the totals reflect it
+        recalculate_bill_totals(db, bill_id)
+        db.refresh(db_bill) # Refresh again to ensure the API returns the updated grand_total
+        
     return db_bill
 
 def recalculate_bill_totals(db: Session, bill_id: int):
