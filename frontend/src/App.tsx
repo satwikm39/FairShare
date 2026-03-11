@@ -5,6 +5,7 @@ import { GroupDashboard } from './views/GroupDashboard';
 import { BillOverview } from './views/BillOverview';
 
 import { GroupDetails } from './views/GroupDetails';
+import { LiveDemo } from './views/LiveDemo';
 
 import { Login } from './views/Login';
 import { AuthProvider, useAuth } from './context/AuthContext';
@@ -28,6 +29,7 @@ function App() {
           <Layout>
             <Routes>
               <Route path="/" element={<Home />} />
+              <Route path="/demo" element={<LiveDemo />} />
               <Route path="/login" element={<Login />} />
               <Route path="/dashboard" element={<PrivateRoute><GroupDashboard /></PrivateRoute>} />
               <Route path="/groups/:id" element={<PrivateRoute><GroupDetails /></PrivateRoute>} />

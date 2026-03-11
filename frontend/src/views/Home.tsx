@@ -17,9 +17,11 @@ export function Home() {
               Go to Dashboard
             </Button>
           </Link>
-          <Button variant="secondary" className="w-full sm:w-auto text-lg px-8 py-4 rounded-2xl shadow-sm hover:shadow-md">
-            View Live Demo
-          </Button>
+          <Link to="/demo" className="w-full sm:w-auto">
+            <Button variant="secondary" className="w-full text-lg px-8 py-4 rounded-2xl shadow-sm hover:shadow-md">
+              View Live Demo
+            </Button>
+          </Link>
         </div>
       </div>
     </div>
