@@ -51,13 +51,21 @@ export const groupsService = {
   /**
    * Create a new bill in a group
    */
-  createBill: async (groupId: number): Promise<Bill> => {
-    const response = await api.post<Bill>(`/groups/${groupId}/bills/`, {
+  createBill: async (groupId: number, data?: { name: string; date: string }): Promise<Bill> => {
+    const payload: any = {
       group_id: groupId,
       total_tax: 0,
       subtotal: 0,
       grand_total: 0
-    });
+    };
+    
+    if (data?.name) payload.name = data.name;
+    if (data?.date) {
+      // Create bill expecting ISO format on backend
+      payload.date = new Date(`${data.date}T00:00:00`).toISOString();
+    }
+    
+    const response = await api.post<Bill>(`/groups/${groupId}/bills/`, payload);
     return response.data;
   }
 };

@@ -6,6 +6,7 @@ import { Button } from '../components/ui/Button';
 import { useGroupDetails } from '../hooks/useGroupDetails';
 import { groupsService } from '../services/groups';
 import { AddMemberModal } from '../components/groups/AddMemberModal';
+import { CreateBillModal } from '../components/groups/CreateBillModal';
 import { ConfirmModal } from '../components/ui/ConfirmModal';
 
 export function GroupDetails() {
@@ -15,6 +16,7 @@ export function GroupDetails() {
   const { group, bills, isLoading, error, refresh, deleteBill } = useGroupDetails(groupId);
   const [isCreatingBill, setIsCreatingBill] = useState(false);
   const [isAddMemberModalOpen, setIsAddMemberModalOpen] = useState(false);
+  const [isCreateBillModalOpen, setIsCreateBillModalOpen] = useState(false);
   
   const [billToDelete, setBillToDelete] = useState<number | null>(null);
   const [isDeletingBill, setIsDeletingBill] = useState(false);
@@ -80,11 +82,11 @@ export function GroupDetails() {
     }
   };
 
-  const handleCreateBill = async () => {
+  const handleCreateBill = async (name: string, date: string) => {
     setIsCreatingBill(true);
     try {
-      const newBill = await groupsService.createBill(groupId);
-      // Navigate straight to the new bill overview to upload receipt
+      const newBill = await groupsService.createBill(groupId, { name, date });
+      // Navigate straight to the new bill overview to upload receipt or add items manually
       navigate(`/bills/${newBill.id}`);
     } catch (e) {
       console.error(e);
@@ -171,7 +173,7 @@ export function GroupDetails() {
             </Button>
             <Button 
               className="gap-2 px-6 shadow-brand-500/20" 
-              onClick={handleCreateBill}
+              onClick={() => setIsCreateBillModalOpen(true)}
               isLoading={isCreatingBill}
             >
               <Plus className="w-5 h-5" />
@@ -321,6 +323,12 @@ export function GroupDetails() {
         confirmText="Delete Bill"
         isLoading={isDeletingBill}
         variant="danger"
+      />
+
+      <CreateBillModal
+        isOpen={isCreateBillModalOpen}
+        onClose={() => setIsCreateBillModalOpen(false)}
+        onSubmit={handleCreateBill}
       />
     </div>
   );
