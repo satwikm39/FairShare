@@ -149,6 +149,18 @@ export function GroupDetails() {
           <div>
             <h1 className="text-4xl font-extrabold text-slate-900 dark:text-white tracking-tight">{group.name}</h1>
             <p className="text-lg text-slate-500 dark:text-slate-400 mt-2 font-medium">Manage this group's bills and expenses.</p>
+            {group.members && group.members.length > 0 && (
+              <div className="flex flex-wrap items-center gap-2 mt-4">
+                {group.members.map(member => (
+                  <div key={member.user_id} className="flex items-center gap-2 bg-slate-100 dark:bg-slate-800 rounded-full px-3 py-1 text-sm font-medium text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
+                    <div className="w-5 h-5 rounded-full bg-brand-100 dark:bg-brand-900/50 flex items-center justify-center text-brand-600 dark:text-brand-400 text-xs font-bold shrink-0">
+                      {member.user?.name?.charAt(0)?.toUpperCase() || 'U'}
+                    </div>
+                    {member.user?.name || member.user?.email || 'Unknown User'}
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
           <div className="flex gap-3">
             <Button 

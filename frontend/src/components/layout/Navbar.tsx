@@ -1,4 +1,4 @@
-import { Receipt, Moon, Sun } from 'lucide-react';
+import { Moon, Sun } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
@@ -22,9 +22,7 @@ export function Navbar() {
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           <Link to="/" className="flex items-center gap-2.5 transition-transform hover:scale-105">
-            <div className="bg-brand-500 text-white p-1.5 rounded-xl shadow-lg shadow-brand-500/30">
-              <Receipt className="w-5 h-5" />
-            </div>
+            <img src="/fairShareLogo.svg" alt="FairShare Logo" className="w-8 h-8 rounded-xl shadow-lg shadow-brand-500/30" />
             <span className="font-extrabold text-xl tracking-tight text-slate-900 dark:text-white">
               FairShare
             </span>
