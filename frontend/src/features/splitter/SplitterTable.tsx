@@ -22,6 +22,7 @@ export function SplitterTable({ bill, group, onUpdateShare, onSplitAllEqually, o
   const [newItemName, setNewItemName] = useState('');
   const [newItemCost, setNewItemCost] = useState('');
   const [isAddingItem, setIsAddingItem] = useState(false);
+  const { currentUser } = useAuth();
 
   const handleAddItem = async () => {
     if (!onAddItem || !newItemName.trim() || !newItemCost) return;
@@ -60,14 +61,6 @@ export function SplitterTable({ bill, group, onUpdateShare, onSplitAllEqually, o
   const totalFees = bill.total_tax;
   const billGrandTotal = totalBillSubtotal + totalFees;
 
-  if (bill.items.length === 0) {
-    return (
-      <Card className="border-slate-200/60 dark:border-slate-700/50 shadow-lg text-center p-12 text-slate-500 dark:text-slate-400">
-        No items on this bill yet. Upload a receipt to get started.
-      </Card>
-    );
-  }
-
   if (!group) {
     return (
       <Card className="border-slate-200/60 dark:border-slate-700/50 shadow-lg text-center p-12 text-slate-500 dark:text-slate-400">
@@ -76,8 +69,6 @@ export function SplitterTable({ bill, group, onUpdateShare, onSplitAllEqually, o
       </Card>
     );
   }
-
-  const { currentUser } = useAuth();
   
   let users = group.members?.map(m => m.user) || [];
   // Fallback so the table always has at least one column (specifically for groups created before the backend fix)
