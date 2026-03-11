@@ -22,7 +22,7 @@ export function Button({
   
   const variants = {
     primary: "bg-brand-500 hover:bg-brand-600 text-white shadow-lg shadow-brand-500/30 dark:shadow-brand-500/20 focus-visible:ring-brand-500",
-    secondary: "bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-800 dark:text-slate-100 shadow-sm focus-visible:ring-slate-300 dark:focus-visible:ring-slate-600",
+    secondary: "bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-100 border border-slate-200 dark:border-slate-700 shadow-sm focus-visible:ring-slate-300 dark:focus-visible:ring-slate-600",
     outline: "border border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 shadow-sm focus-visible:ring-slate-300",
     ghost: "hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white focus-visible:ring-slate-200",
     danger: "bg-red-500 hover:bg-red-600 text-white shadow-lg shadow-red-500/30 dark:shadow-red-500/20 focus-visible:ring-red-500",
