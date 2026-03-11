@@ -91,4 +91,11 @@ export const billsService = {
     const response = await api.post<BillItem>(`/bills/${billId}/items/`, item);
     return response.data;
   },
+
+  /**
+   * Delete an item from a bill
+   */
+  deleteItem: async (itemId: number): Promise<void> => {
+    await api.delete(`/bills/items/${itemId}`);
+  },
 };

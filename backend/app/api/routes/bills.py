@@ -67,6 +67,17 @@ def update_item_details(
         raise HTTPException(status_code=404, detail="Bill item not found")
     return db_item
 
+@router.delete("/items/{item_id}", status_code=204)
+def delete_item(
+    item_id: int, 
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(deps.get_current_user)
+):
+    db_item = crud.bills.delete_bill_item(db=db, item_id=item_id)
+    if db_item is None:
+        raise HTTPException(status_code=404, detail="Bill item not found")
+    return None
+
 @router.post("/{bill_id}/shares/bulk", response_model=list[schemas.ItemShare])
 def update_shares_bulk(
     bill_id: int, 

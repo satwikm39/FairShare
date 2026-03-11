@@ -70,6 +70,17 @@ def update_bill_item(db: Session, item_id: int, item_update: schemas.BillItemUpd
         
     return db_item
 
+def delete_bill_item(db: Session, item_id: int):
+    db_item = db.query(models.BillItem).filter(models.BillItem.id == item_id).first()
+    if db_item:
+        bill_id = db_item.bill_id
+        db.delete(db_item)
+        db.commit()
+        
+        # Recalculate totals
+        recalculate_bill_totals(db, bill_id)
+    return db_item
+
 def add_item_share(db: Session, item_id: int, share: schemas.ItemShareCreate):
     existing_share = db.query(models.ItemShare).filter(
         models.ItemShare.item_id == item_id,

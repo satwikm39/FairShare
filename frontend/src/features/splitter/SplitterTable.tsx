@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Card } from '../../components/ui/Card';
-import { Minus, Plus, Loader2, Divide, PlusCircle, Check, X } from 'lucide-react';
+import { Minus, Plus, Loader2, Divide, PlusCircle, Check, X, Trash2 } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
 import { cn } from '../../lib/utils';
 import type { Bill, Group } from '../../types';
@@ -14,9 +14,10 @@ interface SplitterTableProps {
   onUpdateItemDetails?: (itemId: number, name: string, cost: number) => void;
   onUpdateTax?: (tax: number) => void;
   onAddItem?: (name: string, cost: number) => Promise<void>;
+  onDeleteItem?: (itemId: number) => Promise<void>;
 }
 
-export function SplitterTable({ bill, group, onUpdateShare, onSplitAllEqually, onUpdateItemDetails, onUpdateTax, onAddItem }: SplitterTableProps) {
+export function SplitterTable({ bill, group, onUpdateShare, onSplitAllEqually, onUpdateItemDetails, onUpdateTax, onAddItem, onDeleteItem }: SplitterTableProps) {
   const [showAddRow, setShowAddRow] = useState(false);
   const [newItemName, setNewItemName] = useState('');
   const [newItemCost, setNewItemCost] = useState('');
@@ -128,16 +129,31 @@ export function SplitterTable({ bill, group, onUpdateShare, onSplitAllEqually, o
             return (
               <tr key={item.id} className={cn("transition-colors group", isZeroShares ? "bg-red-50/80 dark:bg-red-900/20 hover:bg-red-100/80 dark:hover:bg-red-900/30 ring-1 ring-inset ring-red-200 dark:ring-red-800/60" : "hover:bg-slate-50/50 dark:hover:bg-slate-700/30")}>
                 <td className="p-3 border-r border-slate-200/50 dark:border-slate-700/50">
-                  <input
-                    type="text"
-                    value={item.item_name}
-                    onChange={(e) => onUpdateItemDetails?.(item.id, e.target.value, item.unit_cost)}
-                    className={cn(
-                      "w-full bg-transparent border-0 border-b border-transparent hover:border-slate-300 dark:hover:border-slate-600 focus:border-brand-500 focus:ring-0 px-2 py-1.5 font-semibold text-slate-800 dark:text-slate-200 transition-colors",
-                      !onUpdateItemDetails && "pointer-events-none"
+                  <div className="flex items-center gap-2 group/item">
+                    {onDeleteItem && (
+                      <button
+                        onClick={() => {
+                          if (window.confirm('Are you sure you want to delete this item?')) {
+                            onDeleteItem(item.id);
+                          }
+                        }}
+                        className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 rounded transition-colors"
+                        title="Delete item"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
                     )}
-                    placeholder="Item Name"
-                  />
+                    <input
+                      type="text"
+                      value={item.item_name}
+                      onChange={(e) => onUpdateItemDetails?.(item.id, e.target.value, item.unit_cost)}
+                      className={cn(
+                        "w-full bg-transparent border-0 border-b border-transparent hover:border-slate-300 dark:hover:border-slate-600 focus:border-brand-500 focus:ring-0 px-2 py-1.5 font-semibold text-slate-800 dark:text-slate-200 transition-colors",
+                        !onUpdateItemDetails && "pointer-events-none"
+                      )}
+                      placeholder="Item Name"
+                    />
+                  </div>
                 </td>
                 <td className="p-3 text-right border-r border-slate-200/50 dark:border-slate-700/50 relative">
                   <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold">$</div>

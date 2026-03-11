@@ -208,6 +208,25 @@ export function useBill(initialBillId: number) {
     }
   };
 
+  const deleteItem = async (itemId: number) => {
+    if (!bill) return;
+    try {
+      await billsService.deleteItem(itemId);
+      // Remove from local state immediately to update UI without full refresh
+      setBill(prev => prev ? { 
+        ...prev, 
+        items: prev.items.filter(item => item.id !== itemId) 
+      } : null);
+      
+      // Let the UI know it can fetch an updated bill or we can just rely on the local state update.
+      // But we should refresh to get the updated grand_total
+      await fetchBill(bill.id);
+    } catch (err: any) {
+      setError(err.response?.data?.detail || err.message || 'Failed to delete item');
+      throw err;
+    }
+  };
+
   return {
     bill,
     isLoading,
@@ -221,6 +240,7 @@ export function useBill(initialBillId: number) {
     updateItemDetails,
     updateTax,
     addItem,
+    deleteItem,
     saveShares,
     deleteBill,
     updateBillDetails,
