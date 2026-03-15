@@ -51,6 +51,7 @@ class BillBase(BaseModel):
 class BillUpdate(BaseModel):
     name: Optional[str] = None
     date: Optional[datetime] = None
+    total_tax: Optional[float] = None
 
 class BillCreate(BillBase):
     group_id: int
