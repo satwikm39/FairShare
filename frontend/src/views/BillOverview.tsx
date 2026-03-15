@@ -11,7 +11,7 @@ export function BillOverview() {
   const { id } = useParams<{ id: string }>();
   // Default to 1 if no ID is provided, so it doesn't crash on invalid URLs
   const billId = parseInt(id || '1', 10);
-  const { bill, isLoading, error, fetchBill, uploadReceipt, updateShare, splitAllEqually, updateItemDetails, updateTax, addItem, deleteItem, hasUnsavedChanges, isSavingShares, saveShares } = useBill(billId);
+  const { bill, isLoading, error, fetchBill, uploadReceipt, updateShare, splitAllEqually, resetAllShares, updateItemDetails, updateTax, addItem, deleteItem, hasUnsavedChanges, isSavingShares, saveShares } = useBill(billId);
   const [group, setGroup] = useState<any>(null);
 
   useEffect(() => {
@@ -185,6 +185,7 @@ export function BillOverview() {
                 onUpdateTax={updateTax}
                 onAddItem={(name, cost) => addItem(name, cost).then(() => {})}
                 onDeleteItem={deleteItem}
+                onResetAll={resetAllShares}
               />
               {hasUnsavedChanges && (
                 <div className="mt-6 flex justify-end">

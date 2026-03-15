@@ -104,6 +104,20 @@ export function useBill(initialBillId: number) {
     setHasUnsavedChanges(true);
   };
 
+  const resetAllShares = () => {
+    setBill(prev => {
+      if (!prev) return null;
+      
+      const updatedItems = prev.items.map(item => ({
+        ...item,
+        shares: []
+      }));
+
+      return { ...prev, items: updatedItems };
+    });
+    setHasUnsavedChanges(true);
+  };
+
   const updateItemDetails = (itemId: number, name: string, cost: number) => {
     setBill(prev => {
       if (!prev) return null;
@@ -244,6 +258,7 @@ export function useBill(initialBillId: number) {
     saveShares,
     deleteBill,
     updateBillDetails,
-    setBill
+    setBill,
+    resetAllShares
   };
 }

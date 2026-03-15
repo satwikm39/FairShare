@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Card } from '../../components/ui/Card';
-import { Minus, Plus, Loader2, Divide, PlusCircle, Check, X, Trash2 } from 'lucide-react';
+import { Minus, Plus, Loader2, Divide, PlusCircle, Check, X, Trash2, RotateCcw } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
 import { cn } from '../../lib/utils';
 import type { Bill, Group } from '../../types';
@@ -15,13 +15,15 @@ interface SplitterTableProps {
   onUpdateTax?: (tax: number) => void;
   onAddItem?: (name: string, cost: number) => Promise<void>;
   onDeleteItem?: (itemId: number) => Promise<void>;
+  onResetAll?: () => void;
 }
 
-export function SplitterTable({ bill, group, onUpdateShare, onSplitAllEqually, onUpdateItemDetails, onUpdateTax, onAddItem, onDeleteItem }: SplitterTableProps) {
+export function SplitterTable({ bill, group, onUpdateShare, onSplitAllEqually, onUpdateItemDetails, onUpdateTax, onAddItem, onDeleteItem, onResetAll }: SplitterTableProps) {
   const [showAddRow, setShowAddRow] = useState(false);
   const [newItemName, setNewItemName] = useState('');
   const [newItemCost, setNewItemCost] = useState('');
   const [isAddingItem, setIsAddingItem] = useState(false);
+  const [isResetMode, setIsResetMode] = useState(false);
   const { currentUser } = useAuth();
 
   const handleAddItem = async () => {
@@ -85,14 +87,34 @@ export function SplitterTable({ bill, group, onUpdateShare, onSplitAllEqually, o
           <h3 className="font-bold text-slate-800 dark:text-slate-100">Bill Items</h3>
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Edit shares or use auto-split.</p>
         </div>
-        {onSplitAllEqually && (
+        {onSplitAllEqually && onResetAll && (
           <Button 
-            variant="secondary" 
-            onClick={() => onSplitAllEqually(users.map(u => u.id))} 
-            className="gap-2 shadow-sm text-xs h-9 px-4"
+            variant={isResetMode ? "outline" : "secondary"} 
+            onClick={() => {
+              if (isResetMode) {
+                onResetAll();
+                setIsResetMode(false);
+              } else {
+                onSplitAllEqually(users.map(u => u.id));
+                setIsResetMode(true);
+              }
+            }} 
+            className={cn(
+              "gap-2 shadow-sm text-xs h-9 px-4 transition-all duration-300",
+              isResetMode && "border-orange-200 text-orange-600 hover:bg-orange-50 hover:text-orange-700 dark:border-orange-900/50 dark:text-orange-400 dark:hover:bg-orange-900/20"
+            )}
           >
-            <Divide className="w-4 h-4 text-brand-500 dark:text-brand-400" />
-            Equally Split All
+            {isResetMode ? (
+              <>
+                <RotateCcw className="w-4 h-4" />
+                Reset all quantities
+              </>
+            ) : (
+              <>
+                <Divide className="w-4 h-4 text-brand-500 dark:text-brand-400" />
+                Equally Split All
+              </>
+            )}
           </Button>
         )}
       </div>
