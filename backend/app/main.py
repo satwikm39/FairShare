@@ -13,9 +13,12 @@ except Exception as e:
 app = FastAPI(title="FairShare API")
 
 # Configure CORS for frontend
+import os
+origins = os.getenv("ALLOWED_ORIGINS", "http://localhost:5173,http://localhost:3000").split(",")
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"], # Change this to specific domain in production e.g. ["http://localhost:5173"]
+    allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
