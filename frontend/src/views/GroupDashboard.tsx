@@ -1,19 +1,33 @@
-import { useState } from 'react';
-import { Plus, Users, Loader2, Trash2 } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Plus, Users, Loader2, Trash2, TrendingUp, TrendingDown, Minus as MinusIcon } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { useGroups } from '../hooks/useGroups';
+import { groupsService } from '../services/groups';
 import { CreateGroupModal } from '../components/groups/CreateGroupModal';
 import { ConfirmModal } from '../components/ui/ConfirmModal';
+import type { GroupBalances } from '../types';
 
 export function GroupDashboard() {
   const { groups, isLoading, error, createGroup, deleteGroup } = useGroups();
   const [isCreating, setIsCreating] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  
   const [groupToDelete, setGroupToDelete] = useState<number | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [groupBalances, setGroupBalances] = useState<Record<number, GroupBalances>>({});
+
+  // Fetch balances for all groups once loaded
+  useEffect(() => {
+    if (groups.length === 0) return;
+    groups.forEach(group => {
+      groupsService.getGroupBalances(group.id)
+        .then(balances => {
+          setGroupBalances(prev => ({ ...prev, [group.id]: balances }));
+        })
+        .catch(() => {}); // Silently ignore if balances can't be fetched
+    });
+  }, [groups]);
 
   const handleCreateGroup = async (name: string, currency: string) => {
     setIsCreating(true);
@@ -40,6 +54,39 @@ export function GroupDashboard() {
     } finally {
       setIsDeleting(false);
     }
+  };
+
+  const renderDebtBadge = (groupId: number, currency: string) => {
+    const bal = groupBalances[groupId];
+    if (!bal) return null;
+
+    const net = bal.my_net_amount;
+    const absNet = Math.abs(net);
+
+    if (absNet < 0.01) {
+      return (
+        <div className="flex items-center gap-1.5 mt-3 text-xs font-semibold text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800/60 px-3 py-1.5 rounded-full w-fit">
+          <MinusIcon className="w-3 h-3" />
+          All settled
+        </div>
+      );
+    }
+
+    if (net > 0) {
+      return (
+        <div className="flex items-center gap-1.5 mt-3 text-xs font-semibold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/20 px-3 py-1.5 rounded-full w-fit border border-emerald-200 dark:border-emerald-800/40">
+          <TrendingUp className="w-3 h-3" />
+          You're owed {currency}{absNet.toFixed(2)}
+        </div>
+      );
+    }
+
+    return (
+      <div className="flex items-center gap-1.5 mt-3 text-xs font-semibold text-rose-700 dark:text-rose-400 bg-rose-50 dark:bg-rose-900/20 px-3 py-1.5 rounded-full w-fit border border-rose-200 dark:border-rose-800/40">
+        <TrendingDown className="w-3 h-3" />
+        You owe {currency}{absNet.toFixed(2)}
+      </div>
+    );
   };
 
   return (
@@ -75,18 +122,19 @@ export function GroupDashboard() {
             <div key={group.id} className="relative group">
               <Link to={`/groups/${group.id}`} className="block h-full">
                 <Card className="h-full border border-slate-200/60 shadow-md group-hover:shadow-2xl group-hover:border-brand-200 transition-all duration-300">
-                  <div className="flex flex-col h-full justify-between gap-6">
+                  <div className="flex flex-col h-full justify-between gap-4">
                     <div>
                       <h3 className="text-2xl font-bold text-slate-800 dark:text-slate-100 group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors pr-8">
                         {group.name}
                       </h3>
-                      <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400 mt-3 font-medium">
+                      <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400 mt-2 font-medium">
                         <Users className="w-4 h-4" />
-                        <span>Multiple members</span> {/* Backend doesn't return member count yet */}
+                        <span>{group.members?.length ?? 0} member{(group.members?.length ?? 0) !== 1 ? 's' : ''}</span>
                       </div>
+                      {renderDebtBadge(group.id, group.currency)}
                     </div>
-                    <div className="text-sm font-semibold text-slate-400">
-                      ID: {group.id}
+                    <div className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                      {group.currency} · Group #{group.id}
                     </div>
                   </div>
                 </Card>

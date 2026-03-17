@@ -1,6 +1,6 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { Upload, FileText, CheckCircle2, Loader2, ArrowLeft } from 'lucide-react';
+import { Upload, FileText, CheckCircle2, Loader2, ArrowLeft, UserCheck } from 'lucide-react';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { SplitterTable } from '../features/splitter/SplitterTable';
@@ -17,6 +17,30 @@ export function BillOverview() {
   const [group, setGroup] = useState<any>(null);
 
   const textractLimitReached = (currentUser?.textract_usage_count ?? 0) >= 2;
+  const [payerId, setPayerId] = useState<number | null>(null);
+  const [isSavingPayer, setIsSavingPayer] = useState(false);
+
+  // Sync payerId from fetched bill
+  useEffect(() => {
+    if (bill?.paid_by_user_id !== undefined) {
+      setPayerId(bill.paid_by_user_id);
+    }
+  }, [bill?.paid_by_user_id]);
+
+  const handlePayerChange = useCallback(async (newPayerId: number | null) => {
+    if (!bill) return;
+    setPayerId(newPayerId);
+    setIsSavingPayer(true);
+    try {
+      const { billsService } = await import('../services/bills');
+      await billsService.updateBill(bill.id, { paid_by_user_id: newPayerId });
+    } catch (err) {
+      console.error('Failed to save payer:', err);
+    } finally {
+      setIsSavingPayer(false);
+      fetchBill(billId);
+    }
+  }, [bill, billId, fetchBill]);
 
   useEffect(() => {
     fetchBill(billId);
@@ -113,6 +137,38 @@ export function BillOverview() {
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 items-start">
         <div className="lg:col-span-1 space-y-6 lg:sticky lg:top-24">
+
+          {/* Payer Selection Card */}
+          {group && (
+            <Card className="border-slate-200/60 dark:border-slate-700/50 shadow-lg">
+              <div className="flex items-center gap-2 mb-4">
+                <UserCheck className="w-4 h-4 text-brand-500" />
+                <h3 className="font-bold text-lg text-slate-900 dark:text-white">Paid by</h3>
+                {isSavingPayer && <Loader2 className="w-3 h-3 animate-spin text-slate-400" />}
+              </div>
+              <div className="relative">
+                <select
+                  value={payerId ?? ''}
+                  onChange={(e) => handlePayerChange(e.target.value ? Number(e.target.value) : null)}
+                  className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-slate-100 font-medium px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-400 cursor-pointer appearance-none"
+                >
+                  <option value="">— Not set —</option>
+                  {group.members?.map((m: any) => (
+                    <option key={m.user.id} value={m.user.id}>{m.user.name}</option>
+                  ))}
+                </select>
+                <div className="pointer-events-none absolute inset-y-0 right-3 flex items-center">
+                  <svg className="w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+                </div>
+              </div>
+              {payerId && (
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">
+                  {group.members?.find((m: any) => m.user.id === payerId)?.user.name} fronted this bill. Balances updated automatically.
+                </p>
+              )}
+            </Card>
+          )}
+
           <Card className="border-slate-200/60 dark:border-slate-700/50 shadow-lg">
             <h3 className="font-bold text-lg text-slate-900 dark:text-white mb-4">Receipt Upload</h3>
             

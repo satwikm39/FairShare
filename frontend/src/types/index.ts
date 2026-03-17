@@ -42,5 +42,26 @@ export interface Bill {
   subtotal: number;
   grand_total: number;
   receipt_image_url: string | null;
+  paid_by_user_id: number | null;
   items: BillItem[];
+}
+
+export interface UserBalance {
+  user_id: number;
+  user_name: string;
+  net_amount: number; // positive = is owed, negative = owes
+}
+
+export interface DebtDetail {
+  from_user_id: number;
+  from_user_name: string;
+  to_user_id: number;
+  to_user_name: string;
+  amount: number;
+}
+
+export interface GroupBalances {
+  balances: UserBalance[];
+  debts: DebtDetail[];
+  my_net_amount: number;
 }

@@ -1,5 +1,5 @@
 import { api } from './api';
-import type { Group, Bill } from '../types';
+import type { Group, Bill, GroupBalances } from '../types';
 
 export const groupsService = {
   /**
@@ -45,6 +45,11 @@ export const groupsService = {
    */
   getGroupBills: async (groupId: number): Promise<Bill[]> => {
     const response = await api.get<Bill[]>(`/groups/${groupId}/bills/`);
+    return response.data;
+  },
+
+  getGroupBalances: async (groupId: number): Promise<GroupBalances> => {
+    const response = await api.get<GroupBalances>(`/groups/${groupId}/balances`);
     return response.data;
   },
 

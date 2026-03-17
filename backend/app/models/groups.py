@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, ForeignKey
+from sqlalchemy import Column, Integer, String, ForeignKey, Float
 from sqlalchemy.orm import relationship
 from app.core.database import Base
 
@@ -12,6 +12,7 @@ class Group(Base):
     # Relationships
     members = relationship("GroupMember", back_populates="group", cascade="all, delete-orphan")
     bills = relationship("Bill", back_populates="group", cascade="all, delete-orphan")
+    debts = relationship("Debt", back_populates="group", cascade="all, delete-orphan")
 
 class GroupMember(Base):
     __tablename__ = "group_members"
@@ -22,3 +23,19 @@ class GroupMember(Base):
     # Relationships
     user = relationship("User", back_populates="group_memberships")
     group = relationship("Group", back_populates="members")
+
+
+class Debt(Base):
+    """Cached simplified pairwise debt within a group. Recomputed on payer/share changes."""
+    __tablename__ = "debts"
+
+    id = Column(Integer, primary_key=True, index=True)
+    group_id = Column(Integer, ForeignKey("groups.id"), nullable=False)
+    from_user_id = Column(Integer, ForeignKey("users.id"), nullable=False)  # owes
+    to_user_id = Column(Integer, ForeignKey("users.id"), nullable=False)    # is owed
+    amount = Column(Float, nullable=False, default=0.0)
+
+    # Relationships
+    group = relationship("Group", back_populates="debts")
+    from_user = relationship("User", foreign_keys=[from_user_id])
+    to_user = relationship("User", foreign_keys=[to_user_id])

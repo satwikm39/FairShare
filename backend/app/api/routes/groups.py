@@ -79,6 +79,58 @@ def read_group_bills(group_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Group not found")
     return crud.bills.get_bills_by_group(db=db, group_id=group_id)
 
+
+@router.get("/{group_id}/balances", response_model=schemas.GroupBalances)
+def get_group_balances(
+    group_id: int,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(deps.get_current_user),
+    refresh: bool = False,
+):
+    """Serve cached pairwise debts for a group. Set ?refresh=true to force recompute."""
+    from app.services.debts import recompute_group_debts
+
+    db_group = crud.groups.get_group(db, group_id=group_id)
+    if db_group is None:
+        raise HTTPException(status_code=404, detail="Group not found")
+
+    # Recompute if explicitly requested or no data cached yet
+    cached_debts = db.query(models.Debt).filter(models.Debt.group_id == group_id).all()
+    if refresh or (not cached_debts and any(b.paid_by_user_id is not None for b in db_group.bills)):
+        recompute_group_debts(db, group_id)
+        cached_debts = db.query(models.Debt).filter(models.Debt.group_id == group_id).all()
+
+    user_map: dict[int, str] = {m.user.id: m.user.name for m in db_group.members}
+
+    # Build response schemas from cached debts
+    simplified_debts = [
+        schemas.DebtDetail(
+            from_user_id=d.from_user_id,
+            from_user_name=d.from_user.name,
+            to_user_id=d.to_user_id,
+            to_user_name=d.to_user.name,
+            amount=d.amount
+        )
+        for d in cached_debts
+    ]
+
+    user_net: dict[int, float] = {}
+    for uid in user_map:
+        owed = sum(d.amount for d in cached_debts if d.to_user_id == uid)
+        owes = sum(d.amount for d in cached_debts if d.from_user_id == uid)
+        user_net[uid] = round(owed - owes, 2)
+
+    balances = [
+        schemas.UserBalance(user_id=uid, user_name=name, net_amount=user_net.get(uid, 0.0))
+        for uid, name in user_map.items()
+    ]
+
+    return schemas.GroupBalances(
+        balances=balances,
+        debts=simplified_debts,
+        my_net_amount=user_net.get(current_user.id, 0.0)
+    )
+
 @router.post("/{group_id}/bills/", response_model=schemas.Bill)
 def create_bill_for_group(group_id: int, bill: schemas.BillCreate, db: Session = Depends(get_db)):
     db_group = crud.groups.get_group(db, group_id=group_id)

@@ -20,7 +20,7 @@ export const billsService = {
   /**
    * Update a bill's details (e.g. name, date, total_tax)
    */
-  updateBill: async (billId: number, data: { name?: string | null; date?: string; total_tax?: number }): Promise<Bill> => {
+  updateBill: async (billId: number, data: { name?: string | null; date?: string; total_tax?: number; paid_by_user_id?: number | null }): Promise<Bill> => {
     const response = await api.put<Bill>(`/bills/${billId}`, data);
     return response.data;
   },

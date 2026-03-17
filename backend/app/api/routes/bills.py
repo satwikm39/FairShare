@@ -27,7 +27,15 @@ def update_bill_details(
         raise HTTPException(status_code=404, detail="Bill not found")
     
     update_data = bill_update.model_dump(exclude_unset=True)
-    return crud.bills.update_bill(db=db, bill_id=bill_id, **update_data)
+    group_id = db_bill.group_id
+    result = crud.bills.update_bill(db=db, bill_id=bill_id, **update_data)
+
+    # Recompute cached debts if the payer changed
+    if "paid_by_user_id" in update_data:
+        from app.services.debts import recompute_group_debts
+        recompute_group_debts(db, group_id)
+
+    return result
 
 @router.delete("/{bill_id}", status_code=204)
 def delete_bill(
@@ -89,7 +97,13 @@ def update_shares_bulk(
     if db_bill is None:
         raise HTTPException(status_code=404, detail="Bill not found")
         
-    return crud.bills.add_item_shares_bulk(db=db, bill_id=bill_id, shares=shares)
+    result = crud.bills.add_item_shares_bulk(db=db, bill_id=bill_id, shares=shares)
+
+    # Recompute cached debts when shares change
+    from app.services.debts import recompute_group_debts
+    recompute_group_debts(db, db_bill.group_id)
+
+    return result
 
 @router.post("/{bill_id}/upload-receipt", response_model=list[schemas.BillItem])
 async def upload_receipt(

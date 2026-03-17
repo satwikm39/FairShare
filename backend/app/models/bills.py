@@ -8,6 +8,7 @@ class Bill(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     group_id = Column(Integer, ForeignKey("groups.id"))
+    paid_by_user_id = Column(Integer, ForeignKey("users.id"), nullable=True)
     name = Column(String, nullable=True)
     date = Column(DateTime, default=datetime.utcnow)
     total_tax = Column(Float, default=0.0)
@@ -17,6 +18,7 @@ class Bill(Base):
 
     # Relationships
     group = relationship("Group", back_populates="bills")
+    payer = relationship("User", back_populates="bills_paid", foreign_keys=[paid_by_user_id])
     items = relationship("BillItem", back_populates="bill", cascade="all, delete-orphan")
 
 class BillItem(Base):

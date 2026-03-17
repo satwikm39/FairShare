@@ -1,23 +1,45 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { Plus, Receipt, Loader2, ArrowLeft, Trash2, Edit2, Calendar, Check, X } from 'lucide-react';
+import { Plus, Receipt, Loader2, ArrowLeft, Trash2, Edit2, Calendar, Check, X, TrendingUp, TrendingDown, ArrowRight, RefreshCw } from 'lucide-react';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { useGroupDetails } from '../hooks/useGroupDetails';
+import { useAuth } from '../context/AuthContext';
 import { groupsService } from '../services/groups';
 import { AddMemberModal } from '../components/groups/AddMemberModal';
 import { CreateBillModal } from '../components/groups/CreateBillModal';
 import { ConfirmModal } from '../components/ui/ConfirmModal';
+import type { GroupBalances } from '../types';
 
 export function GroupDetails() {
   const { id } = useParams<{ id: string }>();
   const groupId = parseInt(id || '0', 10);
   const navigate = useNavigate();
   const { group, bills, isLoading, error, refresh, deleteBill } = useGroupDetails(groupId);
+  const { currentUser } = useAuth();
   const [isCreatingBill, setIsCreatingBill] = useState(false);
   const [isAddMemberModalOpen, setIsAddMemberModalOpen] = useState(false);
   const [isCreateBillModalOpen, setIsCreateBillModalOpen] = useState(false);
-  
+  const [balances, setBalances] = useState<GroupBalances | null>(null);
+  const [isLoadingBalances, setIsLoadingBalances] = useState(false);
+
+  const fetchBalances = async (forceRefresh = false) => {
+    setIsLoadingBalances(true);
+    try {
+      const url = forceRefresh ? groupId + '?refresh=true' : groupId;
+      const data = await groupsService.getGroupBalances(typeof url === 'number' ? url : groupId);
+      setBalances(data);
+    } catch (e) {
+      console.error('Failed to fetch balances', e);
+    } finally {
+      setIsLoadingBalances(false);
+    }
+  };
+
+  useEffect(() => {
+    if (groupId) fetchBalances();
+  }, [groupId]);
+
   const [billToDelete, setBillToDelete] = useState<number | null>(null);
   const [isDeletingBill, setIsDeletingBill] = useState(false);
 
@@ -183,6 +205,97 @@ export function GroupDetails() {
         </div>
       </div>
 
+      {/* ── Balance breakdown ── */}
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100">Balances</h2>
+          <button
+            onClick={() => fetchBalances(true)}
+            className="flex items-center gap-1.5 text-sm font-medium text-slate-500 hover:text-brand-600 dark:text-slate-400 dark:hover:text-brand-400 transition-colors"
+            title="Force-recalculate balances"
+          >
+            <RefreshCw className="w-3.5 h-3.5" />
+            Recalculate
+          </button>
+        </div>
+
+        {isLoadingBalances ? (
+          <Card className="border-slate-200/60 dark:border-slate-700/50 shadow-sm">
+            <div className="flex items-center justify-center py-6 text-slate-400 gap-2">
+              <Loader2 className="w-5 h-5 animate-spin" />
+              <span className="text-sm">Loading balances...</span>
+            </div>
+          </Card>
+        ) : balances && (balances.debts.length > 0 || balances.balances.length > 0) ? (
+          <Card className="border-slate-200/60 dark:border-slate-700/50 shadow-sm space-y-5">
+
+            {/* Your personal summary */}
+            {currentUser && (() => {
+              const myNet = balances.my_net_amount;
+              const absNet = Math.abs(myNet);
+              if (absNet < 0.01) return (
+                <div className="flex items-center gap-3 p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60">
+                  <span className="text-sm font-semibold text-slate-500 dark:text-slate-400">You are all settled up in this group 🎉</span>
+                </div>
+              );
+              if (myNet > 0) return (
+                <div className="flex items-center gap-3 p-3 rounded-xl bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800/40">
+                  <TrendingUp className="w-5 h-5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                  <span className="text-sm font-semibold text-emerald-700 dark:text-emerald-400">
+                    Overall, you are owed <strong>{group?.currency}{absNet.toFixed(2)}</strong> in this group.
+                  </span>
+                </div>
+              );
+              return (
+                <div className="flex items-center gap-3 p-3 rounded-xl bg-rose-50 dark:bg-rose-900/20 border border-rose-200 dark:border-rose-800/40">
+                  <TrendingDown className="w-5 h-5 text-rose-600 dark:text-rose-400 shrink-0" />
+                  <span className="text-sm font-semibold text-rose-700 dark:text-rose-400">
+                    Overall, you owe <strong>{group?.currency}{absNet.toFixed(2)}</strong> in this group.
+                  </span>
+                </div>
+              );
+            })()}
+
+            {/* Full debt list, highlighting rows involving the current user */}
+            {balances.debts.length > 0 && (
+              <div className="space-y-2">
+                <p className="text-xs font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">All outstanding debts</p>
+                {balances.debts.map((debt, i) => {
+                  const isMe = debt.from_user_id === currentUser?.id || debt.to_user_id === currentUser?.id;
+                  const iOwe = debt.from_user_id === currentUser?.id;
+                  return (
+                    <div
+                      key={i}
+                      className={`flex items-center justify-between gap-3 rounded-xl px-4 py-3 text-sm font-medium transition-colors ${
+                        isMe
+                          ? iOwe
+                            ? 'bg-rose-50 dark:bg-rose-900/20 border border-rose-100 dark:border-rose-800/30 text-rose-800 dark:text-rose-300'
+                            : 'bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-100 dark:border-emerald-800/30 text-emerald-800 dark:text-emerald-300'
+                          : 'bg-slate-50 dark:bg-slate-800/50 text-slate-700 dark:text-slate-300'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2 min-w-0">
+                        <span className="font-semibold truncate">{debt.from_user_name}</span>
+                        <ArrowRight className="w-4 h-4 shrink-0 text-slate-400" />
+                        <span className="font-semibold truncate">{debt.to_user_name}</span>
+                      </div>
+                      <span className="font-bold shrink-0">{group?.currency}{debt.amount.toFixed(2)}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </Card>
+        ) : (
+          <Card className="border-slate-200/60 dark:border-slate-700/50 shadow-sm">
+            <p className="text-sm text-slate-500 dark:text-slate-400 py-2 text-center">
+              No balances yet — set a payer on each bill to track who owes what.
+            </p>
+          </Card>
+        )}
+      </div>
+
+      {/* ── Bills list ── */}
       <div className="flex flex-col gap-4">
         {bills.length === 0 ? (
           <div className="text-center p-16 bg-slate-50 dark:bg-slate-900/50 rounded-3xl border border-dashed border-slate-300 dark:border-slate-700">

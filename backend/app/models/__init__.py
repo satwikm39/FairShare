@@ -1,3 +1,3 @@
 from .users import User
-from .groups import Group, GroupMember
+from .groups import Group, GroupMember, Debt
 from .bills import Bill, BillItem, ItemShare
