@@ -29,3 +29,7 @@ GroupMemberResponse.model_rebuild()
 
 class GroupMemberCreate(BaseModel):
     email: str
+
+class GroupUpdate(BaseModel):
+    name: str | None = None
+    currency: str | None = None

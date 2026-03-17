@@ -45,3 +45,16 @@ def delete_group(db: Session, group_id: int):
         db.delete(db_group)
         db.commit()
     return db_group
+
+def update_group(db: Session, group_id: int, group_update: schemas.GroupUpdate):
+    db_group = get_group(db, group_id)
+    if not db_group:
+        return None
+    
+    update_data = group_update.model_dump(exclude_unset=True)
+    for key, value in update_data.items():
+        setattr(db_group, key, value)
+    
+    db.commit()
+    db.refresh(db_group)
+    return db_group

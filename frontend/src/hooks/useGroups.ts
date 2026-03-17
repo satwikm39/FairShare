@@ -45,6 +45,17 @@ export function useGroups() {
     }
   };
 
+  const updateGroup = async (groupId: number, name?: string, currency?: string) => {
+    try {
+      const updatedGroup = await groupsService.updateGroup(groupId, { name, currency });
+      setGroups(prev => prev.map(g => g.id === groupId ? updatedGroup : g));
+      return updatedGroup;
+    } catch (err: any) {
+      setError(err.response?.data?.detail || err.message || 'Failed to update group');
+      throw err;
+    }
+  };
+
   // Initially fetch groups when hook mounts
   useEffect(() => {
     fetchGroups();
@@ -56,6 +67,7 @@ export function useGroups() {
     error,
     fetchGroups,
     createGroup,
-    deleteGroup: deleteGroupLocally
+    deleteGroup: deleteGroupLocally,
+    updateGroup
   };
 }

@@ -8,6 +8,7 @@ import { useAuth } from '../context/AuthContext';
 import { groupsService } from '../services/groups';
 import { AddMemberModal } from '../components/groups/AddMemberModal';
 import { CreateBillModal } from '../components/groups/CreateBillModal';
+import { EditGroupModal } from '../components/groups/EditGroupModal';
 import { ConfirmModal } from '../components/ui/ConfirmModal';
 import type { GroupBalances } from '../types';
 
@@ -20,6 +21,7 @@ export function GroupDetails() {
   const [isCreatingBill, setIsCreatingBill] = useState(false);
   const [isAddMemberModalOpen, setIsAddMemberModalOpen] = useState(false);
   const [isCreateBillModalOpen, setIsCreateBillModalOpen] = useState(false);
+  const [isEditGroupModalOpen, setIsEditGroupModalOpen] = useState(false);
   const [balances, setBalances] = useState<GroupBalances | null>(null);
   const [isLoadingBalances, setIsLoadingBalances] = useState(false);
 
@@ -129,6 +131,17 @@ export function GroupDetails() {
     }
   };
 
+  const handleUpdateGroup = async (name: string, currency: string) => {
+    try {
+      await groupsService.updateGroup(groupId, { name, currency });
+      setIsEditGroupModalOpen(false);
+      await refresh();
+    } catch (e) {
+      console.error(e);
+      alert("Failed to update group.");
+    }
+  };
+
   const handleConfirmDeleteBill = async () => {
     if (!billToDelete) return;
     setIsDeletingBill(true);
@@ -178,6 +191,13 @@ export function GroupDetails() {
                 <Coins className="w-3.5 h-3.5" />
                 <span>{group.currency}</span>
               </div>
+              <button
+                onClick={() => setIsEditGroupModalOpen(true)}
+                className="p-1.5 text-slate-400 hover:text-brand-600 hover:bg-brand-50 dark:hover:bg-brand-900/30 rounded-full transition-colors"
+                title="Edit group details"
+              >
+                <Edit2 className="w-4 h-4" />
+              </button>
             </div>
             {group.members && group.members.length > 0 && (
               <div className="flex flex-wrap items-center gap-2 mt-4">
@@ -448,6 +468,14 @@ export function GroupDetails() {
         isOpen={isCreateBillModalOpen}
         onClose={() => setIsCreateBillModalOpen(false)}
         onSubmit={handleCreateBill}
+      />
+
+      <EditGroupModal
+        isOpen={isEditGroupModalOpen}
+        onClose={() => setIsEditGroupModalOpen(false)}
+        onSubmit={handleUpdateGroup}
+        initialName={group.name}
+        initialCurrency={group.currency}
       />
     </div>
   );

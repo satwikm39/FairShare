@@ -34,6 +34,25 @@ def read_group(group_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Group not found")
     return db_group
 
+@router.patch("/{group_id}", response_model=schemas.Group)
+def update_group(
+    group_id: int,
+    group_update: schemas.GroupUpdate,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(deps.get_current_user)
+):
+    # Check if user is member of group
+    db_group = crud.groups.get_group(db, group_id=group_id)
+    if not db_group:
+        raise HTTPException(status_code=404, detail="Group not found")
+        
+    user_is_member = any(m.user_id == current_user.id for m in db_group.members)
+    if not user_is_member:
+        raise HTTPException(status_code=403, detail="Not authorized to update this group")
+        
+    updated_group = crud.groups.update_group(db=db, group_id=group_id, group_update=group_update)
+    return updated_group
+
 @router.delete("/{group_id}", status_code=204)
 def delete_group(
     group_id: int, 

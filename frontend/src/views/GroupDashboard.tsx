@@ -1,18 +1,21 @@
 import { useState, useEffect } from 'react';
-import { Plus, Users, Loader2, Trash2, TrendingUp, TrendingDown, Minus as MinusIcon, Coins } from 'lucide-react';
+import { Plus, Users, Loader2, Trash2, Edit2, TrendingUp, TrendingDown, Minus as MinusIcon, Coins } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { useGroups } from '../hooks/useGroups';
 import { groupsService } from '../services/groups';
 import { CreateGroupModal } from '../components/groups/CreateGroupModal';
+import { EditGroupModal } from '../components/groups/EditGroupModal';
 import { ConfirmModal } from '../components/ui/ConfirmModal';
-import type { GroupBalances } from '../types';
+import type { Group, GroupBalances } from '../types';
 
 export function GroupDashboard() {
-  const { groups, isLoading, error, createGroup, deleteGroup } = useGroups();
+  const { groups, isLoading, error, createGroup, deleteGroup, updateGroup } = useGroups();
   const [isCreating, setIsCreating] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [groupToEdit, setGroupToEdit] = useState<Group | null>(null);
   const [groupToDelete, setGroupToDelete] = useState<number | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [groupBalances, setGroupBalances] = useState<Record<number, GroupBalances>>({});
@@ -39,6 +42,17 @@ export function GroupDashboard() {
       alert("Failed to create group.");
     } finally {
       setIsCreating(false);
+    }
+  };
+
+  const handleUpdateGroup = async (name: string, currency: string) => {
+    if (!groupToEdit) return;
+    try {
+      await updateGroup(groupToEdit.id, name, currency);
+      setIsEditModalOpen(false);
+    } catch (e) {
+      console.error(e);
+      alert("Failed to update group.");
     }
   };
 
@@ -144,6 +158,18 @@ export function GroupDashboard() {
                 onClick={(e) => {
                   e.preventDefault();
                   e.stopPropagation();
+                  setGroupToEdit(group);
+                  setIsEditModalOpen(true);
+                }}
+                className="absolute top-4 right-12 p-2 text-slate-400 hover:text-brand-600 hover:bg-brand-50 dark:hover:bg-brand-900/30 rounded-full transition-colors z-10 opacity-0 group-hover:opacity-100"
+                aria-label="Edit group"
+              >
+                <Edit2 className="w-4 h-4" />
+              </button>
+              <button
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
                   setGroupToDelete(group.id);
                 }}
                 className="absolute top-4 right-4 p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-full transition-colors z-10 opacity-0 group-hover:opacity-100"
@@ -171,6 +197,14 @@ export function GroupDashboard() {
         isOpen={isModalOpen} 
         onClose={() => setIsModalOpen(false)} 
         onSubmit={handleCreateGroup} 
+      />
+
+      <EditGroupModal
+        isOpen={isEditModalOpen}
+        onClose={() => setIsEditModalOpen(false)}
+        onSubmit={handleUpdateGroup}
+        initialName={groupToEdit?.name || ''}
+        initialCurrency={groupToEdit?.currency || '$'}
       />
 
       <ConfirmModal

@@ -34,6 +34,14 @@ export const groupsService = {
   },
 
   /**
+   * Update a group
+   */
+  updateGroup: async (groupId: number, data: { name?: string; currency?: string }): Promise<Group> => {
+    const response = await api.patch<Group>(`/groups/${groupId}`, data);
+    return response.data;
+  },
+
+  /**
    * Add a user to a group by email
    */
   addMemberByEmail: async (groupId: number, email: string): Promise<void> => {
