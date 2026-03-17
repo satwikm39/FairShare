@@ -64,3 +64,13 @@ FairShare is a modern, high-performance web application designed to solve the ag
 - **`/frontend`**: React source codes including features-based components, UI primitives, and custom hooks.
 - **`/backend`**: FastAPI application following a modular structure (`api`, `core`, `models`, `schemas`, `crud`).
 - **`/docs`**: Project documentation including PRD and schemas.
+
+## Documentation
+
+| Doc | Description |
+|---|---|
+| [`docs/FEATURES.md`](docs/FEATURES.md) | Full feature list |
+| [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | System diagram, DB schema, data flows |
+| [`docs/EXECUTIVE_SUMMARY.md`](docs/EXECUTIVE_SUMMARY.md) | Product and technical overview |
+| [`docs/SETUP.md`](docs/SETUP.md) | Detailed local setup and deployment guide |
+
