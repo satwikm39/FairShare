@@ -3,6 +3,11 @@ name: Build and Push Docker Image
 # This workflow allows you to manually trigger a deployment from the GitHub Actions tab.
 # You can select which branch you want to build from.
 on:
+  push:
+    branches: [ "main" ]
+    paths:
+      - 'backend/**'
+      - '.github/workflows/deploy-backend.yml'
   workflow_dispatch:
     inputs:
       image_tag:
@@ -33,5 +38,11 @@ jobs:
           context: ./backend
           file: ./backend/Dockerfile
           push: true
-          # Replace 'yourdockerhubusername' with your actual Docker Hub username below
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/fairshare-backend:${{ inputs.image_tag }}
+          # Use user-provided tag on manual trigger, or 'latest' on push
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/fairshare-backend:${{ github.event.inputs.image_tag || 'latest' }}
+
+      # Trigger Render deployment via Deploy Hook
+      - name: Trigger Render Deploy
+        if: success()
+        run: |
+          curl -X GET "${{ secrets.RENDER_DEPLOY_HOOK_URL }}"
