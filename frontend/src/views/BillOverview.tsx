@@ -254,16 +254,16 @@ export function BillOverview() {
                 onResetAll={resetAllShares}
               />
               {hasUnsavedChanges && (
-                <div className="mt-6 flex justify-end">
-                  <div className="flex items-center gap-4">
+                <div className="mt-6 flex justify-end w-full sm:w-auto">
+                  <div className="flex flex-col sm:flex-row items-center gap-4 w-full sm:w-auto">
                     {hasInvalidItems && (
-                      <span className="text-sm font-medium text-red-500 dark:text-red-400">
+                      <span className="text-sm font-medium text-red-500 dark:text-red-400 text-center sm:text-right">
                         Please assign shares to all items highlighted in red.
                       </span>
                     )}
                     <Button
                       variant="primary"
-                      className="shadow-brand-500/20 gap-2 px-8"
+                      className="shadow-brand-500/20 gap-2 px-8 w-full sm:w-auto"
                       onClick={saveShares}
                       isLoading={isSavingShares}
                       disabled={hasInvalidItems || isSavingShares}

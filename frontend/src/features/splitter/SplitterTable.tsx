@@ -87,7 +87,9 @@ export function SplitterTable({ bill, group, onUpdateShare, onSplitAllEqually, o
       <div className="p-4 border-b border-slate-200/80 dark:border-slate-700 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white dark:bg-slate-900 rounded-t-[2rem]">
         <div>
           <h3 className="font-bold text-slate-800 dark:text-slate-100">Bill Items</h3>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Edit shares or use auto-split.</p>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+            Edit shares or use auto-split. <span className="md:hidden text-brand-500 font-medium">Scroll right to see all members →</span>
+          </p>
         </div>
         {onSplitAllEqually && onResetAll && (
           <Button 
@@ -215,10 +217,10 @@ export function SplitterTable({ bill, group, onUpdateShare, onSplitAllEqually, o
           {/* Add Item Row */}
           {onAddItem && !showAddRow && (
             <tr>
-              <td colSpan={2 + (bill.group_id ? 0 : 0)} className="p-3">
+              <td colSpan={99} className="p-3">
                 <button
                   onClick={() => setShowAddRow(true)}
-                  className="flex items-center gap-2 text-sm font-semibold text-brand-600 dark:text-brand-400 hover:text-brand-700 dark:hover:text-brand-300 transition-colors px-2 py-1.5 rounded-lg hover:bg-brand-50 dark:hover:bg-brand-900/20"
+                  className="flex items-center gap-2 text-sm font-semibold text-brand-600 dark:text-brand-400 hover:text-brand-700 dark:hover:text-brand-300 transition-colors px-2 py-1.5 rounded-lg hover:bg-brand-50 dark:hover:bg-brand-900/20 w-fit"
                 >
                   <PlusCircle className="w-4 h-4" />
                   Add Item

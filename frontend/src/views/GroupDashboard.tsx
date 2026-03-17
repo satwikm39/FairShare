@@ -161,7 +161,7 @@ export function GroupDashboard() {
                   setGroupToEdit(group);
                   setIsEditModalOpen(true);
                 }}
-                className="absolute top-4 right-12 p-2 text-slate-400 hover:text-brand-600 hover:bg-brand-50 dark:hover:bg-brand-900/30 rounded-full transition-colors z-10 opacity-0 group-hover:opacity-100"
+                className="absolute top-4 right-12 p-2 text-slate-400 hover:text-brand-600 hover:bg-brand-50 dark:hover:bg-brand-900/30 rounded-full transition-colors z-10 opacity-100 md:opacity-0 md:group-hover:opacity-100"
                 aria-label="Edit group"
               >
                 <Edit2 className="w-4 h-4" />
@@ -172,7 +172,7 @@ export function GroupDashboard() {
                   e.stopPropagation();
                   setGroupToDelete(group.id);
                 }}
-                className="absolute top-4 right-4 p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-full transition-colors z-10 opacity-0 group-hover:opacity-100"
+                className="absolute top-4 right-4 p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-full transition-colors z-10 opacity-100 md:opacity-0 md:group-hover:opacity-100"
                 aria-label="Delete group"
               >
                 <Trash2 className="w-4 h-4" />

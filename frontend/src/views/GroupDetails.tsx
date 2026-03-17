@@ -212,15 +212,16 @@ export function GroupDetails() {
               </div>
             )}
           </div>
-          <div className="flex gap-3">
+          <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
             <Button 
               variant="outline"
+              className="w-full sm:w-auto"
               onClick={() => setIsAddMemberModalOpen(true)}
             >
               Add Friend
             </Button>
             <Button 
-              className="gap-2 px-6 shadow-brand-500/20" 
+              className="gap-2 px-6 shadow-brand-500/20 w-full sm:w-auto" 
               onClick={() => setIsCreateBillModalOpen(true)}
               isLoading={isCreatingBill}
             >
@@ -391,7 +392,7 @@ export function GroupDetails() {
                           </h3>
                           <button
                             onClick={(e) => startEditingBill(e, bill.id, bill.name, bill.date)}
-                            className="p-1.5 text-slate-400 hover:text-brand-600 hover:bg-brand-50 dark:hover:bg-brand-900/30 rounded opacity-0 group-hover/bill:opacity-100 transition-opacity"
+                            className="p-1.5 text-slate-400 hover:text-brand-600 hover:bg-brand-50 dark:hover:bg-brand-900/30 rounded opacity-100 md:opacity-0 md:group-hover/bill:opacity-100 transition-opacity"
                             title="Edit bill details"
                           >
                             <Edit2 className="w-4 h-4" />
@@ -437,7 +438,7 @@ export function GroupDetails() {
                   e.stopPropagation();
                   setBillToDelete(bill.id);
                 }}
-                className="absolute top-1/2 -translate-y-1/2 right-4 p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/30 rounded transition-colors z-10 opacity-0 group-hover/bill:opacity-100"
+                className="absolute top-1/2 -translate-y-1/2 right-4 p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/30 rounded transition-colors z-10 opacity-100 md:opacity-0 md:group-hover/bill:opacity-100"
                 aria-label="Delete bill"
               >
                 <Trash2 className="w-5 h-5" />
