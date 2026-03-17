@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { Plus, Receipt, Loader2, ArrowLeft, Trash2, Edit2, Calendar, Check, X, TrendingUp, TrendingDown, ArrowRight, RefreshCw, Coins } from 'lucide-react';
+import { Plus, Receipt, Loader2, ArrowLeft, Trash2, Edit2, Calendar, Check, X, TrendingUp, TrendingDown, ArrowRight, RefreshCw } from 'lucide-react';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { useGroupDetails } from '../hooks/useGroupDetails';
@@ -11,6 +11,7 @@ import { CreateBillModal } from '../components/groups/CreateBillModal';
 import { EditGroupModal } from '../components/groups/EditGroupModal';
 import { ConfirmModal } from '../components/ui/ConfirmModal';
 import type { GroupBalances } from '../types';
+import { getCurrencySymbol, getCurrencyCode } from '../lib/utils';
 
 export function GroupDetails() {
   const { id } = useParams<{ id: string }>();
@@ -186,9 +187,11 @@ export function GroupDetails() {
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-3">
               <h1 className="text-2xl font-extrabold text-slate-900 dark:text-white tracking-tight truncate">{group.name}</h1>
-              <div className="flex items-center gap-1.5 text-[10px] font-bold text-brand-600 dark:text-brand-400 uppercase tracking-widest bg-brand-50 dark:bg-brand-900/20 px-2 py-0.5 rounded-full border border-brand-100 dark:border-brand-800/40">
-                <Coins className="w-3 h-3" />
-                <span>{group.currency}</span>
+              <div className="flex items-center gap-1.5 text-[10px] font-bold text-brand-600 dark:text-brand-400 uppercase tracking-widest bg-brand-50 dark:bg-brand-900/20 px-2.5 py-1 rounded-full border border-brand-100/50 dark:border-brand-800/40 shadow-sm transition-all">
+                <span className="flex items-center gap-1">
+                  <span className="text-sm font-black">{getCurrencySymbol(group.currency)}</span>
+                  <span className="text-sm font-black">{getCurrencyCode(group.currency)}</span>
+                </span>
               </div>
               <button
                 onClick={() => setIsEditGroupModalOpen(true)}
@@ -269,7 +272,7 @@ export function GroupDetails() {
                 <div className="flex items-center gap-3 p-3 rounded-xl bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800/40">
                   <TrendingUp className="w-5 h-5 text-emerald-600 dark:text-emerald-400 shrink-0" />
                   <span className="text-sm font-semibold text-emerald-700 dark:text-emerald-400">
-                    Overall, you are owed <strong>{group?.currency}{absNet.toFixed(2)}</strong> in this group.
+                    Overall, you are owed <strong><span className="text-base font-black">{getCurrencySymbol(group?.currency || '$')}</span>{absNet.toFixed(2)}</strong> in this group.
                   </span>
                 </div>
               );
@@ -277,7 +280,7 @@ export function GroupDetails() {
                 <div className="flex items-center gap-3 p-3 rounded-xl bg-rose-50 dark:bg-rose-900/20 border border-rose-200 dark:border-rose-800/40">
                   <TrendingDown className="w-5 h-5 text-rose-600 dark:text-rose-400 shrink-0" />
                   <span className="text-sm font-semibold text-rose-700 dark:text-rose-400">
-                    Overall, you owe <strong>{group?.currency}{absNet.toFixed(2)}</strong> in this group.
+                    Overall, you owe <strong><span className="text-base font-black">{getCurrencySymbol(group?.currency || '$')}</span>{absNet.toFixed(2)}</strong> in this group.
                   </span>
                 </div>
               );
@@ -306,7 +309,7 @@ export function GroupDetails() {
                         <ArrowRight className="w-4 h-4 shrink-0 text-slate-400" />
                         <span className="font-semibold truncate">{debt.to_user_name}</span>
                       </div>
-                      <span className="font-bold shrink-0">{group?.currency}{debt.amount.toFixed(2)}</span>
+                      <span className="font-bold shrink-0"><span className="text-sm font-black">{getCurrencySymbol(group?.currency || '$')}</span>{debt.amount.toFixed(2)}</span>
                     </div>
                   );
                 })}
@@ -422,8 +425,9 @@ export function GroupDetails() {
 
                     {/* Grand Total Value */}
                     <div className="flex items-center gap-6 sm:pr-10">
-                      <div className="text-2xl font-black text-brand-600 dark:text-brand-400">
-                        ${bill.grand_total.toFixed(2)}
+                      <div className="text-2xl font-black text-brand-600 dark:text-brand-400 flex items-baseline">
+                        <span className="text-3xl font-black mr-1">{getCurrencySymbol(group.currency)}</span>
+                        <span>{bill.grand_total.toFixed(2)}</span>
                       </div>
                     </div>
 

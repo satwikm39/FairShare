@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { X } from 'lucide-react';
 import { Button } from '../ui/Button';
+import { cn, currencies } from '../../lib/utils';
 
 interface CreateGroupModalProps {
   isOpen: boolean;
@@ -10,18 +11,8 @@ interface CreateGroupModalProps {
 
 export function CreateGroupModal({ isOpen, onClose, onSubmit }: CreateGroupModalProps) {
   const [name, setName] = useState('');
-  const [currency, setCurrency] = useState('$');
+  const [currency, setCurrency] = useState('USD');
   const [isLoading, setIsLoading] = useState(false);
-  
-  const currencies = [
-    { label: 'US Dollar ($)', value: '$' },
-    { label: 'Euro (€)', value: '€' },
-    { label: 'British Pound (£)', value: '£' },
-    { label: 'Indian Rupee (₹)', value: '₹' },
-    { label: 'Japanese Yen (¥)', value: '¥' },
-    { label: 'Canadian Dollar (CA$)', value: 'CA$' },
-    { label: 'Australian Dollar (A$)', value: 'A$' },
-  ];
 
   if (!isOpen) return null;
 
@@ -75,22 +66,40 @@ export function CreateGroupModal({ isOpen, onClose, onSubmit }: CreateGroupModal
               />
             </div>
             <div>
-              <label htmlFor="currency" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-3">
                 Currency
               </label>
-              <select
-                id="currency"
-                value={currency}
-                onChange={e => setCurrency(e.target.value)}
-                className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900/50 text-slate-900 dark:text-white focus:border-brand-500 dark:focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 outline-none transition-all"
-                disabled={isLoading}
-              >
+              <div className="grid grid-cols-2 gap-3">
                 {currencies.map(curr => (
-                  <option key={curr.value} value={curr.value}>
-                    {curr.label}
-                  </option>
+                  <button
+                    key={curr.code}
+                    type="button"
+                    onClick={() => setCurrency(curr.code)}
+                    className={cn(
+                      "flex items-center justify-between px-4 py-3 rounded-2xl border-2 transition-all duration-300 group",
+                      currency === curr.code
+                        ? "border-brand-500 bg-brand-50/50 dark:bg-brand-900/20 text-brand-700 dark:text-brand-400 shadow-md ring-4 ring-brand-500/10"
+                        : "border-slate-100 dark:border-slate-700/50 bg-white dark:bg-slate-900/50 text-slate-600 dark:text-slate-400 hover:border-slate-200 dark:hover:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800/50"
+                    )}
+                    disabled={isLoading}
+                  >
+                    <div className="flex flex-col items-start">
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 group-hover:text-brand-500 transition-colors">
+                        {curr.label}
+                      </span>
+                      <span className="text-sm font-black uppercase tracking-tight">
+                        {curr.code}
+                      </span>
+                    </div>
+                    <span className={cn(
+                      "text-3xl font-black shrink-0 transition-transform group-hover:scale-110",
+                      currency === curr.code ? "text-brand-600 dark:text-brand-400" : "text-slate-300 dark:text-slate-600"
+                    )}>
+                      {curr.symbol}
+                    </span>
+                  </button>
                 ))}
-              </select>
+              </div>
             </div>
           </div>
           

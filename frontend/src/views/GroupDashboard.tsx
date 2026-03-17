@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Plus, Users, Loader2, Trash2, Edit2, TrendingUp, TrendingDown, Minus as MinusIcon, Coins } from 'lucide-react';
+import { Plus, Users, Loader2, Trash2, Edit2, TrendingUp, TrendingDown, Minus as MinusIcon } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
@@ -9,6 +9,7 @@ import { CreateGroupModal } from '../components/groups/CreateGroupModal';
 import { EditGroupModal } from '../components/groups/EditGroupModal';
 import { ConfirmModal } from '../components/ui/ConfirmModal';
 import type { Group, GroupBalances } from '../types';
+import { getCurrencySymbol, getCurrencyCode } from '../lib/utils';
 
 export function GroupDashboard() {
   const { groups, isLoading, error, createGroup, deleteGroup, updateGroup } = useGroups();
@@ -90,7 +91,7 @@ export function GroupDashboard() {
       return (
         <div className="flex items-center gap-1.5 mt-3 text-xs font-semibold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/20 px-3 py-1.5 rounded-full w-fit border border-emerald-200 dark:border-emerald-800/40">
           <TrendingUp className="w-3 h-3" />
-          You're owed {currency}{absNet.toFixed(2)}
+          You're owed <span className="text-sm font-black mr-0.5">{getCurrencySymbol(currency)}</span>{absNet.toFixed(2)}
         </div>
       );
     }
@@ -98,7 +99,7 @@ export function GroupDashboard() {
     return (
       <div className="flex items-center gap-1.5 mt-3 text-xs font-semibold text-rose-700 dark:text-rose-400 bg-rose-50 dark:bg-rose-900/20 px-3 py-1.5 rounded-full w-fit border border-rose-200 dark:border-rose-800/40">
         <TrendingDown className="w-3 h-3" />
-        You owe {currency}{absNet.toFixed(2)}
+        You owe <span className="text-sm font-black mr-0.5">{getCurrencySymbol(currency)}</span>{absNet.toFixed(2)}
       </div>
     );
   };
@@ -147,9 +148,11 @@ export function GroupDashboard() {
                       </div>
                       {renderDebtBadge(group.id, group.currency)}
                     </div>
-                    <div className="flex items-center gap-1.5 text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest bg-slate-50 dark:bg-slate-900/40 px-2 py-1 rounded-md w-fit border border-slate-100 dark:border-slate-800/50">
-                      <Coins className="w-3 h-3" />
-                      <span>Currency: {group.currency}</span>
+                    <div className="flex items-center gap-1.5 text-[10px] font-bold text-brand-600 dark:text-brand-400 uppercase tracking-widest bg-brand-50/50 dark:bg-brand-900/20 px-2.5 py-1 rounded-full w-fit border border-brand-100/50 dark:border-brand-800/40 shadow-sm transition-all group-hover:bg-brand-50 dark:group-hover:bg-brand-900/30">
+                      <span className="flex items-center gap-1">
+                        <span className="text-sm font-black">{getCurrencySymbol(group.currency)}</span>
+                        <span className="text-sm font-black">{getCurrencyCode(group.currency)}</span>
+                      </span>
                     </div>
                   </div>
                 </Card>

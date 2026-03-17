@@ -6,7 +6,7 @@ import { Button } from '../components/ui/Button';
 import { SplitterTable } from '../features/splitter/SplitterTable';
 import { useBill } from '../hooks/useBill';
 import { useAuth } from '../context/AuthContext';
-import { cn } from '../lib/utils';
+import { cn, getCurrencySymbol } from '../lib/utils';
 
 export function BillOverview() {
   const { id } = useParams<{ id: string }>();
@@ -113,8 +113,9 @@ export function BillOverview() {
               {bill && (
                 <div className="flex items-center gap-1.5">
                   <span className="text-sm font-bold text-slate-500 dark:text-slate-400">Total:</span>
-                  <span className="text-lg font-black text-brand-600 dark:text-brand-400">
-                    ${bill.grand_total.toFixed(2)}
+                  <span className="text-lg font-black text-brand-600 dark:text-brand-400 flex items-baseline">
+                    <span className="text-xl font-black mr-0.5">{getCurrencySymbol(group?.currency || '$')}</span>
+                    <span>{bill.grand_total.toFixed(2)}</span>
                   </span>
                 </div>
               )}
