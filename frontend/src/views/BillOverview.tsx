@@ -90,45 +90,47 @@ export function BillOverview() {
   };
 
   return (
-    <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-500">
+    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
       <div>
-        <Link to={bill?.group_id ? `/groups/${bill.group_id}` : '/dashboard'} className="inline-flex items-center text-sm font-medium text-brand-600 dark:text-brand-500 hover:text-brand-700 dark:hover:text-brand-400 mb-6 transition-colors">
-          <ArrowLeft className="w-4 h-4 mr-1" /> Back to Group
+        <Link to={bill?.group_id ? `/groups/${bill.group_id}` : '/dashboard'} className="inline-flex items-center text-xs font-medium text-brand-600 dark:text-brand-500 hover:text-brand-700 dark:hover:text-brand-400 mb-3 transition-colors">
+          <ArrowLeft className="w-3 h-3 mr-1" /> Back to Group
         </Link>
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
-          <div>
-            <h1 className="text-4xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+          <div className="flex-1 min-w-0">
+            <h1 className="text-2xl font-extrabold text-slate-900 dark:text-white tracking-tight truncate">
               {isLoading && !bill ? 'Loading Bill...' : (bill?.name || (group?.name ? `${group.name} Bill` : 'Bill Details'))}
             </h1>
-            {bill?.date && (
-              <p className="text-sm font-medium text-slate-500 dark:text-slate-400 mt-1 uppercase tracking-wider">
-                {new Date(bill.date).toLocaleDateString(undefined, {
-                  year: 'numeric',
-                  month: 'long',
-                  day: 'numeric'
-                })}
-              </p>
-            )}
-            {bill && (
-              <div className="mt-3 flex items-center gap-2">
-                <span className="text-xl font-bold text-slate-800 dark:text-slate-200">Grand Total:</span>
-                <span className="text-2xl font-black text-brand-600 dark:text-brand-400">
-                  ${bill.grand_total.toFixed(2)}
-                </span>
-              </div>
-            )}
-            <p className="text-lg text-slate-500 dark:text-slate-400 mt-2 font-medium">Split your bill items exactly how they were ordered.</p>
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-1">
+              {bill?.date && (
+                <p className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded">
+                  {new Date(bill.date).toLocaleDateString(undefined, {
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric'
+                  })}
+                </p>
+              )}
+              {bill && (
+                <div className="flex items-center gap-1.5">
+                  <span className="text-sm font-bold text-slate-500 dark:text-slate-400">Total:</span>
+                  <span className="text-lg font-black text-brand-600 dark:text-brand-400">
+                    ${bill.grand_total.toFixed(2)}
+                  </span>
+                </div>
+              )}
+              <p className="text-xs text-slate-400 dark:text-slate-500 font-medium italic">Split exactly as ordered.</p>
+            </div>
           </div>
           {bill && hasUnsavedChanges && (
              <Button 
                variant="primary"
-               className="shadow-brand-500/20 gap-2 px-6"
+               className="shadow-brand-500/20 gap-2 px-5 py-2 h-10 text-sm"
                onClick={saveShares}
                isLoading={isSavingShares}
                disabled={hasInvalidItems || isSavingShares}
                title={hasInvalidItems ? "All items must have at least one assigned share." : ""}
              >
-               <CheckCircle2 className="w-5 h-5" />
+               <CheckCircle2 className="w-4 h-4" />
                Save Splits
              </Button>
           )}
@@ -141,9 +143,9 @@ export function BillOverview() {
           {/* Payer Selection Card */}
           {group && (
             <Card className="border-slate-200/60 dark:border-slate-700/50 shadow-lg">
-              <div className="flex items-center gap-2 mb-4">
-                <UserCheck className="w-4 h-4 text-brand-500" />
-                <h3 className="font-bold text-lg text-slate-900 dark:text-white">Paid by</h3>
+            <div className="flex items-center gap-2 mb-3">
+                <UserCheck className="w-3.5 h-3.5 text-brand-500" />
+                <h3 className="font-bold text-sm text-slate-900 dark:text-white uppercase tracking-wider">Paid by</h3>
                 {isSavingPayer && <Loader2 className="w-3 h-3 animate-spin text-slate-400" />}
               </div>
               <div className="relative">
@@ -169,8 +171,8 @@ export function BillOverview() {
             </Card>
           )}
 
-          <Card className="border-slate-200/60 dark:border-slate-700/50 shadow-lg">
-            <h3 className="font-bold text-lg text-slate-900 dark:text-white mb-4">Receipt Upload</h3>
+          <Card className="border-slate-200/60 dark:border-slate-700/50 shadow-sm p-4">
+            <h3 className="font-bold text-sm text-slate-900 dark:text-white mb-3 uppercase tracking-wider">Receipt</h3>
             
             <input 
               type="file" 
@@ -191,11 +193,11 @@ export function BillOverview() {
                 "w-12 h-12 rounded-full flex items-center justify-center transition-colors shadow-sm",
                 selectedFile ? "bg-brand-500 text-white" : "bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 group-hover:bg-brand-100 dark:group-hover:bg-brand-900/50 group-hover:text-brand-600 dark:group-hover:text-brand-400"
               )}>
-                {selectedFile ? <FileText className="w-6 h-6" /> : <Upload className="w-6 h-6" />}
+                {selectedFile ? <FileText className="w-5 h-5" /> : <Upload className="w-5 h-5" />}
               </div>
               <div>
-                <p className={cn("font-semibold", selectedFile ? "text-brand-700 dark:text-brand-400" : "text-slate-700 dark:text-slate-300 group-hover:text-brand-700 dark:group-hover:text-brand-400")}>
-                  {selectedFile ? selectedFile.name : "Click to select file"}
+                <p className={cn("text-sm font-semibold", selectedFile ? "text-brand-700 dark:text-brand-400" : "text-slate-700 dark:text-slate-300 group-hover:text-brand-700 dark:group-hover:text-brand-400")}>
+                  {selectedFile ? selectedFile.name : "Select Receipt"}
                 </p>
                 {!selectedFile && <p className="text-xs text-slate-500 dark:text-slate-500 mt-1">JPEG, PNG, or PDF</p>}
               </div>

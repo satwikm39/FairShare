@@ -83,7 +83,7 @@ export function SplitterTable({ bill, group, onUpdateShare, onSplitAllEqually, o
   const currencySign = group.currency || '$';
 
   return (
-    <Card className="overflow-x-auto border-slate-200/60 dark:border-slate-700/50 shadow-lg" noPadding>
+    <Card className="border-slate-200/60 dark:border-slate-700/50 shadow-lg" noPadding allowOverflow>
       <div className="p-4 border-b border-slate-200/80 dark:border-slate-700 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white dark:bg-slate-900 rounded-t-[2rem]">
         <div>
           <h3 className="font-bold text-slate-800 dark:text-slate-100">Bill Items</h3>
@@ -125,10 +125,10 @@ export function SplitterTable({ bill, group, onUpdateShare, onSplitAllEqually, o
       <table className="w-full text-left border-collapse min-w-[650px]">
         <thead>
           <tr className="bg-slate-50 dark:bg-slate-900/50 border-b border-slate-200/80 dark:border-slate-700 text-xs text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider">
-            <th className="p-5 w-1/3 border-r border-slate-200/50 dark:border-slate-700/50">Item Name</th>
-            <th className="p-5 text-right w-1/6 border-r border-slate-200/50 dark:border-slate-700/50">Unit Cost</th>
+            <th className="sticky top-16 z-20 p-5 w-1/3 border-r border-slate-200/50 dark:border-slate-700/50 bg-slate-50 dark:bg-slate-900 shadow-[0_1px_0_0_rgba(0,0,0,0.05)] dark:shadow-[0_1px_0_0_rgba(255,255,255,0.05)]">Item Name</th>
+            <th className="sticky top-16 z-20 p-5 text-right w-1/6 border-r border-slate-200/50 dark:border-slate-700/50 bg-slate-50 dark:bg-slate-900 shadow-[0_1px_0_0_rgba(0,0,0,0.05)] dark:shadow-[0_1px_0_0_rgba(255,255,255,0.05)]">Unit Cost</th>
             {users.map((user, idx) => (
-              <th key={user.id} className={cn("p-5 text-center", idx !== users.length - 1 && "border-r border-slate-200/50 dark:border-slate-700/50")}>
+              <th key={user.id} className={cn("sticky top-16 z-20 p-5 text-center bg-slate-50 dark:bg-slate-900 shadow-[0_1px_0_0_rgba(0,0,0,0.05)] dark:shadow-[0_1px_0_0_rgba(255,255,255,0.05)]", idx !== users.length - 1 && "border-r border-slate-200/50 dark:border-slate-700/50")}>
                 <div className="flex flex-col items-center gap-1.5 cursor-pointer group">
                   <div className="w-9 h-9 rounded-full bg-brand-100 dark:bg-brand-900/30 text-brand-700 dark:text-brand-300 flex items-center justify-center font-extrabold ring-2 ring-transparent group-hover:ring-brand-200 dark:group-hover:ring-brand-700 transition-all shadow-sm">
                     {user.name.charAt(0).toUpperCase()}

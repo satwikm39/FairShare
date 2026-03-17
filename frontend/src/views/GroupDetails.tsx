@@ -177,36 +177,36 @@ export function GroupDetails() {
   }
 
   return (
-    <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-500">
+    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
       <div>
-        <Link to="/dashboard" className="inline-flex items-center text-sm font-medium text-brand-600 dark:text-brand-500 hover:text-brand-700 dark:hover:text-brand-400 mb-6">
-          <ArrowLeft className="w-4 h-4 mr-1" /> Back to Groups
+        <Link to="/dashboard" className="inline-flex items-center text-xs font-medium text-brand-600 dark:text-brand-500 hover:text-brand-700 dark:hover:text-brand-400 mb-3 transition-colors">
+          <ArrowLeft className="w-3 h-3 mr-1" /> Back to Groups
         </Link>
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
-          <div>
-            <h1 className="text-4xl font-extrabold text-slate-900 dark:text-white tracking-tight">{group.name}</h1>
-            <div className="flex items-center gap-3 mt-2">
-              <p className="text-lg text-slate-500 dark:text-slate-400 font-medium whitespace-nowrap">Manage this group's bills and expenses.</p>
-              <div className="flex items-center gap-1.5 text-[10px] font-bold text-brand-600 dark:text-brand-400 uppercase tracking-widest bg-brand-50 dark:bg-brand-900/20 px-2.5 py-1 rounded-full border border-brand-100 dark:border-brand-800/40">
-                <Coins className="w-3.5 h-3.5" />
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-3">
+              <h1 className="text-2xl font-extrabold text-slate-900 dark:text-white tracking-tight truncate">{group.name}</h1>
+              <div className="flex items-center gap-1.5 text-[10px] font-bold text-brand-600 dark:text-brand-400 uppercase tracking-widest bg-brand-50 dark:bg-brand-900/20 px-2 py-0.5 rounded-full border border-brand-100 dark:border-brand-800/40">
+                <Coins className="w-3 h-3" />
                 <span>{group.currency}</span>
               </div>
               <button
                 onClick={() => setIsEditGroupModalOpen(true)}
-                className="p-1.5 text-slate-400 hover:text-brand-600 hover:bg-brand-50 dark:hover:bg-brand-900/30 rounded-full transition-colors"
-                title="Edit group details"
+                className="p-1 text-slate-400 hover:text-brand-600 hover:bg-brand-50 dark:hover:bg-brand-900/30 rounded-full transition-colors"
+                title="Edit group"
               >
-                <Edit2 className="w-4 h-4" />
+                <Edit2 className="w-3.5 h-3.5" />
               </button>
             </div>
+            <p className="text-sm text-slate-500 dark:text-slate-400 font-medium mt-0.5 italic">Manage bills and expenses.</p>
             {group.members && group.members.length > 0 && (
-              <div className="flex flex-wrap items-center gap-2 mt-4">
+              <div className="flex flex-wrap items-center gap-1.5 mt-3">
                 {group.members.map(member => (
-                  <div key={member.user_id} className="flex items-center gap-2 bg-slate-100 dark:bg-slate-800 rounded-full px-3 py-1 text-sm font-medium text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
-                    <div className="w-5 h-5 rounded-full bg-brand-100 dark:bg-brand-900/50 flex items-center justify-center text-brand-600 dark:text-brand-400 text-xs font-bold shrink-0">
+                  <div key={member.user_id} className="flex items-center gap-1.5 bg-slate-50 dark:bg-slate-800/50 rounded-full px-2 py-0.5 text-xs font-semibold text-slate-600 dark:text-slate-400 border border-slate-200/60 dark:border-slate-700/50">
+                    <div className="w-4 h-4 rounded-full bg-brand-50 dark:bg-brand-900/30 flex items-center justify-center text-brand-600 dark:text-brand-400 text-[10px] font-bold shrink-0">
                       {member.user?.name?.charAt(0)?.toUpperCase() || 'U'}
                     </div>
-                    {member.user?.name || member.user?.email || 'Unknown User'}
+                    <span>{member.user?.name?.split(' ')[0] || member.user?.email || 'User'}</span>
                   </div>
                 ))}
               </div>
@@ -215,17 +215,17 @@ export function GroupDetails() {
           <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
             <Button 
               variant="outline"
-              className="w-full sm:w-auto"
+              className="w-full sm:w-auto h-9 text-xs"
               onClick={() => setIsAddMemberModalOpen(true)}
             >
               Add Friend
             </Button>
             <Button 
-              className="gap-2 px-6 shadow-brand-500/20 w-full sm:w-auto" 
+              className="gap-1.5 px-4 shadow-brand-500/20 w-full sm:w-auto h-9 text-xs" 
               onClick={() => setIsCreateBillModalOpen(true)}
               isLoading={isCreatingBill}
             >
-              <Plus className="w-5 h-5" />
+              <Plus className="w-4 h-4" />
               New Bill
             </Button>
           </div>
@@ -233,9 +233,9 @@ export function GroupDetails() {
       </div>
 
       {/* ── Balance breakdown ── */}
-      <div className="space-y-4">
+      <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100">Balances</h2>
+          <h2 className="text-lg font-bold text-slate-800 dark:text-slate-100 uppercase tracking-wider">Balances</h2>
           <button
             onClick={() => fetchBalances(true)}
             className="flex items-center gap-1.5 text-sm font-medium text-slate-500 hover:text-brand-600 dark:text-slate-400 dark:hover:text-brand-400 transition-colors"
@@ -254,7 +254,7 @@ export function GroupDetails() {
             </div>
           </Card>
         ) : balances && (balances.debts.length > 0 || balances.balances.length > 0) ? (
-          <Card className="border-slate-200/60 dark:border-slate-700/50 shadow-sm space-y-5">
+          <Card className="border-slate-200/60 dark:border-slate-700/50 shadow-sm space-y-4 p-4">
 
             {/* Your personal summary */}
             {currentUser && (() => {
@@ -387,7 +387,7 @@ export function GroupDetails() {
                         </div>
                       ) : (
                         <div className="flex items-center gap-2 mb-1">
-                          <h3 className="text-xl font-bold text-slate-800 dark:text-slate-100 group-hover/bill:text-brand-600 dark:group-hover/bill:text-brand-400 transition-colors truncate">
+                          <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100 group-hover/bill:text-brand-600 dark:group-hover/bill:text-brand-400 transition-colors truncate">
                             {bill.name || `Bill #${bill.id}`}
                           </h3>
                           <button
