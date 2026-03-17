@@ -1,18 +1,18 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
 from sqlalchemy.orm import Session
 from app import schemas, crud, models
-from app.core.database import get_db
-from fastapi import UploadFile, File
-from app.api import deps
+from app.api.deps import get_current_user, get_db, get_current_bill_access
 import app.services.aws as aws_service
 
 router = APIRouter()
 
 @router.get("/{bill_id}", response_model=schemas.Bill)
-def read_bill(bill_id: int, db: Session = Depends(get_db)):
+def read_bill(
+    bill_id: int, 
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_bill_access)
+):
     db_bill = crud.bills.get_bill(db, bill_id=bill_id)
-    if db_bill is None:
-        raise HTTPException(status_code=404, detail="Bill not found")
     return db_bill
 
 @router.put("/{bill_id}", response_model=schemas.Bill)
@@ -20,7 +20,7 @@ def update_bill_details(
     bill_id: int, 
     bill_update: schemas.BillUpdate, 
     db: Session = Depends(get_db),
-    current_user: models.User = Depends(deps.get_current_user)
+    current_user: models.User = Depends(get_current_bill_access)
 ):
     db_bill = crud.bills.get_bill(db, bill_id=bill_id)
     if db_bill is None:
@@ -41,7 +41,7 @@ def update_bill_details(
 def delete_bill(
     bill_id: int, 
     db: Session = Depends(get_db),
-    current_user: models.User = Depends(deps.get_current_user)
+    current_user: models.User = Depends(get_current_bill_access)
 ):
     db_bill = crud.bills.delete_bill(db=db, bill_id=bill_id)
     if db_bill is None:
@@ -49,14 +49,21 @@ def delete_bill(
     return None
 
 @router.post("/{bill_id}/items/", response_model=schemas.BillItem)
-def create_item_for_bill(bill_id: int, item: schemas.BillItemCreate, db: Session = Depends(get_db)):
-    db_bill = crud.bills.get_bill(db, bill_id=bill_id)
-    if db_bill is None:
-        raise HTTPException(status_code=404, detail="Bill not found")
+def create_item_for_bill(
+    bill_id: int, 
+    item: schemas.BillItemCreate, 
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_bill_access)
+):
     return crud.bills.create_bill_item(db=db, bill_id=bill_id, item=item)
 
 @router.post("/items/{item_id}/shares/", response_model=schemas.ItemShare)
-def add_share_to_item(item_id: int, share: schemas.ItemShareCreate, db: Session = Depends(get_db)):
+def add_share_to_item(
+    item_id: int, 
+    share: schemas.ItemShareCreate, 
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user) # Global auth enough, but could check group membership too if needed.
+):
     # Validate user exists
     db_user = crud.users.get_user(db, user_id=share.user_id)
     if db_user is None:
@@ -68,7 +75,7 @@ def update_item_details(
     item_id: int, 
     item_update: schemas.BillItemUpdate, 
     db: Session = Depends(get_db),
-    current_user: models.User = Depends(deps.get_current_user)
+    current_user: models.User = Depends(get_current_user)
 ):
     db_item = crud.bills.update_bill_item(db=db, item_id=item_id, item_update=item_update)
     if db_item is None:
@@ -79,7 +86,7 @@ def update_item_details(
 def delete_item(
     item_id: int, 
     db: Session = Depends(get_db),
-    current_user: models.User = Depends(deps.get_current_user)
+    current_user: models.User = Depends(get_current_user)
 ):
     db_item = crud.bills.delete_bill_item(db=db, item_id=item_id)
     if db_item is None:
@@ -91,7 +98,7 @@ def update_shares_bulk(
     bill_id: int, 
     shares: list[schemas.ItemShareUpdateBulk], 
     db: Session = Depends(get_db),
-    current_user: models.User = Depends(deps.get_current_user)
+    current_user: models.User = Depends(get_current_bill_access)
 ):
     db_bill = crud.bills.get_bill(db, bill_id=bill_id)
     if db_bill is None:
@@ -110,7 +117,7 @@ async def upload_receipt(
     bill_id: int, 
     file: UploadFile = File(...), 
     db: Session = Depends(get_db),
-    current_user: models.User = Depends(deps.get_current_user)
+    current_user: models.User = Depends(get_current_bill_access)
 ):
     print(f"DEBUG: Upload route called for bill_id: {bill_id}")
     

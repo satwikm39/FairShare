@@ -3,6 +3,7 @@ from pydantic import BaseModel
 class UserBase(BaseModel):
     name: str
     email: str
+    is_admin: bool = False
     textract_usage_count: int = 0
 
 class UserCreate(UserBase):

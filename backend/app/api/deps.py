@@ -49,9 +49,55 @@ def get_current_user(
             
         return user
     except Exception as e:
-        print(f"Auth error: {e}")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid authentication credentials",
             headers={"WWW-Authenticate": "Bearer"},
         )
+
+def get_current_active_admin(
+    current_user: models.User = Depends(get_current_user)
+) -> models.User:
+    if not current_user.is_admin:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Administrator access required"
+        )
+    return current_user
+
+def get_current_group_member(
+    group_id: int,
+    current_user: models.User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+) -> models.User:
+    # Use crud to check membership
+    db_group = crud.groups.get_group(db, group_id=group_id)
+    if not db_group:
+        raise HTTPException(status_code=404, detail="Group not found")
+        
+    user_is_member = any(m.user_id == current_user.id for m in db_group.members)
+    if not user_is_member:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You are not a member of this group"
+        )
+    return current_user
+
+def get_current_bill_access(
+    bill_id: int,
+    current_user: models.User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+) -> models.User:
+    db_bill = crud.bills.get_bill(db, bill_id=bill_id)
+    if not db_bill:
+        raise HTTPException(status_code=404, detail="Bill not found")
+        
+    # Check if user is member of the bill's group
+    db_group = crud.groups.get_group(db, group_id=db_bill.group_id)
+    user_is_member = any(m.user_id == current_user.id for m in db_group.members)
+    if not user_is_member:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You do not have access to this bill"
+        )
+    return current_user
