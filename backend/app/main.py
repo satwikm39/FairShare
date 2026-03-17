@@ -14,7 +14,13 @@ app = FastAPI(title="FairShare API")
 
 # Configure CORS for frontend
 import os
-origins = os.getenv("ALLOWED_ORIGINS", "http://localhost:5173,http://localhost:3000").split(",")
+origins = [
+    origin.strip().rstrip('/') 
+    for origin in os.getenv(
+        "ALLOWED_ORIGINS", 
+        "http://localhost:5173,http://localhost:3000"
+    ).split(",")
+]
 
 app.add_middleware(
     CORSMiddleware,

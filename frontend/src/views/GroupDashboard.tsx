@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Plus, Users, Loader2, Trash2, TrendingUp, TrendingDown, Minus as MinusIcon } from 'lucide-react';
+import { Plus, Users, Loader2, Trash2, TrendingUp, TrendingDown, Minus as MinusIcon, Coins } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
@@ -133,8 +133,9 @@ export function GroupDashboard() {
                       </div>
                       {renderDebtBadge(group.id, group.currency)}
                     </div>
-                    <div className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
-                      {group.currency} · Group #{group.id}
+                    <div className="flex items-center gap-1.5 text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest bg-slate-50 dark:bg-slate-900/40 px-2 py-1 rounded-md w-fit border border-slate-100 dark:border-slate-800/50">
+                      <Coins className="w-3 h-3" />
+                      <span>Currency: {group.currency}</span>
                     </div>
                   </div>
                 </Card>

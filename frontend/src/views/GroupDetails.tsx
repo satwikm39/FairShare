@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { Plus, Receipt, Loader2, ArrowLeft, Trash2, Edit2, Calendar, Check, X, TrendingUp, TrendingDown, ArrowRight, RefreshCw } from 'lucide-react';
+import { Plus, Receipt, Loader2, ArrowLeft, Trash2, Edit2, Calendar, Check, X, TrendingUp, TrendingDown, ArrowRight, RefreshCw, Coins } from 'lucide-react';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { useGroupDetails } from '../hooks/useGroupDetails';
@@ -172,7 +172,13 @@ export function GroupDetails() {
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
           <div>
             <h1 className="text-4xl font-extrabold text-slate-900 dark:text-white tracking-tight">{group.name}</h1>
-            <p className="text-lg text-slate-500 dark:text-slate-400 mt-2 font-medium">Manage this group's bills and expenses.</p>
+            <div className="flex items-center gap-3 mt-2">
+              <p className="text-lg text-slate-500 dark:text-slate-400 font-medium whitespace-nowrap">Manage this group's bills and expenses.</p>
+              <div className="flex items-center gap-1.5 text-[10px] font-bold text-brand-600 dark:text-brand-400 uppercase tracking-widest bg-brand-50 dark:bg-brand-900/20 px-2.5 py-1 rounded-full border border-brand-100 dark:border-brand-800/40">
+                <Coins className="w-3.5 h-3.5" />
+                <span>{group.currency}</span>
+              </div>
+            </div>
             {group.members && group.members.length > 0 && (
               <div className="flex flex-wrap items-center gap-2 mt-4">
                 {group.members.map(member => (
