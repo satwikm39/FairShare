@@ -1,80 +1,66 @@
 # FairShare (Smart Bill Splitter)
 
-FairShare is a full-stack web application that allows groups of friends to upload receipt images and split bills accurately using a weighted, item-by-item system. It ensures everyone pays exactly for what they enjoyed, calculating pro-rated taxes and avoiding the typical "split evenly" disputes.
+FairShare is a modern, high-performance web application designed to solve the age-old problem of "who owes what." Unlike traditional splitters that rely on simple checkboxes or equal divisions, FairShare uses a **weighted, item-by-item system**. This ensures everyone pays exactly for what they consumed—calculated down to the pro-rated tax and fees.
 
 ## Features
 
-- **Group Management:** Create groups and invite friends to share and organize expenses.
-- **Receipt Upload & OCR Processing:** Upload a photo of a receipt, and the system automatically extracts item names and unit prices using AWS Textract.
-- **Manual Adjusting:** Users can easily edit the extracted receipt items in case the OCR results need adjusting.
-- **Interactive Splitter Table:** A dynamic, real-time shared table to allocate costs. Instead of splitting evenly or using simple checkboxes, FairShare uses a weight-based share counter (`[-] [count] [+]`) to specify exact portions.
-- **Pro-rated Tax & Grand Totals:** The application automatically calculates individual subtotals, pro-rates the total tax proportionally based on individual spending, and provides a final amount owed per person.
+- **Group Management:** Organise expenses by groups (e.g., "Ski Trip 2024"). Invite friends via shareable links or manage them directly.
+- **Smart Receipt Processing:** Upload a receipt photo, and FairShare uses **AWS Textract (OCR)** to automatically extract items, quantities, and prices.
+- **Dynamic Manual Controls:** 
+    - **Add/Edit/Delete:** Manually add missed items, delete extras, or edit OCR results in real-time.
+    - **Auto-Split:** Quickly distribute costs evenly across all group members with a single click.
+    - **Reset All:** Instantly clear all shares to start fresh.
+- **Interactive Weighted Splitting:** Allocate portions using a share-based counter (`[-] [count] [+]`). If three people share a pizza but one has double the appetite, just assign shares accordingly (e.g., 2:1:1).
+- **Precision Tax Logic:** Tax and fees are automatically **pro-rated** based on each individual's subtotal. This ensures that the person who ordered the expensive steak isn't subsidised by the person who had a side salad.
+- **Multi-Currency Support:** Set a default currency for your group to keep everything transparent.
+- **Optimised for Any Device:** Features a mobile-responsive table with sticky headers for easy scrolling through long bills.
+- **User Profiles:** Customize your display name for clear identification in group tables.
 
 ## Tech Stack
 
 ### Frontend
-
 - **Framework:** React (Vite)
-- **Language:** TypeScript
-- **Styling:** Tailwind CSS
-- **Routing:** React Router DOM
-- **Authentication:** Firebase Authentication
+- **State Management:** React Context API
+- **Styling:** Tailwind CSS (Modern, Responsive UI)
+- **Icons:** Lucide React
+- **Authentication:** Firebase Client SDK
 
 ### Backend
-
-- **Framework:** FastAPI (Python)
-- **Database:** PostgreSQL with SQLAlchemy ORM
-- **OCR Integration:** AWS Textract (via `boto3`)
-- **Authentication Validation:** Firebase Admin SDK
+- **Framework:** FastAPI (Python 3.9+)
+- **ORM:** SQLAlchemy with PostgreSQL
+- **OCR Engine:** AWS Textract (via Boto3)
+- **Auth Validation:** Firebase Admin SDK
+- **Database Migrations:** Alembic
 
 ## Setup Instructions (Local Development)
 
 ### 1. Prerequisites
-
-- Node.js & npm (for the frontend)
-- Python 3.9+ (for the backend)
-- PostgreSQL running locally or hosted
-- Firebase Project (for authentication credentials)
-- AWS Credentials (for Textract)
+- **Node.js & npm**
+- **Python 3.9+**
+- **PostgreSQL** (Local or RDS)
+- **Firebase Project** (Auth credentials)
+- **AWS Account** (Access keys for Textract)
 
 ### 2. Backend Setup
-
-1.  Navigate to the `backend` directory:
-    ```bash
-    cd backend
-    ```
-2.  Create and activate a virtual environment:
+1.  Navigate to `backend/`.
+2.  Create a virtual environment:
     ```bash
     python -m venv venv
-    source venv/bin/activate  # On Windows: venv\Scripts\activate
+    source venv/bin/activate  # Windows: venv\Scripts\activate
     ```
-3.  Install dependencies:
-    ```bash
-    pip install -r requirements.txt
-    ```
-4.  Set up environment variables in `backend/.env` (Database URL, AWS Keys, etc.) and place your `firebase-adminsdk.json` in the backend root.
-5.  Start the FastAPI server:
-    ```bash
-    uvicorn app.main:app --reload
-    ```
+3.  Install dependencies: `pip install -r requirements.txt`.
+4.  Configure `.env` with your `DATABASE_URL`, `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, and `AWS_REGION`.
+5.  Initialize the database: `alembic upgrade head` (or the app will auto-create tables on start).
+6.  Start server: `uvicorn app.main:app --reload`.
 
 ### 3. Frontend Setup
-
-1.  Navigate to the `frontend` directory:
-    ```bash
-    cd frontend
-    ```
-2.  Install dependencies:
-    ```bash
-    npm install
-    ```
-3.  Set up environment variables in `frontend/.env` (Firebase config keys, VITE_API_URL).
-4.  Start the development server:
-    ```bash
-    npm run dev
-    ```
+1.  Navigate to `frontend/`.
+2.  Install packages: `npm install`.
+3.  Configure `.env` with Firebase API keys and `VITE_API_URL`.
+4.  Launch dev server: `npm run dev`.
 
 ## Project Structure
 
-- **/frontend:** React application with views, components, context (Auth, Theme), and API service integration.
-- **/backend:** FastAPI application containing routing (`/api`), SQLAlchemy ORM models (`/models`), CRUD operations (`/crud`), and core logic (`/core`).
+- **`/frontend`**: React source codes including features-based components, UI primitives, and custom hooks.
+- **`/backend`**: FastAPI application following a modular structure (`api`, `core`, `models`, `schemas`, `crud`).
+- **`/docs`**: Project documentation including PRD and schemas.
