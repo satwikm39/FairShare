@@ -7,6 +7,7 @@ export interface GroupMemberResponse {
 export interface Group {
   id: number;
   name: string;
+  currency: string;
   members: GroupMemberResponse[];
 }
 
@@ -14,6 +15,7 @@ export interface User {
   id: number;
   name: string;
   email: string;
+  textract_usage_count: number;
 }
 
 export interface ItemShare {

@@ -20,7 +20,7 @@ def get_groups_for_user(db: Session, user_id: int, skip: int = 0, limit: int = 1
     )
 
 def create_group(db: Session, group: schemas.GroupCreate, user_id: int):
-    db_group = models.Group(name=group.name)
+    db_group = models.Group(name=group.name, currency=group.currency)
     db.add(db_group)
     db.commit()
     db.refresh(db_group)

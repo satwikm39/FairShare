@@ -5,6 +5,7 @@ import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { SplitterTable } from '../features/splitter/SplitterTable';
 import { useBill } from '../hooks/useBill';
+import { useAuth } from '../context/AuthContext';
 import { cn } from '../lib/utils';
 
 export function BillOverview() {
@@ -12,7 +13,10 @@ export function BillOverview() {
   // Default to 1 if no ID is provided, so it doesn't crash on invalid URLs
   const billId = parseInt(id || '1', 10);
   const { bill, isLoading, error, fetchBill, uploadReceipt, updateShare, splitAllEqually, resetAllShares, updateItemDetails, updateTax, addItem, deleteItem, hasUnsavedChanges, isSavingShares, saveShares } = useBill(billId);
+  const { currentUser, refreshUserData } = useAuth();
   const [group, setGroup] = useState<any>(null);
+
+  const textractLimitReached = (currentUser?.textract_usage_count ?? 0) >= 2;
 
   useEffect(() => {
     fetchBill(billId);
@@ -52,6 +56,7 @@ export function BillOverview() {
       console.log("DEBUG: Calling uploadReceipt hook...");
       const newItems = await uploadReceipt(selectedFile);
       console.log("DEBUG: uploadReceipt hook completed successfully. Returned items:", newItems);
+      await refreshUserData(); // Update usage count
       setUploadSuccess(true);
       setSelectedFile(null); // Clear selected file after successful upload
     } catch (err) {
@@ -157,12 +162,17 @@ export function BillOverview() {
               fullWidth 
               className="mt-6 shadow-brand-500/20" 
               variant={selectedFile ? "primary" : "secondary"}
-              disabled={!selectedFile || isLoading}
+              disabled={!selectedFile || isLoading || textractLimitReached}
               isLoading={isLoading}
               onClick={handleUpload}
             >
-              {isLoading ? "Processing via AWS..." : "Process Receipt"}
+              {textractLimitReached ? "Premium Coming Soon" : (isLoading ? "Processing via AWS..." : "Process Receipt")}
             </Button>
+            {textractLimitReached && (
+              <p className="text-xs text-orange-600 dark:text-orange-400 mt-2 text-center font-medium">
+                Textract limit reached (2 scans). Premium features coming soon!
+              </p>
+            )}
           </Card>
         </div>
         

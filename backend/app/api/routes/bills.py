@@ -99,6 +99,13 @@ async def upload_receipt(
     current_user: models.User = Depends(deps.get_current_user)
 ):
     print(f"DEBUG: Upload route called for bill_id: {bill_id}")
+    
+    # Check Textract usage limit
+    if current_user.textract_usage_count >= 2:
+        raise HTTPException(
+            status_code=403, 
+            detail="Textract limit reached. Premium features coming soon!"
+        )
     # 1. Check if bill exists
     db_bill = crud.bills.get_bill(db, bill_id=bill_id)
     if db_bill is None:
@@ -133,6 +140,11 @@ async def upload_receipt(
     except Exception as e:
          print(f"DEBUG ERROR: Textract failed: {e}")
          raise HTTPException(status_code=500, detail=f"Failed to parse image with Textract: {str(e)}")
+
+    # Increment usage count on success
+    current_user.textract_usage_count += 1
+    db.add(current_user)
+    db.commit()
 
     # 4. Save items to DB
     saved_items = []

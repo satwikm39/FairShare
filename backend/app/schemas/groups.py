@@ -2,6 +2,7 @@ from pydantic import BaseModel
 
 class GroupBase(BaseModel):
     name: str
+    currency: str = "$"
 
 class GroupCreate(GroupBase):
     pass

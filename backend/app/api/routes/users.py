@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from app import schemas, crud
-from app.core.database import get_db
+from app import schemas, crud, models
+from app.api.deps import get_current_user, get_db
 from typing import List
 
 router = APIRouter()
@@ -17,6 +17,10 @@ def create_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
 def read_users(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
     users = crud.users.get_users(db, skip=skip, limit=limit)
     return users
+
+@router.get("/me", response_model=schemas.User)
+def read_user_me(current_user: models.User = Depends(get_current_user)):
+    return current_user
 
 @router.get("/{user_id}", response_model=schemas.User)
 def read_user(user_id: int, db: Session = Depends(get_db)):

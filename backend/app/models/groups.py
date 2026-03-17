@@ -7,6 +7,7 @@ class Group(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, index=True)
+    currency = Column(String, default="$")
 
     # Relationships
     members = relationship("GroupMember", back_populates="group", cascade="all, delete-orphan")

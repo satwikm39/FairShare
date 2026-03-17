@@ -20,11 +20,11 @@ export function useGroups() {
     }
   }, []);
 
-  const createGroup = async (name: string) => {
+  const createGroup = async (name: string, currency: string) => {
     setIsLoading(true);
     setError(null);
     try {
-      const newGroup = await groupsService.createGroup(name);
+      const newGroup = await groupsService.createGroup(name, currency);
       setGroups(prev => [...prev, newGroup]);
       return newGroup;
     } catch (err: any) {

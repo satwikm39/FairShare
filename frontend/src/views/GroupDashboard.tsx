@@ -15,10 +15,10 @@ export function GroupDashboard() {
   const [groupToDelete, setGroupToDelete] = useState<number | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
-  const handleCreateGroup = async (name: string) => {
+  const handleCreateGroup = async (name: string, currency: string) => {
     setIsCreating(true);
     try {
-      await createGroup(name);
+      await createGroup(name, currency);
       setIsModalOpen(false);
     } catch (e) {
       console.error(e);

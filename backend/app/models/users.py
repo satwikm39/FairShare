@@ -8,6 +8,7 @@ class User(Base):
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, index=True)
     email = Column(String, unique=True, index=True)
+    textract_usage_count = Column(Integer, default=0)
 
     # Relationships
     group_memberships = relationship("GroupMember", back_populates="user")

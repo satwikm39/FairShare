@@ -76,9 +76,11 @@ export function SplitterTable({ bill, group, onUpdateShare, onSplitAllEqually, o
   // Fallback so the table always has at least one column (specifically for groups created before the backend fix)
   if (users.length === 0) {
     users = [
-      { id: 999, name: currentUser?.displayName || 'You', email: currentUser?.email || '' }
+      { id: 999, name: currentUser?.displayName || 'You', email: currentUser?.email || '', textract_usage_count: 0 }
     ];
   }
+
+  const currencySign = group.currency || '$';
 
   return (
     <Card className="overflow-x-auto border-slate-200/60 dark:border-slate-700/50 shadow-lg" noPadding>
@@ -169,7 +171,7 @@ export function SplitterTable({ bill, group, onUpdateShare, onSplitAllEqually, o
                   </div>
                 </td>
                 <td className="p-3 text-right border-r border-slate-200/50 dark:border-slate-700/50 relative">
-                  <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold">$</div>
+                  <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold">{currencySign}</div>
                   <input
                     type="number"
                     min="0"
@@ -238,7 +240,7 @@ export function SplitterTable({ bill, group, onUpdateShare, onSplitAllEqually, o
                 />
               </td>
               <td className="p-3 border-r border-slate-200/50 dark:border-slate-700/50 relative">
-                <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold">$</div>
+                <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold">{currencySign}</div>
                 <input
                   type="number"
                   min="0"
@@ -273,17 +275,17 @@ export function SplitterTable({ bill, group, onUpdateShare, onSplitAllEqually, o
         <tfoot className="bg-slate-50 dark:bg-slate-900/50 border-t-2 border-slate-200/80 dark:border-slate-700">
           <tr>
             <td className="p-5 text-right font-extrabold text-slate-700 dark:text-slate-300 rounded-bl-[2rem] border-r border-slate-200/50 dark:border-slate-700/50">Subtotal</td>
-            <td className="p-5 text-right font-extrabold text-slate-800 dark:text-slate-100 border-r border-slate-200/50 dark:border-slate-700/50">${totalBillSubtotal.toFixed(2)}</td>
+            <td className="p-5 text-right font-extrabold text-slate-800 dark:text-slate-100 border-r border-slate-200/50 dark:border-slate-700/50">{currencySign}{totalBillSubtotal.toFixed(2)}</td>
             {users.map((user, idx) => (
               <td key={user.id} className={cn("p-5 text-center font-extrabold text-slate-800 dark:text-slate-100", idx !== users.length - 1 && "border-r border-slate-200/50 dark:border-slate-700/50")}>
-                ${getSubtotalForUser(user.id).toFixed(2)}
+                {currencySign}{getSubtotalForUser(user.id).toFixed(2)}
               </td>
             ))}
           </tr>
           <tr>
             <td className="px-5 py-3 text-right font-bold text-slate-500 dark:text-slate-400 text-sm border-r border-slate-200/50 dark:border-slate-700/50">Tax / Fees</td>
             <td className="px-5 py-3 text-right font-bold text-slate-500 dark:text-slate-400 text-sm border-r border-slate-200/50 dark:border-slate-700/50 relative">
-              <div className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-400">$</div>
+              <div className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-400">{currencySign}</div>
               <input
                 type="number"
                 min="0"
@@ -301,20 +303,20 @@ export function SplitterTable({ bill, group, onUpdateShare, onSplitAllEqually, o
               const userShareOfFees = totalBillSubtotal > 0 ? (userSub / totalBillSubtotal) * totalFees : 0;
               return (
                 <td key={user.id} className={cn("px-5 py-3 text-center font-bold text-slate-500 dark:text-slate-400 text-sm", idx !== users.length - 1 && "border-r border-slate-200/50 dark:border-slate-700/50")}>
-                   +${userShareOfFees.toFixed(2)}
+                   +{currencySign}{userShareOfFees.toFixed(2)}
                 </td>
               );
             })}
           </tr>
           <tr className="bg-brand-50/50 dark:bg-brand-900/10">
             <td className="p-5 text-right font-black text-brand-900 dark:text-brand-300 border-t border-brand-100 dark:border-brand-900/50 rounded-bl-[2rem] border-r border-brand-100/50 dark:border-brand-900/30">Grand Total</td>
-            <td className="p-5 text-right font-black text-brand-700 dark:text-brand-400 text-xl border-t border-brand-100 dark:border-brand-900/50 border-r border-brand-100/50 dark:border-brand-900/30">${billGrandTotal.toFixed(2)}</td>
+            <td className="p-5 text-right font-black text-brand-700 dark:text-brand-400 text-xl border-t border-brand-100 dark:border-brand-900/50 border-r border-brand-100/50 dark:border-brand-900/30">{currencySign}{billGrandTotal.toFixed(2)}</td>
             {users.map((user, idx) => {
               const userSub = getSubtotalForUser(user.id);
               const userShareOfFees = totalBillSubtotal > 0 ? (userSub / totalBillSubtotal) * totalFees : 0;
               return (
                 <td key={user.id} className={cn("p-5 text-center font-black text-brand-700 dark:text-brand-400 text-xl border-t border-brand-100 dark:border-brand-900/50", idx !== users.length - 1 && "border-r border-brand-100/50 dark:border-brand-900/30")}>
-                  ${(userSub + userShareOfFees).toFixed(2)}
+                  {currencySign}{(userSub + userShareOfFees).toFixed(2)}
                 </td>
               );
             })}

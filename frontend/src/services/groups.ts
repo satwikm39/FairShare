@@ -21,8 +21,8 @@ export const groupsService = {
   /**
    * Create a new group
    */
-  createGroup: async (name: string): Promise<Group> => {
-    const response = await api.post<Group>('/groups/', { name });
+  createGroup: async (name: string, currency: string = '$'): Promise<Group> => {
+    const response = await api.post<Group>('/groups/', { name, currency });
     return response.data;
   },
 

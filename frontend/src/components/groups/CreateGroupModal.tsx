@@ -5,12 +5,23 @@ import { Button } from '../ui/Button';
 interface CreateGroupModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (name: string) => Promise<void>;
+  onSubmit: (name: string, currency: string) => Promise<void>;
 }
 
 export function CreateGroupModal({ isOpen, onClose, onSubmit }: CreateGroupModalProps) {
   const [name, setName] = useState('');
+  const [currency, setCurrency] = useState('$');
   const [isLoading, setIsLoading] = useState(false);
+  
+  const currencies = [
+    { label: 'US Dollar ($)', value: '$' },
+    { label: 'Euro (€)', value: '€' },
+    { label: 'British Pound (£)', value: '£' },
+    { label: 'Indian Rupee (₹)', value: '₹' },
+    { label: 'Japanese Yen (¥)', value: '¥' },
+    { label: 'Canadian Dollar (CA$)', value: 'CA$' },
+    { label: 'Australian Dollar (A$)', value: 'A$' },
+  ];
 
   if (!isOpen) return null;
 
@@ -20,7 +31,7 @@ export function CreateGroupModal({ isOpen, onClose, onSubmit }: CreateGroupModal
     
     setIsLoading(true);
     try {
-      await onSubmit(name.trim());
+      await onSubmit(name.trim(), currency);
       setName('');
       onClose();
     } catch (error) {
@@ -62,6 +73,24 @@ export function CreateGroupModal({ isOpen, onClose, onSubmit }: CreateGroupModal
                 className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900/50 text-slate-900 dark:text-white focus:border-brand-500 dark:focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 outline-none transition-all placeholder:text-slate-400 dark:placeholder:text-slate-500"
                 disabled={isLoading}
               />
+            </div>
+            <div>
+              <label htmlFor="currency" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                Currency
+              </label>
+              <select
+                id="currency"
+                value={currency}
+                onChange={e => setCurrency(e.target.value)}
+                className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900/50 text-slate-900 dark:text-white focus:border-brand-500 dark:focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 outline-none transition-all"
+                disabled={isLoading}
+              >
+                {currencies.map(curr => (
+                  <option key={curr.value} value={curr.value}>
+                    {curr.label}
+                  </option>
+                ))}
+              </select>
             </div>
           </div>
           
