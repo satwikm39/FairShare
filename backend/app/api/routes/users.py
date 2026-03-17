@@ -22,6 +22,14 @@ def read_users(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
 def read_user_me(current_user: models.User = Depends(get_current_user)):
     return current_user
 
+@router.patch("/me", response_model=schemas.User)
+def update_user_me(
+    user_update: schemas.UserUpdate,
+    current_user: models.User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    return crud.users.update_user(db=db, db_user=current_user, user_update=user_update)
+
 @router.get("/{user_id}", response_model=schemas.User)
 def read_user(user_id: int, db: Session = Depends(get_db)):
     db_user = crud.users.get_user(db, user_id=user_id)
