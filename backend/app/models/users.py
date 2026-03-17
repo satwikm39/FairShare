@@ -8,7 +8,7 @@ class User(Base):
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, index=True)
     email = Column(String, unique=True, index=True)
-    is_admin = Column(Integer, default=0) # 0 = False, 1 = True (SQLite compatibility)
+    is_admin = Column(Integer, default=0, server_default="0", nullable=False) # 0 = False, 1 = True
     textract_usage_count = Column(Integer, default=0)
 
     # Relationships
