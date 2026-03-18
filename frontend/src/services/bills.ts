@@ -98,4 +98,11 @@ export const billsService = {
   deleteItem: async (itemId: number): Promise<void> => {
     await api.delete(`/bills/items/${itemId}`);
   },
+
+  /**
+   * Remove all shares for a user from a bill (removes them from the split)
+   */
+  removeUserFromBill: async (billId: number, userId: number): Promise<void> => {
+    await api.delete(`/bills/${billId}/members/${userId}`);
+  },
 };

@@ -39,6 +39,17 @@ def add_user_to_group(db: Session, group_id: int, user_id: int):
     db.commit()
     return db_group_member
 
+def remove_user_from_group(db: Session, group_id: int, user_id: int) -> bool:
+    member = db.query(models.GroupMember).filter(
+        models.GroupMember.group_id == group_id,
+        models.GroupMember.user_id == user_id
+    ).first()
+    if not member:
+        return False
+    db.delete(member)
+    db.commit()
+    return True
+
 def delete_group(db: Session, group_id: int):
     db_group = get_group(db, group_id)
     if db_group:

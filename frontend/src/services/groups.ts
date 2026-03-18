@@ -49,6 +49,13 @@ export const groupsService = {
   },
 
   /**
+   * Remove a member from a group
+   */
+  removeGroupMember: async (groupId: number, userId: number): Promise<void> => {
+    await api.delete(`/groups/${groupId}/members/${userId}`);
+  },
+
+  /**
    * Fetch all bills for a specific group
    */
   getGroupBills: async (groupId: number): Promise<Bill[]> => {

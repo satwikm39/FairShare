@@ -48,6 +48,25 @@ def delete_bill(
         raise HTTPException(status_code=404, detail="Bill not found")
     return None
 
+@router.delete("/{bill_id}/members/{user_id}", status_code=204)
+def remove_user_from_bill(
+    bill_id: int,
+    user_id: int,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_bill_access)
+):
+    """Remove all shares for a user from every item in this bill."""
+    db_bill = crud.bills.get_bill(db, bill_id=bill_id)
+    if db_bill is None:
+        raise HTTPException(status_code=404, detail="Bill not found")
+
+    crud.bills.remove_user_from_bill(db=db, bill_id=bill_id, user_id=user_id)
+
+    # Recompute group debts since share distribution changed
+    from app.services.debts import recompute_group_debts
+    recompute_group_debts(db, db_bill.group_id)
+    return None
+
 @router.post("/{bill_id}/items/", response_model=schemas.BillItem)
 def create_item_for_bill(
     bill_id: int, 

@@ -23,6 +23,8 @@ export function GroupDetails() {
   const [isAddMemberModalOpen, setIsAddMemberModalOpen] = useState(false);
   const [isCreateBillModalOpen, setIsCreateBillModalOpen] = useState(false);
   const [isEditGroupModalOpen, setIsEditGroupModalOpen] = useState(false);
+  const [memberToRemove, setMemberToRemove] = useState<{ user_id: number; name: string } | null>(null);
+  const [isRemovingMember, setIsRemovingMember] = useState(false);
   const [balances, setBalances] = useState<GroupBalances | null>(null);
   const [isLoadingBalances, setIsLoadingBalances] = useState(false);
 
@@ -143,6 +145,22 @@ export function GroupDetails() {
     }
   };
 
+  const handleRemoveMember = async () => {
+    if (!memberToRemove) return;
+    setIsRemovingMember(true);
+    try {
+      await groupsService.removeGroupMember(groupId, memberToRemove.user_id);
+      setMemberToRemove(null);
+      await refresh();
+      fetchBalances();
+    } catch (e: any) {
+      console.error(e);
+      alert(e.response?.data?.detail || 'Failed to remove member.');
+    } finally {
+      setIsRemovingMember(false);
+    }
+  };
+
   const handleConfirmDeleteBill = async () => {
     if (!billToDelete) return;
     setIsDeletingBill(true);
@@ -204,14 +222,26 @@ export function GroupDetails() {
             <p className="text-sm text-slate-500 dark:text-slate-400 font-medium mt-0.5 italic">Manage bills and expenses.</p>
             {group.members && group.members.length > 0 && (
               <div className="flex flex-wrap items-center gap-1.5 mt-3">
-                {group.members.map(member => (
-                  <div key={member.user_id} className="flex items-center gap-1.5 bg-slate-50 dark:bg-slate-800/50 rounded-full px-2 py-0.5 text-xs font-semibold text-slate-600 dark:text-slate-400 border border-slate-200/60 dark:border-slate-700/50">
-                    <div className="w-4 h-4 rounded-full bg-brand-50 dark:bg-brand-900/30 flex items-center justify-center text-brand-600 dark:text-brand-400 text-[10px] font-bold shrink-0">
-                      {member.user?.name?.charAt(0)?.toUpperCase() || 'U'}
+                {group.members.map(member => {
+                  const isMe = member.user_id === currentUser?.id;
+                  return (
+                    <div key={member.user_id} className="group/member flex items-center gap-1.5 bg-slate-50 dark:bg-slate-800/50 rounded-full px-2 py-0.5 text-xs font-semibold text-slate-600 dark:text-slate-400 border border-slate-200/60 dark:border-slate-700/50">
+                      <div className="w-4 h-4 rounded-full bg-brand-50 dark:bg-brand-900/30 flex items-center justify-center text-brand-600 dark:text-brand-400 text-[10px] font-bold shrink-0">
+                        {member.user?.name?.charAt(0)?.toUpperCase() || 'U'}
+                      </div>
+                      <span>{member.user?.name?.split(' ')[0] || member.user?.email || 'User'}</span>
+                      {!isMe && (
+                        <button
+                          onClick={() => setMemberToRemove({ user_id: member.user_id, name: member.user?.name || member.user?.email || 'this member' })}
+                          className="ml-0.5 text-slate-300 hover:text-red-500 dark:text-slate-600 dark:hover:text-red-400 transition-colors opacity-0 group-hover/member:opacity-100"
+                          title={`Remove ${member.user?.name || 'member'} from group`}
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                      )}
                     </div>
-                    <span>{member.user?.name?.split(' ')[0] || member.user?.email || 'User'}</span>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>
@@ -466,6 +496,17 @@ export function GroupDetails() {
         description="Are you sure you want to delete this bill? All parsed items and split shares will be permanently deleted. This action cannot be undone."
         confirmText="Delete Bill"
         isLoading={isDeletingBill}
+        variant="danger"
+      />
+
+      <ConfirmModal
+        isOpen={memberToRemove !== null}
+        onClose={() => setMemberToRemove(null)}
+        onConfirm={handleRemoveMember}
+        title="Remove Member"
+        description={`Remove ${memberToRemove?.name} from this group? Their shares on existing bills will remain, but they will no longer be a group member.`}
+        confirmText="Remove Member"
+        isLoading={isRemovingMember}
         variant="danger"
       />
 

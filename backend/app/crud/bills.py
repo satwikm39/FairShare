@@ -136,3 +136,18 @@ def delete_bill(db: Session, bill_id: int):
         db.delete(db_bill)
         db.commit()
     return db_bill
+
+def remove_user_from_bill(db: Session, bill_id: int, user_id: int) -> bool:
+    """Delete all ItemShare rows for this user across every item in the bill."""
+    db_bill = get_bill(db, bill_id)
+    if not db_bill:
+        return False
+    item_ids = [item.id for item in db_bill.items]
+    if not item_ids:
+        return True
+    deleted = db.query(models.ItemShare).filter(
+        models.ItemShare.item_id.in_(item_ids),
+        models.ItemShare.user_id == user_id
+    ).delete(synchronize_session=False)
+    db.commit()
+    return True

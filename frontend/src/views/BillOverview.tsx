@@ -6,6 +6,7 @@ import { Button } from '../components/ui/Button';
 import { SplitterTable } from '../features/splitter/SplitterTable';
 import { useBill } from '../hooks/useBill';
 import { useAuth } from '../context/AuthContext';
+import { billsService } from '../services/bills';
 import { cn, getCurrencySymbol } from '../lib/utils';
 
 export function BillOverview() {
@@ -19,6 +20,17 @@ export function BillOverview() {
   const textractLimitReached = (currentUser?.textract_usage_count ?? 0) >= 2;
   const [payerId, setPayerId] = useState<number | null>(null);
   const [isSavingPayer, setIsSavingPayer] = useState(false);
+
+  const handleRemoveUserFromBill = useCallback(async (userId: number, userName: string) => {
+    if (!window.confirm(`Remove ${userName} from this bill? All their shares will be cleared.`)) return;
+    try {
+      await billsService.removeUserFromBill(billId, userId);
+      await fetchBill();
+    } catch (e) {
+      console.error(e);
+      alert('Failed to remove user from bill.');
+    }
+  }, [billId, fetchBill]);
 
   // Sync payerId from fetched bill
   useEffect(() => {
@@ -255,6 +267,7 @@ export function BillOverview() {
                 onAddItem={(name, cost) => addItem(name, cost).then(() => {})}
                 onDeleteItem={deleteItem}
                 onResetAll={resetAllShares}
+                onRemoveUser={handleRemoveUserFromBill}
               />
               {hasUnsavedChanges && (
                 <div className="mt-6 flex justify-end w-full sm:w-auto">

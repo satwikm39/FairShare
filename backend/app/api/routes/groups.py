@@ -78,6 +78,44 @@ def add_group_member(
         # Catch potential UniqueViolation if already in group
         raise HTTPException(status_code=400, detail="User is already a member of this group")
 
+@router.delete("/{group_id}/members/{user_id}", status_code=204)
+def remove_group_member(
+    group_id: int,
+    user_id: int,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user)
+):
+    db_group = crud.groups.get_group(db, group_id=group_id)
+    if not db_group:
+        raise HTTPException(status_code=404, detail="Group not found")
+
+    user_is_member = any(m.user_id == current_user.id for m in db_group.members)
+    if not user_is_member:
+        raise HTTPException(status_code=403, detail="Not authorized")
+
+    if user_id == current_user.id:
+        raise HTTPException(status_code=400, detail="You cannot remove yourself from the group")
+
+    # Block removal if the user has unsettled debts in this group
+    outstanding = db.query(models.Debt).filter(
+        models.Debt.group_id == group_id,
+        (models.Debt.from_user_id == user_id) | (models.Debt.to_user_id == user_id)
+    ).first()
+    if outstanding:
+        raise HTTPException(
+            status_code=400,
+            detail="This member has unsettled debts in the group. Settle all balances before removing them."
+        )
+
+    removed = crud.groups.remove_user_from_group(db=db, group_id=group_id, user_id=user_id)
+    if not removed:
+        raise HTTPException(status_code=404, detail="Member not found in group")
+
+    # Invalidate debt cache — the removed user's debts are no longer valid
+    from app.services.debts import recompute_group_debts
+    recompute_group_debts(db, group_id)
+    return None
+
 @router.get("/{group_id}/bills/", response_model=List[schemas.Bill])
 def read_group_bills(
     group_id: int, 

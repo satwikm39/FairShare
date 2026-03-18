@@ -16,9 +16,10 @@ interface SplitterTableProps {
   onAddItem?: (name: string, cost: number) => Promise<void>;
   onDeleteItem?: (itemId: number) => Promise<void>;
   onResetAll?: () => void;
+  onRemoveUser?: (userId: number, userName: string) => void;
 }
 
-export function SplitterTable({ bill, group, onUpdateShare, onSplitAllEqually, onUpdateItemDetails, onUpdateTax, onAddItem, onDeleteItem, onResetAll }: SplitterTableProps) {
+export function SplitterTable({ bill, group, onUpdateShare, onSplitAllEqually, onUpdateItemDetails, onUpdateTax, onAddItem, onDeleteItem, onResetAll, onRemoveUser }: SplitterTableProps) {
   const [showAddRow, setShowAddRow] = useState(false);
   const [newItemName, setNewItemName] = useState('');
   const [newItemCost, setNewItemCost] = useState('');
@@ -129,9 +130,20 @@ export function SplitterTable({ bill, group, onUpdateShare, onSplitAllEqually, o
             <th className="sticky top-16 z-20 p-5 text-right w-1/6 border-r border-slate-200/50 dark:border-slate-700/50 bg-slate-50 dark:bg-slate-900 shadow-[0_1px_0_0_rgba(0,0,0,0.05)] dark:shadow-[0_1px_0_0_rgba(255,255,255,0.05)]">Unit Cost</th>
             {users.map((user, idx) => (
               <th key={user.id} className={cn("sticky top-16 z-20 p-5 text-center bg-slate-50 dark:bg-slate-900 shadow-[0_1px_0_0_rgba(0,0,0,0.05)] dark:shadow-[0_1px_0_0_rgba(255,255,255,0.05)]", idx !== users.length - 1 && "border-r border-slate-200/50 dark:border-slate-700/50")}>
-                <div className="flex flex-col items-center gap-1.5 cursor-pointer group">
-                  <div className="w-9 h-9 rounded-full bg-brand-100 dark:bg-brand-900/30 text-brand-700 dark:text-brand-300 flex items-center justify-center font-extrabold ring-2 ring-transparent group-hover:ring-brand-200 dark:group-hover:ring-brand-700 transition-all shadow-sm">
-                    {user.name.charAt(0).toUpperCase()}
+                <div className="flex flex-col items-center gap-1.5 group/user">
+                  <div className="relative">
+                    <div className="w-9 h-9 rounded-full bg-brand-100 dark:bg-brand-900/30 text-brand-700 dark:text-brand-300 flex items-center justify-center font-extrabold ring-2 ring-transparent group-hover/user:ring-brand-200 dark:group-hover/user:ring-brand-700 transition-all shadow-sm">
+                      {user.name.charAt(0).toUpperCase()}
+                    </div>
+                    {onRemoveUser && user.id !== currentUser?.id && (
+                      <button
+                        onClick={() => onRemoveUser(user.id, user.name)}
+                        className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-red-500 text-white flex items-center justify-center opacity-0 group-hover/user:opacity-100 transition-opacity shadow-sm hover:bg-red-600"
+                        title={`Remove ${user.name} from this bill`}
+                      >
+                        <X className="w-2.5 h-2.5" />
+                      </button>
+                    )}
                   </div>
                   <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">{user.name.split(' ')[0]}</span>
                 </div>
