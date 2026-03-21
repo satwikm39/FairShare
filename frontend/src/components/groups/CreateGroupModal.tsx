@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
 import { Button } from '../ui/Button';
+import { ModalPortal } from '../ui/ModalPortal';
 import { cn, currencies } from '../../lib/utils';
 
 interface CreateGroupModalProps {
@@ -33,8 +33,8 @@ export function CreateGroupModal({ isOpen, onClose, onSubmit }: CreateGroupModal
     }
   };
 
-  return createPortal(
-    <div className="fixed inset-0 z-[100] flex min-h-[100dvh] items-center justify-center p-4 bg-slate-900/50 dark:bg-slate-900/80 backdrop-blur-sm animate-in fade-in duration-200">
+  return (
+    <ModalPortal>
       <div 
         className="bg-white dark:bg-slate-800 rounded-3xl shadow-2xl w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-200"
         onClick={e => e.stopPropagation()}
@@ -77,18 +77,18 @@ export function CreateGroupModal({ isOpen, onClose, onSubmit }: CreateGroupModal
                     type="button"
                     onClick={() => setCurrency(curr.code)}
                     className={cn(
-                      "flex items-center justify-between px-4 py-3 rounded-2xl border-2 transition-all duration-300 group",
+                      "@container flex items-center justify-between px-4 py-3 text-left rounded-2xl border-2 transition-all duration-300 group",
                       currency === curr.code
                         ? "border-brand-500 bg-brand-50/50 dark:bg-brand-900/20 text-brand-700 dark:text-brand-400 shadow-md ring-4 ring-brand-500/10"
                         : "border-slate-100 dark:border-slate-700/50 bg-white dark:bg-slate-900/50 text-slate-600 dark:text-slate-400 hover:border-slate-200 dark:hover:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800/50"
                     )}
                     disabled={isLoading}
                   >
-                    <div className="flex flex-col items-start">
-                      <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 group-hover:text-brand-500 transition-colors">
+                    <div className="flex min-w-0 flex-1 flex-col items-start text-left pr-1">
+                      <span className="w-full text-left text-[clamp(0.5rem,calc(0.35rem+2.8cqi),0.625rem)] font-bold uppercase leading-tight tracking-wide text-slate-400 dark:text-slate-500 group-hover:text-brand-500 transition-colors">
                         {curr.label}
                       </span>
-                      <span className="text-sm font-black uppercase tracking-tight">
+                      <span className="w-full text-left text-sm font-black uppercase tracking-tight">
                         {curr.code}
                       </span>
                     </div>
@@ -125,7 +125,6 @@ export function CreateGroupModal({ isOpen, onClose, onSubmit }: CreateGroupModal
           </div>
         </form>
       </div>
-    </div>,
-    document.body
+    </ModalPortal>
   );
 }

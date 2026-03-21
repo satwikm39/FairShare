@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { X } from 'lucide-react';
 import { Button } from '../ui/Button';
+import { ModalPortal } from '../ui/ModalPortal';
 
 interface AddMemberModalProps {
   isOpen: boolean;
@@ -31,7 +32,7 @@ export function AddMemberModal({ isOpen, onClose, onSubmit }: AddMemberModalProp
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 dark:bg-slate-900/80 backdrop-blur-sm animate-in fade-in duration-200">
+    <ModalPortal>
       <div 
         className="bg-white dark:bg-slate-800 rounded-3xl shadow-2xl w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-200"
         onClick={e => e.stopPropagation()}
@@ -86,6 +87,6 @@ export function AddMemberModal({ isOpen, onClose, onSubmit }: AddMemberModalProp
           </div>
         </form>
       </div>
-    </div>
+    </ModalPortal>
   );
 }

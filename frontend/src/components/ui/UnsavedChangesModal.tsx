@@ -1,5 +1,6 @@
 import { Loader2 } from 'lucide-react';
 import { Button } from './Button';
+import { ModalPortal } from './ModalPortal';
 
 interface UnsavedChangesModalProps {
   isOpen: boolean;
@@ -19,7 +20,7 @@ export function UnsavedChangesModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[110] flex items-center justify-center bg-slate-900/50 p-4 backdrop-blur-sm animate-in fade-in duration-200">
+    <ModalPortal className="z-[110] bg-slate-900/50 dark:bg-slate-900/80">
       <div
         className="w-full max-w-md rounded-3xl border border-slate-200 bg-white p-6 shadow-2xl dark:border-slate-700 dark:bg-slate-800 animate-in zoom-in-95 duration-200"
         onClick={(e) => e.stopPropagation()}
@@ -47,6 +48,6 @@ export function UnsavedChangesModal({
           </Button>
         </div>
       </div>
-    </div>
+    </ModalPortal>
   );
 }

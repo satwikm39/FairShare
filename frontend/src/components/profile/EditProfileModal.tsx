@@ -3,6 +3,7 @@ import { X, User, Loader2 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { api } from '../../services/api';
 import { Button } from '../ui/Button';
+import { ModalPortal } from '../ui/ModalPortal';
 import { Input } from '../ui/Input';
 
 interface EditProfileModalProps {
@@ -36,7 +37,7 @@ export function EditProfileModal({ isOpen, onClose }: EditProfileModalProps) {
   };
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/40 dark:bg-slate-900/80 backdrop-blur-sm animate-in fade-in duration-200">
+    <ModalPortal className="bg-slate-900/40 dark:bg-slate-900/80">
       <div 
         className="bg-white dark:bg-slate-800 rounded-3xl shadow-2xl w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-200"
         onClick={e => e.stopPropagation()}
@@ -105,6 +106,6 @@ export function EditProfileModal({ isOpen, onClose }: EditProfileModalProps) {
           </div>
         </form>
       </div>
-    </div>
+    </ModalPortal>
   );
 }

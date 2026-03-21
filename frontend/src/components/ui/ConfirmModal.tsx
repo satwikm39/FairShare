@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 import { X, AlertTriangle } from 'lucide-react';
 import { Button } from './Button';
 import { cn } from '../../lib/utils';
+import { ModalPortal } from './ModalPortal';
 
 interface ConfirmModalProps {
   isOpen: boolean;
@@ -53,7 +54,7 @@ export function ConfirmModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 dark:bg-slate-900/80 backdrop-blur-sm animate-in fade-in duration-200">
+    <ModalPortal className="bg-slate-900/40 dark:bg-slate-900/80">
       <div 
         className="bg-white dark:bg-slate-800 rounded-3xl shadow-2xl w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-200"
         onClick={e => e.stopPropagation()}
@@ -107,6 +108,6 @@ export function ConfirmModal({
           </div>
         </div>
       </div>
-    </div>
+    </ModalPortal>
   );
 }

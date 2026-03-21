@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { X, Calendar, Users } from 'lucide-react';
 import { Button } from '../ui/Button';
+import { ModalPortal } from '../ui/ModalPortal';
 import type { GroupMemberResponse } from '../../types';
 
 interface CreateBillModalProps {
@@ -55,7 +56,7 @@ export function CreateBillModal({ isOpen, onClose, onSubmit, members, currentUse
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 dark:bg-slate-900/80 backdrop-blur-sm animate-in fade-in duration-200">
+    <ModalPortal>
       <div
         className="bg-white dark:bg-slate-800 rounded-3xl shadow-2xl w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-200 max-h-[90vh] flex flex-col"
         onClick={(e) => e.stopPropagation()}
@@ -165,6 +166,6 @@ export function CreateBillModal({ isOpen, onClose, onSubmit, members, currentUse
           </div>
         </form>
       </div>
-    </div>
+    </ModalPortal>
   );
 }
