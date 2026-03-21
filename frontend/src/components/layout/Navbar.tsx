@@ -5,6 +5,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
 import { logout } from '../../config/firebase';
 import { EditProfileModal } from '../profile/EditProfileModal';
+import { ConfirmModal } from '../ui/ConfirmModal';
 
 export function Navbar() {
   const { currentUser } = useAuth();
@@ -12,13 +13,24 @@ export function Navbar() {
   const navigate = useNavigate();
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isLogoutConfirmOpen, setIsLogoutConfirmOpen] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
-  const handleLogout = async () => {
+  const openLogoutConfirm = () => {
+    setIsMobileMenuOpen(false);
+    setIsLogoutConfirmOpen(true);
+  };
+
+  const handleConfirmLogout = async () => {
+    setIsLoggingOut(true);
     try {
       await logout();
       navigate('/login');
+      setIsLogoutConfirmOpen(false);
     } catch (error) {
       console.error(error);
+    } finally {
+      setIsLoggingOut(false);
     }
   };
   return (
@@ -57,7 +69,7 @@ export function Navbar() {
                     )}
                   </div>
                   <button 
-                    onClick={handleLogout}
+                    onClick={openLogoutConfirm}
                     className="text-sm font-medium text-slate-500 hover:text-red-600 transition-colors"
                   >
                     Sign Out
@@ -115,10 +127,7 @@ export function Navbar() {
                     Edit Profile
                   </button>
                   <button 
-                    onClick={() => {
-                      handleLogout();
-                      setIsMobileMenuOpen(false);
-                    }}
+                    onClick={openLogoutConfirm}
                     className="w-full text-left px-3 py-2.5 rounded-xl text-base font-semibold text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
                   >
                     Sign Out
@@ -140,6 +149,17 @@ export function Navbar() {
       <EditProfileModal 
         isOpen={isProfileModalOpen} 
         onClose={() => setIsProfileModalOpen(false)} 
+      />
+      <ConfirmModal
+        isOpen={isLogoutConfirmOpen}
+        onClose={() => !isLoggingOut && setIsLogoutConfirmOpen(false)}
+        onConfirm={handleConfirmLogout}
+        title="Sign out?"
+        description="You will need to sign in again to access your groups and bills."
+        confirmText="Sign out"
+        cancelText="Stay signed in"
+        isLoading={isLoggingOut}
+        variant="primary"
       />
     </>
   );
