@@ -1,10 +1,8 @@
 name: Test and Verify
 
+# Manual only — run from Actions → Test and Verify → Run workflow
 on:
-  push:
-    branches: [main]
-  pull_request:
-    branches: [main]
+  workflow_dispatch:
 
 jobs:
   backend-tests:
