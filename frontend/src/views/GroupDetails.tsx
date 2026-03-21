@@ -5,6 +5,7 @@ import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { useGroupDetails } from '../hooks/useGroupDetails';
 import { useAuth } from '../context/AuthContext';
+import { useToast } from '../context/ToastContext';
 import { groupsService } from '../services/groups';
 import { AddMemberModal } from '../components/groups/AddMemberModal';
 import { CreateBillModal } from '../components/groups/CreateBillModal';
@@ -19,6 +20,7 @@ export function GroupDetails() {
   const navigate = useNavigate();
   const { group, bills, isLoading, error, refresh, deleteBill } = useGroupDetails(groupId);
   const { currentUser } = useAuth();
+  const { showToast } = useToast();
   const [isCreatingBill, setIsCreatingBill] = useState(false);
   const [isAddMemberModalOpen, setIsAddMemberModalOpen] = useState(false);
   const [isCreateBillModalOpen, setIsCreateBillModalOpen] = useState(false);
@@ -103,7 +105,7 @@ export function GroupDetails() {
       setEditingBillId(null);
     } catch (err) {
       console.error(err);
-      alert('Failed to update bill details.');
+      showToast('Failed to update bill details.', 'error');
     } finally {
       setIsSavingName(false);
     }
@@ -120,7 +122,7 @@ export function GroupDetails() {
       navigate(`/bills/${newBill.id}`);
     } catch (e: any) {
       console.error(e);
-      alert(e.response?.data?.detail || 'Failed to create new bill.');
+      showToast(e.response?.data?.detail || 'Failed to create new bill.', 'error');
     } finally {
       setIsCreatingBill(false);
     }
@@ -129,12 +131,11 @@ export function GroupDetails() {
   const handleAddMember = async (email: string) => {
     try {
       await groupsService.addMemberByEmail(groupId, email);
-      alert('Friend added to the group successfully!');
-      // In a real app we might refetch group members here to show them in the UI
+      showToast('Friend added to the group successfully!', 'success');
+      await refresh();
     } catch (e: any) {
       console.error(e);
-      // If the backend returns a 404 or 400 from our recent changes, it will be caught here
-      alert(e.response?.data?.detail || 'Failed to add friend.');
+      showToast(e.response?.data?.detail || 'Failed to add friend.', 'error');
     }
   };
 
@@ -145,7 +146,7 @@ export function GroupDetails() {
       await refresh();
     } catch (e) {
       console.error(e);
-      alert("Failed to update group.");
+      showToast("Failed to update group.", 'error');
     }
   };
 
@@ -159,7 +160,7 @@ export function GroupDetails() {
       fetchBalances();
     } catch (e: any) {
       console.error(e);
-      alert(e.response?.data?.detail || 'Failed to remove member.');
+      showToast(e.response?.data?.detail || 'Failed to remove member.', 'error');
     } finally {
       setIsRemovingMember(false);
     }
@@ -173,7 +174,7 @@ export function GroupDetails() {
       setBillToDelete(null);
     } catch (e) {
       console.error(e);
-      alert("Failed to delete bill.");
+      showToast("Failed to delete bill.", 'error');
     } finally {
       setIsDeletingBill(false);
     }
