@@ -1,42 +1,65 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { createBrowserRouter, Navigate, RouterProvider } from 'react-router-dom';
 import { Layout } from './components/layout/Layout';
 import { Home } from './views/Home';
 import { GroupDashboard } from './views/GroupDashboard';
 import { BillOverview } from './views/BillOverview';
-
 import { GroupDetails } from './views/GroupDetails';
 import { LiveDemo } from './views/LiveDemo';
-
 import { Login } from './views/Login';
 import { AuthProvider, useAuth } from './context/AuthContext';
-import { Navigate } from 'react-router-dom';
+import { ThemeProvider } from './context/ThemeContext';
+import { ToastProvider } from './context/ToastContext';
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
   const { currentUser, loading } = useAuth();
-  
+
   if (loading) return null;
-  
-  return currentUser ? <>{children}</> : <Navigate to="/login" />;
+
+  return currentUser ? <>{children}</> : <Navigate to="/login" replace />;
 }
 
-import { ThemeProvider } from './context/ThemeContext';
+const router = createBrowserRouter([
+  {
+    element: <Layout />,
+    children: [
+      { path: '/', element: <Home /> },
+      { path: '/demo', element: <LiveDemo /> },
+      { path: '/login', element: <Login /> },
+      {
+        path: '/dashboard',
+        element: (
+          <PrivateRoute>
+            <GroupDashboard />
+          </PrivateRoute>
+        ),
+      },
+      {
+        path: '/groups/:id',
+        element: (
+          <PrivateRoute>
+            <GroupDetails />
+          </PrivateRoute>
+        ),
+      },
+      {
+        path: '/bills/:id',
+        element: (
+          <PrivateRoute>
+            <BillOverview />
+          </PrivateRoute>
+        ),
+      },
+    ],
+  },
+]);
 
 function App() {
   return (
     <ThemeProvider defaultTheme="light" storageKey="fairshare-theme">
       <AuthProvider>
-        <Router>
-          <Layout>
-            <Routes>
-              <Route path="/" element={<Home />} />
-              <Route path="/demo" element={<LiveDemo />} />
-              <Route path="/login" element={<Login />} />
-              <Route path="/dashboard" element={<PrivateRoute><GroupDashboard /></PrivateRoute>} />
-              <Route path="/groups/:id" element={<PrivateRoute><GroupDetails /></PrivateRoute>} />
-              <Route path="/bills/:id" element={<PrivateRoute><BillOverview /></PrivateRoute>} />
-            </Routes>
-          </Layout>
-        </Router>
+        <ToastProvider>
+          <RouterProvider router={router} />
+        </ToastProvider>
       </AuthProvider>
     </ThemeProvider>
   );

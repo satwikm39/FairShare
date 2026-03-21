@@ -2,9 +2,11 @@ from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
 from sqlalchemy.orm import Session
 from app import schemas, crud, models
 from app.api.deps import get_current_user, get_db, get_current_bill_access
+from app.services.bill_table_sync import BillTableSyncService
 import app.services.aws as aws_service
 
 router = APIRouter()
+_bill_table_sync_service = BillTableSyncService()
 
 @router.get("/{bill_id}", response_model=schemas.Bill)
 def read_bill(
@@ -111,6 +113,22 @@ def delete_item(
     if db_item is None:
         raise HTTPException(status_code=404, detail="Bill item not found")
     return None
+
+@router.put("/{bill_id}/table-sync", response_model=schemas.Bill)
+def sync_bill_table(
+    bill_id: int,
+    body: schemas.BillTableSyncRequest,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_bill_access),
+):
+    """
+    Persist line items (including staged rows), tax, and all shares in one request.
+    """
+    try:
+        return _bill_table_sync_service.sync(db, bill_id=bill_id, payload=body)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
+
 
 @router.post("/{bill_id}/shares/bulk", response_model=list[schemas.ItemShare])
 def update_shares_bulk(

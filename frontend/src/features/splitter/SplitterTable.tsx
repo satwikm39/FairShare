@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Card } from '../../components/ui/Card';
-import { Minus, Plus, Loader2, Divide, PlusCircle, Check, X, Trash2, RotateCcw } from 'lucide-react';
+import { Minus, Plus, Loader2, Divide, PlusCircle, X, Trash2, RotateCcw } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
 import { cn, getCurrencySymbol } from '../../lib/utils';
 import type { Bill, Group } from '../../types';
@@ -13,36 +13,73 @@ interface SplitterTableProps {
   onSplitAllEqually?: (userIds: number[]) => void;
   onUpdateItemDetails?: (itemId: number, name: string, cost: number) => void;
   onUpdateTax?: (tax: number) => void;
-  onAddItem?: (name: string, cost: number) => Promise<void>;
+  /** Stage multiple new rows locally; they persist on the next bill save (auto or manual). */
+  onBulkAddItems?: (items: { item_name: string; unit_cost: number }[]) => void;
   onDeleteItem?: (itemId: number) => Promise<void>;
   onResetAll?: () => void;
   onRemoveUser?: (userId: number, userName: string) => void;
 }
 
-export function SplitterTable({ bill, group, onUpdateShare, onSplitAllEqually, onUpdateItemDetails, onUpdateTax, onAddItem, onDeleteItem, onResetAll, onRemoveUser }: SplitterTableProps) {
-  const [showAddRow, setShowAddRow] = useState(false);
-  const [newItemName, setNewItemName] = useState('');
-  const [newItemCost, setNewItemCost] = useState('');
-  const [isAddingItem, setIsAddingItem] = useState(false);
+type DraftRow = { key: string; name: string; cost: string };
+
+function newDraftRow(): DraftRow {
+  return { key: `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`, name: '', cost: '' };
+}
+
+export function SplitterTable({ bill, group, onUpdateShare, onSplitAllEqually, onUpdateItemDetails, onUpdateTax, onBulkAddItems, onDeleteItem, onResetAll, onRemoveUser }: SplitterTableProps) {
+  const [draftOpen, setDraftOpen] = useState(false);
+  const [draftRows, setDraftRows] = useState<DraftRow[]>([]);
+  const [draftError, setDraftError] = useState<string | null>(null);
   const [isResetMode, setIsResetMode] = useState(false);
   const { currentUser } = useAuth();
 
-  const handleAddItem = async () => {
-    if (!onAddItem || !newItemName.trim() || !newItemCost) return;
-    setIsAddingItem(true);
-    try {
-      await onAddItem(newItemName.trim(), parseFloat(newItemCost) || 0);
-      setNewItemName('');
-      setNewItemCost('');
-      setShowAddRow(false);
-    } finally {
-      setIsAddingItem(false);
-    }
+  const openDraft = () => {
+    setDraftError(null);
+    setDraftOpen(true);
+    setDraftRows([newDraftRow()]);
   };
 
-  const handleAddRowKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') handleAddItem();
-    if (e.key === 'Escape') { setShowAddRow(false); setNewItemName(''); setNewItemCost(''); }
+  const cancelDraft = () => {
+    setDraftOpen(false);
+    setDraftRows([]);
+    setDraftError(null);
+  };
+
+  const addDraftRow = () => {
+    setDraftRows((r) => [...r, newDraftRow()]);
+  };
+
+  const removeDraftRow = (key: string) => {
+    setDraftRows((r) => (r.length <= 1 ? r : r.filter((x) => x.key !== key)));
+  };
+
+  const updateDraftRow = (key: string, patch: Partial<Pick<DraftRow, 'name' | 'cost'>>) => {
+    setDraftRows((rows) => rows.map((row) => (row.key === key ? { ...row, ...patch } : row)));
+  };
+
+  const submitAllDrafts = () => {
+    if (!onBulkAddItems) return;
+    setDraftError(null);
+    const parsed: { item_name: string; unit_cost: number }[] = [];
+    for (const row of draftRows) {
+      const name = row.name.trim();
+      const costNum = parseFloat(row.cost);
+      if (!name || row.cost.trim() === '' || Number.isNaN(costNum) || costNum < 0) {
+        setDraftError('Fill name and a valid cost (≥ 0) for every row, or remove empty rows.');
+        return;
+      }
+      parsed.push({ item_name: name, unit_cost: costNum });
+    }
+    if (parsed.length === 0) {
+      setDraftError('Add at least one item.');
+      return;
+    }
+    onBulkAddItems(parsed);
+    cancelDraft();
+  };
+
+  const handleDraftKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Escape') cancelDraft();
   };
   const getSubtotalForUser = (userId: number) => {
     let subtotal = 0;
@@ -226,61 +263,89 @@ export function SplitterTable({ bill, group, onUpdateShare, onSplitAllEqually, o
             </tr>
             );
           })}
-          {/* Add Item Row */}
-          {onAddItem && !showAddRow && (
+          {/* Batch add items (staged until bill save) */}
+          {onBulkAddItems && !draftOpen && (
             <tr>
               <td colSpan={99} className="p-3">
                 <button
-                  onClick={() => setShowAddRow(true)}
+                  type="button"
+                  onClick={openDraft}
                   className="flex items-center gap-2 text-sm font-semibold text-brand-600 dark:text-brand-400 hover:text-brand-700 dark:hover:text-brand-300 transition-colors px-2 py-1.5 rounded-lg hover:bg-brand-50 dark:hover:bg-brand-900/20 w-fit"
                 >
                   <PlusCircle className="w-4 h-4" />
-                  Add Item
+                  Add items
                 </button>
               </td>
             </tr>
           )}
-          {onAddItem && showAddRow && (
-            <tr className="bg-brand-50/50 dark:bg-brand-900/10 ring-1 ring-inset ring-brand-200 dark:ring-brand-800/60">
-              <td className="p-3 border-r border-slate-200/50 dark:border-slate-700/50">
-                <input
-                  autoFocus
-                  type="text"
-                  value={newItemName}
-                  onChange={e => setNewItemName(e.target.value)}
-                  onKeyDown={handleAddRowKeyDown}
-                  placeholder="Item name..."
-                  className="w-full bg-transparent border-0 border-b border-brand-300 dark:border-brand-700 focus:border-brand-500 focus:ring-0 px-2 py-1.5 font-semibold text-slate-800 dark:text-slate-200 placeholder:text-slate-400"
-                />
-              </td>
-              <td className="p-3 border-r border-slate-200/50 dark:border-slate-700/50 relative">
-                <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-black text-sm">{currencySign}</div>
-                <input
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  value={newItemCost}
-                  onChange={e => setNewItemCost(e.target.value)}
-                  onKeyDown={handleAddRowKeyDown}
-                  placeholder="0.00"
-                  className="w-24 bg-transparent border-0 border-b border-brand-300 dark:border-brand-700 focus:border-brand-500 focus:ring-0 px-2 py-1.5 font-bold text-right text-slate-700 dark:text-slate-300 placeholder:text-slate-400"
-                />
-              </td>
+          {onBulkAddItems && draftOpen &&
+            draftRows.map((row, rowIdx) => (
+              <tr
+                key={row.key}
+                className="bg-brand-50/50 dark:bg-brand-900/10 ring-1 ring-inset ring-brand-200 dark:ring-brand-800/60"
+                onKeyDown={handleDraftKeyDown}
+              >
+                <td className="p-3 border-r border-slate-200/50 dark:border-slate-700/50">
+                  <input
+                    autoFocus={rowIdx === 0}
+                    type="text"
+                    value={row.name}
+                    onChange={(e) => updateDraftRow(row.key, { name: e.target.value })}
+                    placeholder="Item name..."
+                    className="w-full bg-transparent border-0 border-b border-brand-300 dark:border-brand-700 focus:border-brand-500 focus:ring-0 px-2 py-1.5 font-semibold text-slate-800 dark:text-slate-200 placeholder:text-slate-400"
+                  />
+                </td>
+                <td className="p-3 border-r border-slate-200/50 dark:border-slate-700/50 relative">
+                  <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-black text-sm">{currencySign}</div>
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={row.cost}
+                    onChange={(e) => updateDraftRow(row.key, { cost: e.target.value })}
+                    placeholder="0.00"
+                    className="w-24 bg-transparent border-0 border-b border-brand-300 dark:border-brand-700 focus:border-brand-500 focus:ring-0 px-2 py-1.5 font-bold text-right text-slate-700 dark:text-slate-300 placeholder:text-slate-400"
+                  />
+                </td>
+                <td colSpan={99} className="p-3">
+                  <div className="flex flex-wrap items-center gap-2">
+                    {rowIdx === draftRows.length - 1 && (
+                      <button
+                        type="button"
+                        onClick={addDraftRow}
+                        className="flex items-center gap-1 rounded-lg bg-brand-100 px-3 py-1.5 text-xs font-bold text-brand-800 hover:bg-brand-200 dark:bg-brand-900/40 dark:text-brand-200 dark:hover:bg-brand-900/60"
+                      >
+                        <Plus className="h-3.5 w-3.5" />
+                        Another row
+                      </button>
+                    )}
+                    {draftRows.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={() => removeDraftRow(row.key)}
+                        className="rounded-lg p-1.5 text-slate-500 hover:bg-slate-200 dark:hover:bg-slate-700"
+                        title="Remove row"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    )}
+                  </div>
+                </td>
+              </tr>
+            ))}
+          {onBulkAddItems && draftOpen && (
+            <tr className="bg-brand-50/30 dark:bg-brand-900/5">
               <td colSpan={99} className="p-3">
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={handleAddItem}
-                    disabled={!newItemName.trim() || !newItemCost || isAddingItem}
-                    className="p-1.5 rounded-full bg-brand-500 hover:bg-brand-600 text-white transition-colors disabled:opacity-50 shadow-sm"
-                  >
-                    {isAddingItem ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
-                  </button>
-                  <button
-                    onClick={() => { setShowAddRow(false); setNewItemName(''); setNewItemCost(''); }}
-                    className="p-1.5 rounded-full bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-600 dark:text-slate-300 transition-colors"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
+                {draftError && (
+                  <p className="mb-2 text-sm font-medium text-red-600 dark:text-red-400">{draftError}</p>
+                )}
+                <div className="flex flex-wrap items-center gap-2">
+                  <Button type="button" variant="primary" className="h-9 text-sm" onClick={submitAllDrafts}>
+                    Add all to bill
+                  </Button>
+                  <Button type="button" variant="outline" className="h-9 text-sm" onClick={cancelDraft}>
+                    Cancel
+                  </Button>
                 </div>
               </td>
             </tr>

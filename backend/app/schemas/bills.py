@@ -32,6 +32,31 @@ class BillItemUpdate(BaseModel):
     item_name: Optional[str] = None
     unit_cost: Optional[float] = None
 
+
+class BillItemBulkUpdate(BaseModel):
+    """Patch fields for an existing persisted line item (positive id)."""
+    id: int
+    item_name: Optional[str] = None
+    unit_cost: Optional[float] = None
+
+
+class NewBillItemSync(BaseModel):
+    """
+    A line item that only exists on the client until sync.
+    temp_id must be negative and unique within the request; shares may reference this id.
+    """
+    temp_id: int
+    item_name: str
+    unit_cost: float
+
+
+class BillTableSyncRequest(BaseModel):
+    """Atomic save of splitter table state (last-write-wins)."""
+    shares: List[ItemShareUpdateBulk] = []
+    item_updates: List[BillItemBulkUpdate] = []
+    total_tax: Optional[float] = None
+    new_items: List[NewBillItemSync] = []
+
 class BillItem(BillItemBase):
     id: int
     bill_id: int

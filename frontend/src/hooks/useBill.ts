@@ -1,8 +1,22 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { billsService } from '../services/bills';
-import type { Bill } from '../types';
+import { withRetries } from '../lib/retry';
+import type { Bill, ItemShare } from '../types';
 
-export function useBill(initialBillId: number) {
+const AUTO_SAVE_INTERVAL_MS = 60_000;
+const SAVE_RETRY_DELAYS_MS = [1000, 2000, 4000];
+const SAVE_MAX_RETRIES = 3;
+
+function nextTempItemId(): number {
+  return -Math.floor(Math.random() * 1_000_000_000) - 1;
+}
+
+export interface UseBillOptions {
+  /** Called after all save retries failed (e.g. show toast). */
+  onSaveFailed?: (message: string) => void;
+}
+
+export function useBill(initialBillId: number, options?: UseBillOptions) {
   const [bill, setBill] = useState<Bill | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -12,6 +26,11 @@ export function useBill(initialBillId: number) {
   const [modifiedItems, setModifiedItems] = useState<Record<number, { item_name?: string; unit_cost?: number }>>({});
   const [modifiedTax, setModifiedTax] = useState<number | null>(null);
 
+  const onSaveFailedRef = useRef(options?.onSaveFailed);
+  useEffect(() => {
+    onSaveFailedRef.current = options?.onSaveFailed;
+  }, [options?.onSaveFailed]);
+
   const fetchBill = useCallback(async (id: number = initialBillId) => {
     setIsLoading(true);
     setError(null);
@@ -19,6 +38,8 @@ export function useBill(initialBillId: number) {
       const data = await billsService.getBill(id);
       setBill(data);
       setHasUnsavedChanges(false);
+      setModifiedItems({});
+      setModifiedTax(null);
     } catch (err: any) {
       setError(err.response?.data?.detail || err.message || 'Failed to fetch bill');
     } finally {
@@ -26,25 +47,107 @@ export function useBill(initialBillId: number) {
     }
   }, [initialBillId]);
 
-  const uploadReceipt = async (file: File) => {
-    const targetBillId = bill?.id || initialBillId;
-    
-    if (!targetBillId) {
-      console.log("DEBUG: uploadReceipt hook called but `billId` is missing");
+  const hasInvalidItems =
+    bill?.items.some((item) => item.shares.reduce((sum, share) => sum + share.share_count, 0) === 0) ?? false;
+
+  /** Single API attempt — no retries. */
+  const syncBillToServer = useCallback(async () => {
+    if (!bill) return;
+    setIsSavingShares(true);
+    setError(null);
+    try {
+      const newItems = bill.items
+        .filter((i) => i.id < 0)
+        .map((i) => ({
+          temp_id: i.id,
+          item_name: i.item_name,
+          unit_cost: i.unit_cost,
+        }));
+
+      const sharesToSave = bill.items.flatMap((item) =>
+        item.shares.map((s) => ({
+          item_id: item.id,
+          user_id: s.user_id,
+          share_count: s.share_count,
+        }))
+      );
+
+      const itemUpdates = Object.entries(modifiedItems).map(([itemId, data]) => ({
+        id: Number(itemId),
+        ...data,
+      }));
+
+      const updated = await billsService.syncBillTable(bill.id, {
+        shares: sharesToSave,
+        item_updates: itemUpdates,
+        ...(modifiedTax !== null ? { total_tax: modifiedTax } : {}),
+        new_items: newItems,
+      });
+
+      setBill(updated);
+      setModifiedItems({});
+      setModifiedTax(null);
+      setHasUnsavedChanges(false);
+    } catch (err: any) {
+      const msg = err.response?.data?.detail || err.message || 'Failed to save';
+      setError(typeof msg === 'string' ? msg : 'Failed to save');
+      throw err;
+    } finally {
+      setIsSavingShares(false);
+    }
+  }, [bill, modifiedItems, modifiedTax]);
+
+  /**
+   * Saves with up to 3 retries and backoff. On total failure, invokes onSaveFailed and rethrows.
+   */
+  const saveShares = useCallback(async () => {
+    try {
+      await withRetries(() => syncBillToServer(), SAVE_MAX_RETRIES, SAVE_RETRY_DELAYS_MS);
+    } catch (err: any) {
+      const detail = err.response?.data?.detail;
+      const msg =
+        typeof detail === 'string'
+          ? detail
+          : err.message || 'Could not save after several attempts. Please try again.';
+      onSaveFailedRef.current?.(msg);
+      throw err;
+    }
+  }, [syncBillToServer]);
+
+  /** Periodic auto-save when dirty and splits are valid. */
+  useEffect(() => {
+    if (!bill || !hasUnsavedChanges || hasInvalidItems || isSavingShares) {
       return;
     }
-    
+
+    const id = window.setInterval(() => {
+      void saveShares().catch(() => {
+        /* error surfaced via onSaveFailed + hook error state */
+      });
+    }, AUTO_SAVE_INTERVAL_MS);
+
+    return () => window.clearInterval(id);
+  }, [bill, hasUnsavedChanges, hasInvalidItems, isSavingShares, saveShares]);
+
+  const uploadReceipt = async (file: File) => {
+    const targetBillId = bill?.id || initialBillId;
+
+    if (!targetBillId) {
+      console.log('DEBUG: uploadReceipt hook called but `billId` is missing');
+      return;
+    }
+
     setIsLoading(true);
     setError(null);
     try {
       const newItems = await billsService.uploadReceipt(targetBillId, file);
-      
-      setBill(prev => prev ? { ...prev, items: [...prev.items, ...newItems] } : null);
-      
+
+      setBill((prev) => (prev ? { ...prev, items: [...prev.items, ...newItems] } : null));
+
       if (!bill) {
         await fetchBill(targetBillId);
       }
-      
+
       return newItems;
     } catch (err: any) {
       setError(err.response?.data?.detail || err.message || 'Failed to upload receipt');
@@ -55,23 +158,21 @@ export function useBill(initialBillId: number) {
   };
 
   const updateShare = (itemId: number, userId: number, shareCount: number) => {
-    setBill(prev => {
+    setBill((prev) => {
       if (!prev) return null;
-      
-      const updatedItems = prev.items.map(item => {
+
+      const updatedItems = prev.items.map((item) => {
         if (item.id === itemId) {
-          const filteredShares = item.shares.filter(s => s.user_id !== userId);
-          // Only add back the share if we are actually recording > 0, 
-          // or we just track it as 0 to explicitly send deletion to backend
+          const filteredShares = item.shares.filter((s) => s.user_id !== userId);
           const newShare = {
-            id: Date.now(), // temporary ID for frontend tracking
+            id: Date.now(),
             item_id: itemId,
             user_id: userId,
-            share_count: shareCount
+            share_count: shareCount,
           };
           return {
             ...item,
-            shares: [...filteredShares, newShare]
+            shares: [...filteredShares, newShare],
           };
         }
         return item;
@@ -83,19 +184,19 @@ export function useBill(initialBillId: number) {
   };
 
   const splitAllEqually = (userIds: number[]) => {
-    setBill(prev => {
+    setBill((prev) => {
       if (!prev) return null;
-      
-      const updatedItems = prev.items.map(item => {
+
+      const updatedItems = prev.items.map((item) => {
         const newShares = userIds.map((userId, index) => ({
-          id: Date.now() + item.id + index, // temporary ID for frontend tracking
+          id: Date.now() + item.id + index,
           item_id: item.id,
           user_id: userId,
-          share_count: 1
+          share_count: 1,
         }));
         return {
           ...item,
-          shares: newShares
+          shares: newShares,
         };
       });
 
@@ -105,12 +206,12 @@ export function useBill(initialBillId: number) {
   };
 
   const resetAllShares = () => {
-    setBill(prev => {
+    setBill((prev) => {
       if (!prev) return null;
-      
-      const updatedItems = prev.items.map(item => ({
+
+      const updatedItems = prev.items.map((item) => ({
         ...item,
-        shares: []
+        shares: [],
       }));
 
       return { ...prev, items: updatedItems };
@@ -119,9 +220,9 @@ export function useBill(initialBillId: number) {
   };
 
   const updateItemDetails = (itemId: number, name: string, cost: number) => {
-    setBill(prev => {
+    setBill((prev) => {
       if (!prev) return null;
-      const updatedItems = prev.items.map(item => {
+      const updatedItems = prev.items.map((item) => {
         if (item.id === itemId) {
           return { ...item, item_name: name, unit_cost: cost };
         }
@@ -130,61 +231,36 @@ export function useBill(initialBillId: number) {
       return { ...prev, items: updatedItems };
     });
 
-    setModifiedItems(prev => ({
-      ...prev,
-      [itemId]: { item_name: name, unit_cost: cost }
-    }));
+    if (itemId > 0) {
+      setModifiedItems((prev) => ({
+        ...prev,
+        [itemId]: { item_name: name, unit_cost: cost },
+      }));
+    }
     setHasUnsavedChanges(true);
   };
 
   const updateTax = (tax: number) => {
-    setBill(prev => prev ? { ...prev, total_tax: tax } : null);
+    setBill((prev) => (prev ? { ...prev, total_tax: tax } : null));
     setModifiedTax(tax);
     setHasUnsavedChanges(true);
   };
 
-  const saveShares = async () => {
-    if (!bill) return;
-    setIsSavingShares(true);
-    setError(null);
-    try {
-      // 1. Save shares bulk
-      const sharesToSave = bill.items.flatMap(item => 
-        item.shares.map(s => ({
-          item_id: item.id,
-          user_id: s.user_id,
-          share_count: s.share_count
-        }))
-      );
-      
-      const sharePromise = billsService.updateItemSharesBulk(bill.id, sharesToSave);
-
-      // 2. Save any modified items
-      const itemUpdatePromises = Object.entries(modifiedItems).map(([itemId, data]) => 
-        billsService.updateItem(Number(itemId), data)
-      );
-
-      // 3. Save modified tax
-      let taxPromise = Promise.resolve() as Promise<any>;
-      if (modifiedTax !== null) {
-        taxPromise = billsService.updateBill(bill.id, { total_tax: modifiedTax });
-      }
-
-      await Promise.all([sharePromise, ...itemUpdatePromises, taxPromise]);
-
-      setModifiedItems({});
-      setModifiedTax(null);
-      setHasUnsavedChanges(false);
-      
-      // Optionally refetch to get real IDs, but not strictly necessary since UI works fine
-      // await fetchBill(bill.id);
-    } catch (err: any) {
-      setError(err.response?.data?.detail || err.message || 'Failed to save shares');
-      throw err;
-    } finally {
-      setIsSavingShares(false);
-    }
-  };
+  const bulkAddItems = useCallback((items: { item_name: string; unit_cost: number }[]) => {
+    if (items.length === 0) return;
+    setBill((prev) => {
+      if (!prev) return null;
+      const additions = items.map((it) => ({
+        id: nextTempItemId(),
+        bill_id: prev.id,
+        item_name: it.item_name,
+        unit_cost: it.unit_cost,
+        shares: [] as ItemShare[],
+      }));
+      return { ...prev, items: [...prev.items, ...additions] };
+    });
+    setHasUnsavedChanges(true);
+  }, []);
 
   const deleteBill = async () => {
     setIsLoading(true);
@@ -201,7 +277,7 @@ export function useBill(initialBillId: number) {
     if (!bill) return;
     try {
       const updatedBill = await billsService.updateBill(bill.id, { name, date });
-      setBill(prev => prev ? { ...prev, name: updatedBill.name, date: updatedBill.date } : null);
+      setBill((prev) => (prev ? { ...prev, name: updatedBill.name, date: updatedBill.date } : null));
       return updatedBill;
     } catch (err: any) {
       setError(err.response?.data?.detail || err.message || 'Failed to update bill details');
@@ -210,30 +286,38 @@ export function useBill(initialBillId: number) {
   };
 
   const addItem = async (itemName: string, unitCost: number) => {
-    if (!bill) return;
-    try {
-      const newItem = await billsService.addItem(bill.id, { item_name: itemName, unit_cost: unitCost });
-      // Append to local state immediately
-      setBill(prev => prev ? { ...prev, items: [...prev.items, newItem] } : null);
-      return newItem;
-    } catch (err: any) {
-      setError(err.response?.data?.detail || err.message || 'Failed to add item');
-      throw err;
-    }
+    bulkAddItems([{ item_name: itemName, unit_cost: unitCost }]);
   };
 
   const deleteItem = async (itemId: number) => {
+    if (itemId < 0) {
+      setBill((prev) =>
+        prev
+          ? {
+              ...prev,
+              items: prev.items.filter((item) => item.id !== itemId),
+            }
+          : null
+      );
+      setHasUnsavedChanges(true);
+      return;
+    }
     if (!bill) return;
     try {
       await billsService.deleteItem(itemId);
-      // Remove from local state immediately to update UI without full refresh
-      setBill(prev => prev ? { 
-        ...prev, 
-        items: prev.items.filter(item => item.id !== itemId) 
-      } : null);
-      
-      // Let the UI know it can fetch an updated bill or we can just rely on the local state update.
-      // But we should refresh to get the updated grand_total
+      setBill((prev) =>
+        prev
+          ? {
+              ...prev,
+              items: prev.items.filter((item) => item.id !== itemId),
+            }
+          : null
+      );
+      setModifiedItems((prev) => {
+        const next = { ...prev };
+        delete next[itemId];
+        return next;
+      });
       await fetchBill(bill.id);
     } catch (err: any) {
       setError(err.response?.data?.detail || err.message || 'Failed to delete item');
@@ -246,6 +330,7 @@ export function useBill(initialBillId: number) {
     isLoading,
     error,
     hasUnsavedChanges,
+    hasInvalidItems,
     isSavingShares,
     fetchBill,
     uploadReceipt,
@@ -254,11 +339,12 @@ export function useBill(initialBillId: number) {
     updateItemDetails,
     updateTax,
     addItem,
+    bulkAddItems,
     deleteItem,
     saveShares,
     deleteBill,
     updateBillDetails,
     setBill,
-    resetAllShares
+    resetAllShares,
   };
 }

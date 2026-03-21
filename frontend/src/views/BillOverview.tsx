@@ -1,19 +1,24 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useBlocker } from 'react-router-dom';
 import { Upload, FileText, CheckCircle2, Loader2, ArrowLeft, UserCheck } from 'lucide-react';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
+import { UnsavedChangesModal } from '../components/ui/UnsavedChangesModal';
 import { SplitterTable } from '../features/splitter/SplitterTable';
 import { useBill } from '../hooks/useBill';
 import { useAuth } from '../context/AuthContext';
+import { useToast } from '../context/ToastContext';
 import { billsService } from '../services/bills';
 import { cn, getCurrencySymbol } from '../lib/utils';
 
 export function BillOverview() {
   const { id } = useParams<{ id: string }>();
+  const { showToast } = useToast();
   // Default to 1 if no ID is provided, so it doesn't crash on invalid URLs
   const billId = parseInt(id || '1', 10);
-  const { bill, isLoading, error, fetchBill, uploadReceipt, updateShare, splitAllEqually, resetAllShares, updateItemDetails, updateTax, addItem, deleteItem, hasUnsavedChanges, isSavingShares, saveShares } = useBill(billId);
+  const { bill, isLoading, error, fetchBill, setBill, uploadReceipt, updateShare, splitAllEqually, resetAllShares, updateItemDetails, updateTax, bulkAddItems, deleteItem, hasUnsavedChanges, hasInvalidItems, isSavingShares, saveShares } = useBill(billId, {
+    onSaveFailed: (message) => showToast(message, 'error'),
+  });
   const { currentUser, refreshUserData } = useAuth();
   const [group, setGroup] = useState<any>(null);
 
@@ -41,18 +46,23 @@ export function BillOverview() {
 
   const handlePayerChange = useCallback(async (newPayerId: number | null) => {
     if (!bill) return;
+    const previousPayerId = bill.paid_by_user_id;
     setPayerId(newPayerId);
     setIsSavingPayer(true);
     try {
-      const { billsService } = await import('../services/bills');
-      await billsService.updateBill(bill.id, { paid_by_user_id: newPayerId });
+      const updated = await billsService.updateBill(bill.id, { paid_by_user_id: newPayerId });
+      // Patch payer only — do not fetchBill here or unsaved table edits are wiped.
+      setBill((prev) =>
+        prev ? { ...prev, paid_by_user_id: updated.paid_by_user_id } : null
+      );
     } catch (err) {
       console.error('Failed to save payer:', err);
+      setPayerId(previousPayerId ?? null);
+      showToast('Could not update who paid.', 'error');
     } finally {
       setIsSavingPayer(false);
-      fetchBill(billId);
     }
-  }, [bill, billId, fetchBill]);
+  }, [bill, setBill, showToast]);
 
   useEffect(() => {
     fetchBill(billId);
@@ -66,10 +76,52 @@ export function BillOverview() {
     }
   }, [bill?.group_id]);
 
-  const hasInvalidItems = bill?.items.some(item => {
-    const totalShares = item.shares.reduce((sum, share) => sum + share.share_count, 0);
-    return totalShares === 0;
-  }) ?? false;
+  const [navSaveLoading, setNavSaveLoading] = useState(false);
+
+  const blocker = useBlocker(
+    ({ currentLocation, nextLocation }) =>
+      hasUnsavedChanges &&
+      (currentLocation.pathname !== nextLocation.pathname || currentLocation.search !== nextLocation.search)
+  );
+
+  useEffect(() => {
+    const onBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (!hasUnsavedChanges) return;
+      e.preventDefault();
+      e.returnValue = '';
+    };
+    window.addEventListener('beforeunload', onBeforeUnload);
+    return () => window.removeEventListener('beforeunload', onBeforeUnload);
+  }, [hasUnsavedChanges]);
+
+  const handleBlockerStay = useCallback(() => {
+    if (blocker.state === 'blocked') blocker.reset();
+  }, [blocker]);
+
+  const handleBlockerDiscard = useCallback(async () => {
+    if (blocker.state !== 'blocked') return;
+    try {
+      await fetchBill(billId);
+      blocker.proceed();
+    } catch {
+      showToast('Could not reload bill; staying on page.', 'error');
+      blocker.reset();
+    }
+  }, [blocker, billId, fetchBill, showToast]);
+
+  const handleBlockerSave = useCallback(async () => {
+    if (blocker.state !== 'blocked') return;
+    setNavSaveLoading(true);
+    try {
+      await saveShares();
+      blocker.proceed();
+    } catch {
+      /* saveShares already surfaced error via hook + toast */
+    } finally {
+      setNavSaveLoading(false);
+    }
+  }, [blocker, saveShares]);
+
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [uploadSuccess, setUploadSuccess] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -103,6 +155,13 @@ export function BillOverview() {
 
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+      <UnsavedChangesModal
+        isOpen={blocker.state === 'blocked'}
+        isSaving={navSaveLoading}
+        onStay={handleBlockerStay}
+        onDiscard={handleBlockerDiscard}
+        onSave={handleBlockerSave}
+      />
       <div>
         <Link to={bill?.group_id ? `/groups/${bill.group_id}` : '/dashboard'} className="inline-flex items-center text-xs font-medium text-brand-600 dark:text-brand-500 hover:text-brand-700 dark:hover:text-brand-400 mb-3 transition-colors">
           <ArrowLeft className="w-3 h-3 mr-1" /> Back to Group
@@ -264,7 +323,7 @@ export function BillOverview() {
                 onSplitAllEqually={splitAllEqually}
                 onUpdateItemDetails={updateItemDetails}
                 onUpdateTax={updateTax}
-                onAddItem={(name, cost) => addItem(name, cost).then(() => {})}
+                onBulkAddItems={bulkAddItems}
                 onDeleteItem={deleteItem}
                 onResetAll={resetAllShares}
                 onRemoveUser={handleRemoveUserFromBill}

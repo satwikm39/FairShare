@@ -71,6 +71,22 @@ export const billsService = {
   },
 
   /**
+   * Atomically save table state: new rows (negative temp_id), item patches, tax, and all shares.
+   */
+  syncBillTable: async (
+    billId: number,
+    body: {
+      shares: { item_id: number; user_id: number; share_count: number }[];
+      item_updates: { id: number; item_name?: string; unit_cost?: number }[];
+      total_tax?: number;
+      new_items: { temp_id: number; item_name: string; unit_cost: number }[];
+    }
+  ): Promise<Bill> => {
+    const response = await api.put<Bill>(`/bills/${billId}/table-sync`, body);
+    return response.data;
+  },
+
+  /**
    * Update the details (name/cost) of a specific item
    */
   updateItem: async (

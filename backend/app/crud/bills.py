@@ -1,3 +1,5 @@
+from typing import Optional
+
 from sqlalchemy.orm import Session
 from app import models, schemas
 
@@ -136,6 +138,102 @@ def delete_bill(db: Session, bill_id: int):
         db.delete(db_bill)
         db.commit()
     return db_bill
+
+def sync_bill_table(
+    db: Session,
+    bill_id: int,
+    payload: schemas.BillTableSyncRequest,
+) -> Optional[models.Bill]:
+    """
+    Apply item creates, item patches, tax, and share upserts in one transaction.
+    Client uses negative temp_id for new rows; shares may reference those ids until mapped.
+    """
+    db_bill = get_bill(db, bill_id)
+    if db_bill is None:
+        return None
+
+    temp_id_map: dict[int, int] = {}
+    seen_temp: set[int] = set()
+
+    try:
+        for ni in payload.new_items:
+            if ni.temp_id >= 0:
+                raise ValueError("new_items[].temp_id must be negative")
+            if ni.temp_id in seen_temp:
+                raise ValueError(f"Duplicate temp_id {ni.temp_id}")
+            seen_temp.add(ni.temp_id)
+            db_item = models.BillItem(
+                item_name=ni.item_name,
+                unit_cost=ni.unit_cost,
+                bill_id=bill_id,
+            )
+            db.add(db_item)
+            db.flush()
+            temp_id_map[ni.temp_id] = db_item.id
+
+        valid_item_ids = {i.id for i in db_bill.items}
+        valid_item_ids.update(temp_id_map.values())
+
+        for upd in payload.item_updates:
+            if upd.id < 0:
+                continue
+            item = (
+                db.query(models.BillItem)
+                .filter(
+                    models.BillItem.id == upd.id,
+                    models.BillItem.bill_id == bill_id,
+                )
+                .first()
+            )
+            if item is None:
+                raise ValueError(f"Bill item {upd.id} not found on this bill")
+            patch = upd.model_dump(exclude_unset=True, exclude={"id"})
+            for key, value in patch.items():
+                setattr(item, key, value)
+
+        if payload.total_tax is not None:
+            db_bill.total_tax = payload.total_tax
+
+        for share in payload.shares:
+            item_id = share.item_id
+            if item_id < 0:
+                if item_id not in temp_id_map:
+                    raise ValueError(f"Share references unknown temp item id {item_id}")
+                item_id = temp_id_map[item_id]
+            if item_id not in valid_item_ids:
+                raise ValueError(f"Share references item {item_id} not on this bill")
+
+            existing_share = db.query(models.ItemShare).filter(
+                models.ItemShare.item_id == item_id,
+                models.ItemShare.user_id == share.user_id,
+            ).first()
+
+            if existing_share:
+                existing_share.share_count = share.share_count
+            else:
+                db_share = models.ItemShare(
+                    item_id=item_id,
+                    user_id=share.user_id,
+                    share_count=share.share_count,
+                )
+                db.add(db_share)
+
+        items = (
+            db.query(models.BillItem)
+            .filter(models.BillItem.bill_id == bill_id)
+            .all()
+        )
+        db_bill.subtotal = sum(item.unit_cost for item in items)
+        db_bill.grand_total = db_bill.subtotal + db_bill.total_tax
+
+        db.commit()
+        db.refresh(db_bill)
+    except Exception:
+        db.rollback()
+        raise
+
+    return get_bill(db, bill_id)
+
 
 def remove_user_from_bill(db: Session, bill_id: int, user_id: int) -> bool:
     """Delete all ItemShare rows for this user across every item in the bill."""
