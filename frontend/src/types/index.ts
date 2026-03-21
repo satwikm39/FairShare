@@ -44,6 +44,7 @@ export interface Bill {
   receipt_image_url: string | null;
   paid_by_user_id: number | null;
   items: BillItem[];
+  participant_user_ids?: number[];
 }
 
 export interface UserBalance {

@@ -183,6 +183,10 @@ def create_bill_for_group(
     db: Session = Depends(get_db),
     current_user: models.User = Depends(get_current_group_member)
 ):
-    # Ensure bill create object has group ID
     bill.group_id = group_id
-    return crud.bills.create_bill(db=db, bill=bill)
+    db_group = crud.groups.get_group(db, group_id=group_id)
+    group_member_ids = [m.user_id for m in db_group.members] if db_group else []
+    try:
+        return crud.bills.create_bill(db=db, bill=bill, group_member_ids=group_member_ids)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))

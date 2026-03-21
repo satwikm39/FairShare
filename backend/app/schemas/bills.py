@@ -82,11 +82,13 @@ class BillUpdate(BaseModel):
 
 class BillCreate(BillBase):
     group_id: int
+    participant_user_ids: Optional[List[int]] = None
 
 class Bill(BillBase):
     id: int
     group_id: int
     items: List[BillItem] = []
+    participant_user_ids: List[int] = []
 
     class Config:
         from_attributes = True

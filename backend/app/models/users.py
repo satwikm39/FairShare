@@ -13,5 +13,6 @@ class User(Base):
 
     # Relationships
     group_memberships = relationship("GroupMember", back_populates="user")
+    bill_participations = relationship("BillParticipant", back_populates="user")
     item_shares = relationship("ItemShare", back_populates="user")
     bills_paid = relationship("Bill", back_populates="payer", foreign_keys="Bill.paid_by_user_id")

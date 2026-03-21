@@ -110,11 +110,14 @@ export function SplitterTable({ bill, group, onUpdateShare, onSplitAllEqually, o
     );
   }
   
-  let users = group.members?.map(m => m.user) || [];
-  // Fallback so the table always has at least one column (specifically for groups created before the backend fix)
-  if (users.length === 0) {
+  const participantIds = bill.participant_user_ids;
+  let users =
+    participantIds?.length
+      ? (group.members?.filter((m) => participantIds.includes(m.user_id)) ?? []).map((m) => m.user)
+      : group.members?.map((m) => m.user) ?? [];
+  if (users.length === 0 && currentUser?.id) {
     users = [
-      { id: 999, name: currentUser?.displayName || 'You', email: currentUser?.email || '', textract_usage_count: 0 }
+      { id: currentUser.id, name: currentUser.displayName || 'You', email: currentUser.email || '', textract_usage_count: 0 },
     ];
   }
 

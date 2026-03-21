@@ -50,6 +50,25 @@ def delete_bill(
         raise HTTPException(status_code=404, detail="Bill not found")
     return None
 
+@router.post("/{bill_id}/members/{user_id}", status_code=204)
+def add_user_to_bill(
+    bill_id: int,
+    user_id: int,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_bill_access)
+):
+    """Add a group member as a participant on this bill."""
+    db_bill = crud.bills.get_bill(db, bill_id=bill_id)
+    if db_bill is None:
+        raise HTTPException(status_code=404, detail="Bill not found")
+    db_group = crud.groups.get_group(db, db_bill.group_id)
+    group_member_ids = [m.user_id for m in db_group.members] if db_group else []
+    try:
+        crud.bills.add_participant_to_bill(db, bill_id, user_id, group_member_ids)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    return None
+
 @router.delete("/{bill_id}/members/{user_id}", status_code=204)
 def remove_user_from_bill(
     bill_id: int,
@@ -57,14 +76,13 @@ def remove_user_from_bill(
     db: Session = Depends(get_db),
     current_user: models.User = Depends(get_current_bill_access)
 ):
-    """Remove all shares for a user from every item in this bill."""
+    """Remove user from bill (shares and participant status)."""
     db_bill = crud.bills.get_bill(db, bill_id=bill_id)
     if db_bill is None:
         raise HTTPException(status_code=404, detail="Bill not found")
 
     crud.bills.remove_user_from_bill(db=db, bill_id=bill_id, user_id=user_id)
 
-    # Recompute group debts since share distribution changed
     from app.services.debts import recompute_group_debts
     recompute_group_debts(db, db_bill.group_id)
     return None

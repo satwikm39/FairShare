@@ -1,17 +1,53 @@
 from typing import Optional
 
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from app import models, schemas
 
 def get_bill(db: Session, bill_id: int):
-    return db.query(models.Bill).filter(models.Bill.id == bill_id).first()
+    return (
+        db.query(models.Bill)
+        .options(joinedload(models.Bill.participants))
+        .filter(models.Bill.id == bill_id)
+        .first()
+    )
 
 def get_bills_by_group(db: Session, group_id: int):
-    return db.query(models.Bill).filter(models.Bill.group_id == group_id).all()
+    return (
+        db.query(models.Bill)
+        .options(joinedload(models.Bill.participants))
+        .filter(models.Bill.group_id == group_id)
+        .all()
+    )
 
-def create_bill(db: Session, bill: schemas.BillCreate):
-    db_bill = models.Bill(**bill.model_dump())
+def create_bill(db: Session, bill: schemas.BillCreate, group_member_ids: Optional[list[int]] = None):
+    participant_ids = bill.participant_user_ids
+    if participant_ids is not None:
+        if len(participant_ids) == 0:
+            raise ValueError("At least one participant required")
+        if group_member_ids is None:
+            db_group = db.query(models.Group).filter(models.Group.id == bill.group_id).first()
+            if db_group:
+                group_member_ids = [m.user_id for m in db_group.members]
+        if group_member_ids:
+            ids_set = set(group_member_ids)
+            invalid = [uid for uid in participant_ids if uid not in ids_set]
+            if invalid:
+                raise ValueError(f"User(s) {invalid} are not group members")
+
+    data = bill.model_dump(exclude={"participant_user_ids"})
+    db_bill = models.Bill(**data)
     db.add(db_bill)
+    db.flush()
+
+    if participant_ids is not None and len(participant_ids) > 0 and group_member_ids:
+        ids_set = set(group_member_ids)
+        resolved = list(dict.fromkeys(participant_ids))
+        resolved = [uid for uid in resolved if uid in ids_set]
+        if bill.paid_by_user_id and bill.paid_by_user_id not in resolved and bill.paid_by_user_id in ids_set:
+            resolved.append(bill.paid_by_user_id)
+        for uid in resolved:
+            db.add(models.BillParticipant(bill_id=db_bill.id, user_id=uid))
+
     db.commit()
     db.refresh(db_bill)
     return db_bill
@@ -194,6 +230,12 @@ def sync_bill_table(
         if payload.total_tax is not None:
             db_bill.total_tax = payload.total_tax
 
+        participant_ids = {p.user_id for p in db_bill.participants}
+        if participant_ids:
+            for share in payload.shares:
+                if share.user_id not in participant_ids:
+                    raise ValueError(f"User {share.user_id} is not a bill participant")
+
         for share in payload.shares:
             item_id = share.item_id
             if item_id < 0:
@@ -236,16 +278,35 @@ def sync_bill_table(
 
 
 def remove_user_from_bill(db: Session, bill_id: int, user_id: int) -> bool:
-    """Delete all ItemShare rows for this user across every item in the bill."""
+    """Delete all ItemShare rows and BillParticipant for this user."""
     db_bill = get_bill(db, bill_id)
     if not db_bill:
         return False
     item_ids = [item.id for item in db_bill.items]
-    if not item_ids:
-        return True
-    deleted = db.query(models.ItemShare).filter(
-        models.ItemShare.item_id.in_(item_ids),
-        models.ItemShare.user_id == user_id
+    if item_ids:
+        db.query(models.ItemShare).filter(
+            models.ItemShare.item_id.in_(item_ids),
+            models.ItemShare.user_id == user_id,
+        ).delete(synchronize_session=False)
+    db.query(models.BillParticipant).filter(
+        models.BillParticipant.bill_id == bill_id,
+        models.BillParticipant.user_id == user_id,
     ).delete(synchronize_session=False)
+    db.commit()
+    return True
+
+
+def add_participant_to_bill(db: Session, bill_id: int, user_id: int, group_member_ids: list[int]) -> bool:
+    """Add user as bill participant. User must be a group member."""
+    if user_id not in group_member_ids:
+        raise ValueError("User is not a group member")
+    existing = (
+        db.query(models.BillParticipant)
+        .filter(models.BillParticipant.bill_id == bill_id, models.BillParticipant.user_id == user_id)
+        .first()
+    )
+    if existing:
+        return True
+    db.add(models.BillParticipant(bill_id=bill_id, user_id=user_id))
     db.commit()
     return True

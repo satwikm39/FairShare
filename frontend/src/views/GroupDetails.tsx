@@ -109,15 +109,19 @@ export function GroupDetails() {
     }
   };
 
-  const handleCreateBill = async (name: string, date: string) => {
+  const handleCreateBill = async (name: string, date: string, participantUserIds: number[]) => {
     setIsCreatingBill(true);
     try {
-      const newBill = await groupsService.createBill(groupId, { name, date });
-      // Navigate straight to the new bill overview to upload receipt or add items manually
+      const newBill = await groupsService.createBill(groupId, {
+        name,
+        date,
+        participant_user_ids: participantUserIds,
+      });
       navigate(`/bills/${newBill.id}`);
-    } catch (e) {
+    } catch (e: any) {
       console.error(e);
-      alert('Failed to create new bill.');
+      alert(e.response?.data?.detail || 'Failed to create new bill.');
+    } finally {
       setIsCreatingBill(false);
     }
   };
@@ -514,6 +518,8 @@ export function GroupDetails() {
         isOpen={isCreateBillModalOpen}
         onClose={() => setIsCreateBillModalOpen(false)}
         onSubmit={handleCreateBill}
+        members={group?.members ?? []}
+        currentUserId={currentUser?.id ?? 0}
       />
 
       <EditGroupModal

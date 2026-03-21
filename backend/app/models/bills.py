@@ -20,6 +20,20 @@ class Bill(Base):
     group = relationship("Group", back_populates="bills")
     payer = relationship("User", back_populates="bills_paid", foreign_keys=[paid_by_user_id])
     items = relationship("BillItem", back_populates="bill", cascade="all, delete-orphan")
+    participants = relationship("BillParticipant", back_populates="bill", cascade="all, delete-orphan")
+
+    @property
+    def participant_user_ids(self) -> list[int]:
+        return [p.user_id for p in self.participants]
+
+class BillParticipant(Base):
+    __tablename__ = "bill_participants"
+
+    bill_id = Column(Integer, ForeignKey("bills.id"), primary_key=True)
+    user_id = Column(Integer, ForeignKey("users.id"), primary_key=True)
+
+    bill = relationship("Bill", back_populates="participants")
+    user = relationship("User", back_populates="bill_participations")
 
 class BillItem(Base):
     __tablename__ = "bill_items"

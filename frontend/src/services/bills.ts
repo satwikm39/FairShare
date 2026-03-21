@@ -116,9 +116,16 @@ export const billsService = {
   },
 
   /**
-   * Remove all shares for a user from a bill (removes them from the split)
+   * Remove a user from a bill (shares and participant status)
    */
   removeUserFromBill: async (billId: number, userId: number): Promise<void> => {
     await api.delete(`/bills/${billId}/members/${userId}`);
+  },
+
+  /**
+   * Add a group member as a participant on a bill
+   */
+  addParticipantToBill: async (billId: number, userId: number): Promise<void> => {
+    await api.post(`/bills/${billId}/members/${userId}`);
   },
 };

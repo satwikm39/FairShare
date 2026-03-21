@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useParams, Link, useBlocker } from 'react-router-dom';
-import { Upload, FileText, CheckCircle2, Loader2, ArrowLeft, UserCheck } from 'lucide-react';
+import { Upload, FileText, CheckCircle2, Loader2, ArrowLeft, UserCheck, UserPlus } from 'lucide-react';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { UnsavedChangesModal } from '../components/ui/UnsavedChangesModal';
@@ -10,6 +10,7 @@ import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { billsService } from '../services/bills';
 import { cn, getCurrencySymbol } from '../lib/utils';
+import type { GroupMemberResponse } from '../types';
 
 export function BillOverview() {
   const { id } = useParams<{ id: string }>();
@@ -36,6 +37,27 @@ export function BillOverview() {
       alert('Failed to remove user from bill.');
     }
   }, [billId, fetchBill]);
+
+  const [addingUserId, setAddingUserId] = useState<number | null>(null);
+  const handleAddParticipant = useCallback(async (userId: number) => {
+    setAddingUserId(userId);
+    try {
+      await billsService.addParticipantToBill(billId, userId);
+      await fetchBill();
+    } catch (e: any) {
+      console.error(e);
+      showToast(e.response?.data?.detail || 'Failed to add person to bill.', 'error');
+    } finally {
+      setAddingUserId(null);
+    }
+  }, [billId, fetchBill, showToast]);
+
+  const participantIds = bill?.participant_user_ids ?? [];
+  const hasExplicitParticipants = participantIds.length > 0;
+  const membersToAdd =
+    hasExplicitParticipants && group?.members
+      ? group.members.filter((m: GroupMemberResponse) => !participantIds.includes(m.user_id))
+      : [];
 
   // Sync payerId from fetched bill
   useEffect(() => {
@@ -227,7 +249,10 @@ export function BillOverview() {
                   className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-slate-100 font-medium px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-400 cursor-pointer appearance-none"
                 >
                   <option value="">— Not set —</option>
-                  {group.members?.map((m: any) => (
+                  {(bill?.participant_user_ids?.length
+                    ? group.members?.filter((m: GroupMemberResponse) => bill.participant_user_ids!.includes(m.user_id))
+                    : group.members
+                  )?.map((m: GroupMemberResponse) => (
                     <option key={m.user.id} value={m.user.id}>{m.user.name}</option>
                   ))}
                 </select>
@@ -240,6 +265,36 @@ export function BillOverview() {
                   {group.members?.find((m: any) => m.user.id === payerId)?.user.name} fronted this bill. Balances updated automatically.
                 </p>
               )}
+            </Card>
+          )}
+
+          {hasExplicitParticipants && membersToAdd.length > 0 && (
+            <Card className="border-slate-200/60 dark:border-slate-700/50 shadow-sm">
+              <div className="flex items-center gap-2 mb-3">
+                <UserPlus className="w-3.5 h-3.5 text-brand-500" />
+                <h3 className="font-bold text-sm text-slate-900 dark:text-white uppercase tracking-wider">Add to bill</h3>
+              </div>
+              <div className="space-y-2">
+                {membersToAdd.map((m: GroupMemberResponse) => (
+                  <div
+                    key={m.user_id}
+                    className="flex items-center justify-between gap-2 rounded-lg bg-slate-50 dark:bg-slate-800/50 px-3 py-2"
+                  >
+                    <span className="text-sm font-medium text-slate-700 dark:text-slate-300 truncate">
+                      {m.user.name}
+                    </span>
+                    <Button
+                      variant="secondary"
+                      className="shrink-0 h-7 text-xs px-3 py-1.5"
+                      onClick={() => handleAddParticipant(m.user_id)}
+                      disabled={addingUserId === m.user_id}
+                      isLoading={addingUserId === m.user_id}
+                    >
+                      Add
+                    </Button>
+                  </div>
+                ))}
+              </div>
             </Card>
           )}
 
