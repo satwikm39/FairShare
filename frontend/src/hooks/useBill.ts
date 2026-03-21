@@ -3,7 +3,7 @@ import { billsService } from '../services/bills';
 import { withRetries } from '../lib/retry';
 import type { Bill, ItemShare } from '../types';
 
-const AUTO_SAVE_INTERVAL_MS = 60_000;
+const AUTO_SAVE_DEBOUNCE_MS = 3000;
 const SAVE_RETRY_DELAYS_MS = [1000, 2000, 4000];
 const SAVE_MAX_RETRIES = 3;
 
@@ -114,19 +114,19 @@ export function useBill(initialBillId: number, options?: UseBillOptions) {
     }
   }, [syncBillToServer]);
 
-  /** Periodic auto-save when dirty and splits are valid. */
+  /** Debounced auto-save when dirty and splits are valid. */
   useEffect(() => {
     if (!bill || !hasUnsavedChanges || hasInvalidItems || isSavingShares) {
       return;
     }
 
-    const id = window.setInterval(() => {
+    const timerId = window.setTimeout(() => {
       void saveShares().catch(() => {
         /* error surfaced via onSaveFailed + hook error state */
       });
-    }, AUTO_SAVE_INTERVAL_MS);
+    }, AUTO_SAVE_DEBOUNCE_MS);
 
-    return () => window.clearInterval(id);
+    return () => window.clearTimeout(timerId);
   }, [bill, hasUnsavedChanges, hasInvalidItems, isSavingShares, saveShares]);
 
   const uploadReceipt = async (file: File) => {

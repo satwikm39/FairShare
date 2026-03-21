@@ -3,7 +3,6 @@ import { useParams, Link, useBlocker } from 'react-router-dom';
 import { Upload, FileText, CheckCircle2, Loader2, ArrowLeft, UserCheck, UserPlus } from 'lucide-react';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
-import { UnsavedChangesModal } from '../components/ui/UnsavedChangesModal';
 import { SplitterTable } from '../features/splitter/SplitterTable';
 import { useBill } from '../hooks/useBill';
 import { useAuth } from '../context/AuthContext';
@@ -98,8 +97,6 @@ export function BillOverview() {
     }
   }, [bill?.group_id]);
 
-  const [navSaveLoading, setNavSaveLoading] = useState(false);
-
   const blocker = useBlocker(
     ({ currentLocation, nextLocation }) =>
       hasUnsavedChanges &&
@@ -116,33 +113,14 @@ export function BillOverview() {
     return () => window.removeEventListener('beforeunload', onBeforeUnload);
   }, [hasUnsavedChanges]);
 
-  const handleBlockerStay = useCallback(() => {
-    if (blocker.state === 'blocked') blocker.reset();
-  }, [blocker]);
-
-  const handleBlockerDiscard = useCallback(async () => {
-    if (blocker.state !== 'blocked') return;
-    try {
-      await fetchBill(billId);
+  useEffect(() => {
+    if (blocker.state === 'blocked') {
+      if (hasUnsavedChanges && !hasInvalidItems) {
+        saveShares().catch(console.error);
+      }
       blocker.proceed();
-    } catch {
-      showToast('Could not reload bill; staying on page.', 'error');
-      blocker.reset();
     }
-  }, [blocker, billId, fetchBill, showToast]);
-
-  const handleBlockerSave = useCallback(async () => {
-    if (blocker.state !== 'blocked') return;
-    setNavSaveLoading(true);
-    try {
-      await saveShares();
-      blocker.proceed();
-    } catch {
-      /* saveShares already surfaced error via hook + toast */
-    } finally {
-      setNavSaveLoading(false);
-    }
-  }, [blocker, saveShares]);
+  }, [blocker, hasUnsavedChanges, hasInvalidItems, saveShares]);
 
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [uploadSuccess, setUploadSuccess] = useState(false);
@@ -177,18 +155,21 @@ export function BillOverview() {
 
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-      <UnsavedChangesModal
-        isOpen={blocker.state === 'blocked'}
-        isSaving={navSaveLoading}
-        onStay={handleBlockerStay}
-        onDiscard={handleBlockerDiscard}
-        onSave={handleBlockerSave}
-      />
-      <div>
-        <Link to={bill?.group_id ? `/groups/${bill.group_id}` : '/dashboard'} className="inline-flex items-center text-xs font-medium text-brand-600 dark:text-brand-500 hover:text-brand-700 dark:hover:text-brand-400 mb-3 transition-colors">
+      <div className="flex items-center justify-between mb-3">
+        <Link to={bill?.group_id ? `/groups/${bill.group_id}` : '/dashboard'} className="inline-flex items-center text-xs font-medium text-brand-600 dark:text-brand-500 hover:text-brand-700 dark:hover:text-brand-400 transition-colors">
           <ArrowLeft className="w-3 h-3 mr-1" /> Back to Group
         </Link>
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div className="flex items-center gap-2 text-xs font-medium">
+          {isSavingShares ? (
+            <span className="text-slate-500 dark:text-slate-400 flex items-center gap-1"><Loader2 className="w-3 h-3 animate-spin"/> Saving...</span>
+          ) : hasUnsavedChanges ? (
+            <span className="text-slate-400 dark:text-slate-500">Unsaved changes</span>
+          ) : bill ? (
+            <span className="text-brand-600 dark:text-brand-500 flex items-center gap-1"><CheckCircle2 className="w-3 h-3"/> Saved</span>
+          ) : null}
+        </div>
+      </div>
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div className="flex-1 min-w-0">
             <h1 className="text-2xl font-extrabold text-slate-900 dark:text-white tracking-tight truncate">
               {isLoading && !bill ? 'Loading Bill...' : (bill?.name || (group?.name ? `${group.name} Bill` : 'Bill Details'))}
@@ -215,20 +196,6 @@ export function BillOverview() {
               <p className="text-xs text-slate-400 dark:text-slate-500 font-medium italic">Split exactly as ordered.</p>
             </div>
           </div>
-          {bill && hasUnsavedChanges && (
-             <Button 
-               variant="primary"
-               className="shadow-brand-500/20 gap-2 px-5 py-2 h-10 text-sm"
-               onClick={saveShares}
-               isLoading={isSavingShares}
-               disabled={hasInvalidItems || isSavingShares}
-               title={hasInvalidItems ? "All items must have at least one assigned share." : ""}
-             >
-               <CheckCircle2 className="w-4 h-4" />
-               Save Splits
-             </Button>
-          )}
-        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 items-start">
@@ -383,26 +350,11 @@ export function BillOverview() {
                 onResetAll={resetAllShares}
                 onRemoveUser={handleRemoveUserFromBill}
               />
-              {hasUnsavedChanges && (
-                <div className="mt-6 flex justify-end w-full sm:w-auto">
-                  <div className="flex flex-col sm:flex-row items-center gap-4 w-full sm:w-auto">
-                    {hasInvalidItems && (
-                      <span className="text-sm font-medium text-red-500 dark:text-red-400 text-center sm:text-right">
-                        Please assign shares to all items highlighted in red.
-                      </span>
-                    )}
-                    <Button
-                      variant="primary"
-                      className="shadow-brand-500/20 gap-2 px-8 w-full sm:w-auto"
-                      onClick={saveShares}
-                      isLoading={isSavingShares}
-                      disabled={hasInvalidItems || isSavingShares}
-                      title={hasInvalidItems ? "All items must have at least one assigned share." : ""}
-                    >
-                      <CheckCircle2 className="w-5 h-5" />
-                      Save Splits
-                    </Button>
-                  </div>
+              {hasInvalidItems && (
+                <div className="mt-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-900/50 rounded-xl text-center">
+                  <span className="text-sm font-medium text-red-600 dark:text-red-400">
+                    Fix the items highlighted in red (they must have at least one assigned share).
+                  </span>
                 </div>
               )}
             </>
