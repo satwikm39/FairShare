@@ -8,6 +8,7 @@ export interface Group {
   id: number;
   name: string;
   currency: string;
+  simplify_debts: boolean;
   members: GroupMemberResponse[];
 }
 
@@ -65,4 +66,13 @@ export interface GroupBalances {
   balances: UserBalance[];
   debts: DebtDetail[];
   my_net_amount: number;
+}
+
+export interface Settlement {
+  id: number;
+  group_id: number;
+  from_user_id: number;
+  to_user_id: number;
+  amount: number;
+  date: string;
 }

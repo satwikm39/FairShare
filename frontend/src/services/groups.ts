@@ -36,9 +36,16 @@ export const groupsService = {
   /**
    * Update a group
    */
-  updateGroup: async (groupId: number, data: { name?: string; currency?: string }): Promise<Group> => {
+  updateGroup: async (groupId: number, data: { name?: string; currency?: string; simplify_debts?: boolean }): Promise<Group> => {
     const response = await api.patch<Group>(`/groups/${groupId}`, data);
     return response.data;
+  },
+
+  /**
+   * Create a new settlement between two users
+   */
+  createSettlement: async (groupId: number, data: { from_user_id: number; to_user_id: number; amount: number }): Promise<void> => {
+    await api.post(`/groups/${groupId}/settlements`, { ...data, group_id: groupId });
   },
 
   /**

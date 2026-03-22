@@ -3,6 +3,7 @@ from pydantic import BaseModel
 class GroupBase(BaseModel):
     name: str
     currency: str = "$"
+    simplify_debts: bool = False
 
 class GroupCreate(GroupBase):
     pass
@@ -33,3 +34,4 @@ class GroupMemberCreate(BaseModel):
 class GroupUpdate(BaseModel):
     name: str | None = None
     currency: str | None = None
+    simplify_debts: bool | None = None

@@ -20,3 +20,4 @@ from .bills import (
     UserBalance,
     DebtDetail,
 )
+from .settlements import Settlement, SettlementCreate, SettlementBase

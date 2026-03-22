@@ -190,3 +190,25 @@ def create_bill_for_group(
         return crud.bills.create_bill(db=db, bill=bill, group_member_ids=group_member_ids)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
+
+@router.post("/{group_id}/settlements", response_model=schemas.Settlement)
+def create_settlement(
+    group_id: int,
+    settlement: schemas.SettlementCreate,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_group_member)
+):
+    if settlement.group_id != group_id:
+        raise HTTPException(status_code=400, detail="Path group_id must match body group_id")
+    
+    # Must be recording a payment involving themselves
+    if current_user.id not in [settlement.from_user_id, settlement.to_user_id]:
+        raise HTTPException(status_code=403, detail="You can only record settlements you are involved in")
+        
+    created = crud.settlements.create_settlement(db=db, settlement=settlement)
+    
+    # Invalidate and recompute debt cache
+    from app.services.debts import recompute_group_debts
+    recompute_group_debts(db, group_id)
+    
+    return created

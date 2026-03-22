@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, ForeignKey, Float
+from sqlalchemy import Column, Integer, String, ForeignKey, Float, Boolean
 from sqlalchemy.orm import relationship
 from app.core.database import Base
 
@@ -8,11 +8,13 @@ class Group(Base):
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, index=True)
     currency = Column(String, default="$")
+    simplify_debts = Column(Boolean, default=False)
 
     # Relationships
     members = relationship("GroupMember", back_populates="group", cascade="all, delete-orphan")
     bills = relationship("Bill", back_populates="group", cascade="all, delete-orphan")
     debts = relationship("Debt", back_populates="group", cascade="all, delete-orphan")
+    settlements = relationship("Settlement", back_populates="group", cascade="all, delete-orphan")
 
 class GroupMember(Base):
     __tablename__ = "group_members"
