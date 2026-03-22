@@ -96,6 +96,10 @@ def remove_group_member(
     if user_id == current_user.id:
         raise HTTPException(status_code=400, detail="You cannot remove yourself from the group")
 
+    # Force recompute to ensure we are checking against the latest balances
+    from app.services.debts import recompute_group_debts
+    recompute_group_debts(db, group_id)
+
     # Block removal if the user has unsettled debts in this group
     outstanding = db.query(models.Debt).filter(
         models.Debt.group_id == group_id,
