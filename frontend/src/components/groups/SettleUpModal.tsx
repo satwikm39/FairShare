@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { X, ArrowRight, DollarSign } from 'lucide-react';
+import { X, ArrowRight } from 'lucide-react';
 import { Button } from '../ui/Button';
 import { ModalPortal } from '../ui/ModalPortal';
 import type { GroupMemberResponse } from '../../types';

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { Card } from '../../components/ui/Card';
 import { Minus, Plus, Loader2, Divide, PlusCircle, X, Trash2, RotateCcw } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
@@ -31,6 +31,58 @@ export function SplitterTable({ bill, group, onUpdateShare, onSplitAllEqually, o
   const [draftRows, setDraftRows] = useState<DraftRow[]>([]);
   const [draftError, setDraftError] = useState<string | null>(null);
   const [isResetMode, setIsResetMode] = useState(false);
+
+  // Column resizing state (uncontrolled for performance)
+  const itemNameColRef = useRef<HTMLTableCellElement>(null);
+  const isResizing = useRef(false);
+  const startX = useRef(0);
+  const startWidth = useRef(0);
+
+  const handleMouseMove = useCallback((e: MouseEvent) => {
+    if (!isResizing.current || !itemNameColRef.current) return;
+    const newWidth = Math.max(150, startWidth.current + (e.pageX - startX.current));
+    // Apply width directly to DOM for smooth resizing
+    itemNameColRef.current.style.width = `${newWidth}px`;
+    itemNameColRef.current.style.minWidth = `${newWidth}px`;
+    itemNameColRef.current.style.maxWidth = `${newWidth}px`;
+    
+    // Also apply to all cells in the column to force rigid alignment
+    const colCells = itemNameColRef.current.closest('table')?.querySelectorAll('.item-name-col') || [];
+    colCells.forEach(cell => {
+       if (cell instanceof HTMLElement) {
+          cell.style.width = `${newWidth}px`;
+          cell.style.minWidth = `${newWidth}px`;
+          cell.style.maxWidth = `${newWidth}px`;
+       }
+    });
+  }, []);
+
+  const handleMouseUp = useCallback(() => {
+    isResizing.current = false;
+    document.removeEventListener('mousemove', handleMouseMove);
+    document.removeEventListener('mouseup', handleMouseUp);
+    document.body.style.cursor = '';
+    document.body.style.userSelect = '';
+  }, [handleMouseMove]);
+
+  const handleMouseDown = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    isResizing.current = true;
+    startX.current = e.pageX;
+    startWidth.current = itemNameColRef.current?.offsetWidth || 250;
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+    
+    document.body.style.cursor = 'col-resize';
+    document.body.style.userSelect = 'none';
+  }, [handleMouseMove, handleMouseUp]);
+
+  useEffect(() => {
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [handleMouseMove, handleMouseUp]);
   const { currentUser } = useAuth();
 
   const openDraft = () => {
@@ -163,13 +215,26 @@ export function SplitterTable({ bill, group, onUpdateShare, onSplitAllEqually, o
           </Button>
         )}
       </div>
-      <table className="w-full text-left border-collapse min-w-[650px]">
-        <thead>
-          <tr className="bg-slate-50 dark:bg-slate-900/50 border-b border-slate-200/80 dark:border-slate-700 text-xs text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider">
-            <th className="sticky top-16 z-20 p-5 w-1/3 border-r border-slate-200/50 dark:border-slate-700/50 bg-slate-50 dark:bg-slate-900 shadow-[0_1px_0_0_rgba(0,0,0,0.05)] dark:shadow-[0_1px_0_0_rgba(255,255,255,0.05)]">Item Name</th>
-            <th className="sticky top-16 z-20 p-5 text-right w-1/6 border-r border-slate-200/50 dark:border-slate-700/50 bg-slate-50 dark:bg-slate-900 shadow-[0_1px_0_0_rgba(0,0,0,0.05)] dark:shadow-[0_1px_0_0_rgba(255,255,255,0.05)]">Unit Cost</th>
+      <div className="w-full overflow-x-auto pb-6 scrollbar-thin scrollbar-thumb-slate-200 dark:scrollbar-thumb-slate-700">
+        <table className="w-auto text-left border-collapse min-w-full whitespace-nowrap">
+          <thead>
+          <tr className="bg-slate-100 dark:bg-slate-800/80 border-b-2 border-slate-300 dark:border-slate-600 text-[13px] text-slate-800 dark:text-slate-100 font-extrabold uppercase tracking-widest text-center">
+            <th 
+              ref={itemNameColRef}
+              className="sticky top-0 z-20 w-auto border-r border-slate-200/50 dark:border-slate-700/50 bg-slate-100 dark:bg-slate-800/80 shadow-[0_1px_0_0_rgba(0,0,0,0.05)] dark:shadow-[0_1px_0_0_rgba(255,255,255,0.05)] p-0 relative item-name-col min-w-[200px]"
+            >
+              <div className="pl-5 pr-4 h-full flex flex-col items-start md:items-center justify-center" style={{ minHeight: '99px' }}>
+                <span className="font-extrabold">Item Name</span>
+              </div>
+              <div 
+                className="absolute top-0 right-[-3px] w-[6px] h-full cursor-col-resize hover:bg-brand-500/50 z-30 transition-colors"
+                onMouseDown={handleMouseDown}
+                title="Drag to resize"
+              />
+            </th>
+            <th className="sticky top-0 z-20 p-5 text-right md:text-center w-auto border-r border-slate-200/50 dark:border-slate-700/50 bg-slate-100 dark:bg-slate-800/80 shadow-[0_1px_0_0_rgba(0,0,0,0.05)] dark:shadow-[0_1px_0_0_rgba(255,255,255,0.05)]">Unit Cost</th>
             {users.map((user, idx) => (
-              <th key={user.id} className={cn("sticky top-16 z-20 p-5 text-center bg-slate-50 dark:bg-slate-900 shadow-[0_1px_0_0_rgba(0,0,0,0.05)] dark:shadow-[0_1px_0_0_rgba(255,255,255,0.05)]", idx !== users.length - 1 && "border-r border-slate-200/50 dark:border-slate-700/50")}>
+              <th key={user.id} className={cn("sticky top-0 z-20 p-5 text-center bg-slate-100 dark:bg-slate-800/80 shadow-[0_1px_0_0_rgba(0,0,0,0.05)] dark:shadow-[0_1px_0_0_rgba(255,255,255,0.05)]", idx !== users.length - 1 && "border-r border-slate-200/50 dark:border-slate-700/50")}>
                 <div className="flex flex-col items-center gap-1.5 group/user">
                   <div className="relative">
                     <div className="w-9 h-9 rounded-full bg-brand-100 dark:bg-brand-900/30 text-brand-700 dark:text-brand-300 flex items-center justify-center font-extrabold ring-2 ring-transparent group-hover/user:ring-brand-200 dark:group-hover/user:ring-brand-700 transition-all shadow-sm">
@@ -197,7 +262,7 @@ export function SplitterTable({ bill, group, onUpdateShare, onSplitAllEqually, o
             const isZeroShares = totalItemShares === 0;
             return (
               <tr key={item.id} className={cn("transition-colors group", isZeroShares ? "bg-red-50/80 dark:bg-red-900/20 hover:bg-red-100/80 dark:hover:bg-red-900/30 ring-1 ring-inset ring-red-200 dark:ring-red-800/60" : "hover:bg-slate-50/50 dark:hover:bg-slate-700/30")}>
-                <td className="p-3 border-r border-slate-200/50 dark:border-slate-700/50">
+                <td className="p-3 border-r border-slate-200/50 dark:border-slate-700/50 item-name-col">
                   <div className="flex items-center gap-2 group/item">
                     {onDeleteItem && (
                       <button
@@ -217,7 +282,7 @@ export function SplitterTable({ bill, group, onUpdateShare, onSplitAllEqually, o
                       value={item.item_name}
                       onChange={(e) => onUpdateItemDetails?.(item.id, e.target.value, item.unit_cost)}
                       className={cn(
-                        "w-full bg-transparent border-0 border-b border-transparent hover:border-slate-300 dark:hover:border-slate-600 focus:border-brand-500 focus:ring-0 px-2 py-1.5 font-semibold text-slate-800 dark:text-slate-200 transition-colors",
+                        "w-full min-w-[200px] bg-transparent border-0 border-b border-transparent hover:border-slate-300 dark:hover:border-slate-600 focus:border-brand-500 focus:ring-0 px-2 py-1.5 font-semibold text-slate-800 dark:text-slate-200 transition-colors",
                         !onUpdateItemDetails && "pointer-events-none"
                       )}
                       placeholder="Item Name"
@@ -288,14 +353,14 @@ export function SplitterTable({ bill, group, onUpdateShare, onSplitAllEqually, o
                 className="bg-brand-50/50 dark:bg-brand-900/10 ring-1 ring-inset ring-brand-200 dark:ring-brand-800/60"
                 onKeyDown={handleDraftKeyDown}
               >
-                <td className="p-3 border-r border-slate-200/50 dark:border-slate-700/50">
+                <td className="p-3 border-r border-slate-200/50 dark:border-slate-700/50 item-name-col">
                   <input
                     autoFocus={rowIdx === 0}
                     type="text"
                     value={row.name}
                     onChange={(e) => updateDraftRow(row.key, { name: e.target.value })}
                     placeholder="Item name..."
-                    className="w-full bg-transparent border-0 border-b border-brand-300 dark:border-brand-700 focus:border-brand-500 focus:ring-0 px-2 py-1.5 font-semibold text-slate-800 dark:text-slate-200 placeholder:text-slate-400"
+                    className="w-full min-w-[200px] bg-transparent border-0 border-b border-brand-300 dark:border-brand-700 focus:border-brand-500 focus:ring-0 px-2 py-1.5 font-semibold text-slate-800 dark:text-slate-200 placeholder:text-slate-400"
                   />
                 </td>
                 <td className="p-3 border-r border-slate-200/50 dark:border-slate-700/50 relative">
@@ -415,6 +480,7 @@ export function SplitterTable({ bill, group, onUpdateShare, onSplitAllEqually, o
           </tr>
         </tfoot>
       </table>
+      </div>
     </Card>
   );
 }

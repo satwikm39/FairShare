@@ -1,6 +1,7 @@
 import { Camera, CheckCircle2, Clock, Users, Receipt, SplitSquareVertical } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 import { Link } from 'react-router-dom';
+import { enableDemoMode } from '../config/demo';
 
 export function LiveDemo() {
   const features = [
@@ -35,9 +36,19 @@ export function LiveDemo() {
         <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight text-slate-900 dark:text-white mb-6">
           Live Demo Coming Soon!
         </h1>
-        <p className="text-xl text-slate-600 dark:text-slate-300 max-w-2xl mx-auto leading-relaxed">
-          We sincerely apologize, but we are currently in the process of recording an interactive live demo video to showcase the full power of FairShare. Please bear with us!
+        <p className="text-xl text-slate-600 dark:text-slate-300 max-w-2xl mx-auto leading-relaxed mb-8">
+          Experience FairShare instantly! Our interactive demo runs entirely in your browser using local storage. No signup required, and no data is saved to our servers.
         </p>
+
+        <Button 
+          className="text-lg px-8 py-4 rounded-2xl shadow-xl shadow-brand-500/20 hover:shadow-brand-500/40 transition-all font-bold animate-bounce hover:animate-none"
+          onClick={() => {
+            enableDemoMode();
+            window.location.href = '/dashboard';
+          }}
+        >
+          Try it out now
+        </Button>
       </div>
 
       <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 p-8 mb-12">
@@ -68,7 +79,7 @@ export function LiveDemo() {
       <div className="text-center space-y-6">
         <div className="inline-flex items-center gap-2 text-brand-600 dark:text-brand-400 bg-brand-50 dark:bg-brand-900/20 px-4 py-2 rounded-full font-medium">
           <Clock className="w-4 h-4" />
-          <span>Check back in a few days for the complete video tutorial!</span>
+          <span>The demo resets automatically if you clear your browser data.</span>
         </div>
         <div>
           <Link to="/">

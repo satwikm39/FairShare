@@ -155,220 +155,226 @@ export function BillOverview() {
 
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-      <div className="flex items-center justify-between mb-3">
-        <Link to={bill?.group_id ? `/groups/${bill.group_id}` : '/dashboard'} className="inline-flex items-center text-xs font-medium text-brand-600 dark:text-brand-500 hover:text-brand-700 dark:hover:text-brand-400 transition-colors">
-          <ArrowLeft className="w-3 h-3 mr-1" /> Back to Group
-        </Link>
-        <div className="flex items-center gap-2 text-xs font-medium">
-          {isSavingShares ? (
-            <span className="text-slate-500 dark:text-slate-400 flex items-center gap-1"><Loader2 className="w-3 h-3 animate-spin"/> Saving...</span>
-          ) : hasUnsavedChanges ? (
-            <span className="text-slate-400 dark:text-slate-500">Unsaved changes</span>
-          ) : bill ? (
-            <span className="text-brand-600 dark:text-brand-500 flex items-center gap-1"><CheckCircle2 className="w-3 h-3"/> Saved</span>
-          ) : null}
+      <div className="sticky top-[4rem] z-30 bg-slate-50/95 dark:bg-slate-950/95 backdrop-blur-md pt-2 pb-4 mb-6 border-b border-slate-200/60 dark:border-slate-800/60">
+        <div className="flex items-center justify-between mb-3">
+          <Link to={bill?.group_id ? `/groups/${bill.group_id}` : '/dashboard'} className="inline-flex items-center text-xs font-medium text-brand-600 dark:text-brand-500 hover:text-brand-700 dark:hover:text-brand-400 transition-colors">
+            <ArrowLeft className="w-3 h-3 mr-1" /> Back to Group
+          </Link>
+          <div className="flex items-center gap-2 text-xs font-medium">
+            {isSavingShares ? (
+              <span className="text-slate-500 dark:text-slate-400 flex items-center gap-1"><Loader2 className="w-3 h-3 animate-spin"/> Saving...</span>
+            ) : hasUnsavedChanges ? (
+              <span className="text-slate-400 dark:text-slate-500">Unsaved changes</span>
+            ) : bill ? (
+              <span className="text-brand-600 dark:text-brand-500 flex items-center gap-1"><CheckCircle2 className="w-3 h-3"/> Saved</span>
+            ) : null}
+          </div>
+        </div>
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            <div className="flex-1 min-w-0">
+              <h1 className="text-2xl font-extrabold text-slate-900 dark:text-white tracking-tight truncate">
+                {isLoading && !bill ? 'Loading Bill...' : (bill?.name || (group?.name ? `${group.name} Bill` : 'Bill Details'))}
+              </h1>
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-1">
+                {bill?.date && (
+                  <p className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded">
+                    {new Date(bill.date).toLocaleDateString(undefined, {
+                      year: 'numeric',
+                      month: 'short',
+                      day: 'numeric'
+                    })}
+                  </p>
+                )}
+                {bill && (
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-sm font-bold text-slate-500 dark:text-slate-400">Total:</span>
+                    <span className="text-lg font-black text-brand-600 dark:text-brand-400 flex items-baseline">
+                      <span className="text-xl font-black mr-0.5">{getCurrencySymbol(group?.currency || '$')}</span>
+                      <span>{bill.grand_total.toFixed(2)}</span>
+                    </span>
+                  </div>
+                )}
+                <p className="text-xs text-slate-400 dark:text-slate-500 font-medium italic">Split exactly as ordered.</p>
+              </div>
+            </div>
         </div>
       </div>
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-          <div className="flex-1 min-w-0">
-            <h1 className="text-2xl font-extrabold text-slate-900 dark:text-white tracking-tight truncate">
-              {isLoading && !bill ? 'Loading Bill...' : (bill?.name || (group?.name ? `${group.name} Bill` : 'Bill Details'))}
-            </h1>
-            <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-1">
-              {bill?.date && (
-                <p className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded">
-                  {new Date(bill.date).toLocaleDateString(undefined, {
-                    year: 'numeric',
-                    month: 'short',
-                    day: 'numeric'
-                  })}
-                </p>
-              )}
-              {bill && (
-                <div className="flex items-center gap-1.5">
-                  <span className="text-sm font-bold text-slate-500 dark:text-slate-400">Total:</span>
-                  <span className="text-lg font-black text-brand-600 dark:text-brand-400 flex items-baseline">
-                    <span className="text-xl font-black mr-0.5">{getCurrencySymbol(group?.currency || '$')}</span>
-                    <span>{bill.grand_total.toFixed(2)}</span>
-                  </span>
-                </div>
-              )}
-              <p className="text-xs text-slate-400 dark:text-slate-500 font-medium italic">Split exactly as ordered.</p>
+
+      <div className="flex flex-col xl:flex-row gap-6 items-start">
+        
+        {/* Left Sidebar Actions */}
+        <div className="w-full xl:w-1/4 xl:max-w-xs space-y-4 shrink-0">
+        {/* Payer Selection Card */}
+        {group && (
+          <Card className="border-slate-200/60 dark:border-slate-700/50 shadow-lg">
+          <div className="flex items-center gap-2 mb-3">
+              <UserCheck className="w-3.5 h-3.5 text-brand-500" />
+              <h3 className="font-bold text-sm text-slate-900 dark:text-white uppercase tracking-wider">Paid by</h3>
+              {isSavingPayer && <Loader2 className="w-3 h-3 animate-spin text-slate-400" />}
             </div>
-          </div>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 items-start">
-        <div className="lg:col-span-1 space-y-6 lg:sticky lg:top-24">
-
-          {/* Payer Selection Card */}
-          {group && (
-            <Card className="border-slate-200/60 dark:border-slate-700/50 shadow-lg">
-            <div className="flex items-center gap-2 mb-3">
-                <UserCheck className="w-3.5 h-3.5 text-brand-500" />
-                <h3 className="font-bold text-sm text-slate-900 dark:text-white uppercase tracking-wider">Paid by</h3>
-                {isSavingPayer && <Loader2 className="w-3 h-3 animate-spin text-slate-400" />}
-              </div>
-              <div className="relative">
-                <select
-                  value={payerId ?? ''}
-                  onChange={(e) => handlePayerChange(e.target.value ? Number(e.target.value) : null)}
-                  className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-slate-100 font-medium px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-400 cursor-pointer appearance-none"
-                >
-                  <option value="">— Not set —</option>
-                  {(bill?.participant_user_ids?.length
-                    ? group.members?.filter((m: GroupMemberResponse) => bill.participant_user_ids!.includes(m.user_id))
-                    : group.members
-                  )?.map((m: GroupMemberResponse) => (
-                    <option key={m.user.id} value={m.user.id}>{m.user.name}</option>
-                  ))}
-                </select>
-                <div className="pointer-events-none absolute inset-y-0 right-3 flex items-center">
-                  <svg className="w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
-                </div>
-              </div>
-              {payerId && (
-                <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">
-                  {group.members?.find((m: any) => m.user.id === payerId)?.user.name} fronted this bill. Balances updated automatically.
-                </p>
-              )}
-            </Card>
-          )}
-
-          {hasExplicitParticipants && membersToAdd.length > 0 && (
-            <Card className="border-slate-200/60 dark:border-slate-700/50 shadow-sm">
-              <div className="flex items-center gap-2 mb-3">
-                <UserPlus className="w-3.5 h-3.5 text-brand-500" />
-                <h3 className="font-bold text-sm text-slate-900 dark:text-white uppercase tracking-wider">Add to bill</h3>
-              </div>
-              <div className="space-y-2">
-                {membersToAdd.map((m: GroupMemberResponse) => (
-                  <div
-                    key={m.user_id}
-                    className="flex items-center justify-between gap-2 rounded-lg bg-slate-50 dark:bg-slate-800/50 px-3 py-2"
-                  >
-                    <span className="text-sm font-medium text-slate-700 dark:text-slate-300 truncate">
-                      {m.user.name}
-                    </span>
-                    <Button
-                      variant="secondary"
-                      className="shrink-0 h-7 text-xs px-3 py-1.5"
-                      onClick={() => handleAddParticipant(m.user_id)}
-                      disabled={addingUserId === m.user_id}
-                      isLoading={addingUserId === m.user_id}
-                    >
-                      Add
-                    </Button>
-                  </div>
+            <div className="relative">
+              <select
+                value={payerId ?? ''}
+                onChange={(e) => handlePayerChange(e.target.value ? Number(e.target.value) : null)}
+                className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-slate-100 font-medium px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-400 cursor-pointer appearance-none"
+              >
+                <option value="">— Not set —</option>
+                {(bill?.participant_user_ids?.length
+                  ? group.members?.filter((m: GroupMemberResponse) => bill.participant_user_ids!.includes(m.user_id))
+                  : group.members
+                )?.map((m: GroupMemberResponse) => (
+                  <option key={m.user.id} value={m.user.id}>{m.user.name}</option>
                 ))}
-              </div>
-            </Card>
-          )}
-
-          <Card className="border-slate-200/60 dark:border-slate-700/50 shadow-sm p-4">
-            <h3 className="font-bold text-sm text-slate-900 dark:text-white mb-3 uppercase tracking-wider">Receipt</h3>
-            
-            <input 
-              type="file" 
-              ref={fileInputRef} 
-              className="hidden" 
-              accept="image/jpeg, image/png, application/pdf"
-              onChange={handleFileSelect}
-            />
-
-            <div 
-              onClick={() => fileInputRef.current?.click()}
-              className={cn(
-                "border-2 border-dashed rounded-2xl p-6 flex flex-col items-center justify-center text-center gap-4 transition-all cursor-pointer group",
-                selectedFile ? "border-brand-400 dark:border-brand-500 bg-brand-50 dark:bg-brand-900/20" : "border-slate-300 dark:border-slate-700 hover:border-brand-400 dark:hover:border-brand-500 hover:bg-brand-50/50 dark:hover:bg-brand-900/10"
-              )}
-            >
-              <div className={cn(
-                "w-12 h-12 rounded-full flex items-center justify-center transition-colors shadow-sm",
-                selectedFile ? "bg-brand-500 text-white" : "bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 group-hover:bg-brand-100 dark:group-hover:bg-brand-900/50 group-hover:text-brand-600 dark:group-hover:text-brand-400"
-              )}>
-                {selectedFile ? <FileText className="w-5 h-5" /> : <Upload className="w-5 h-5" />}
-              </div>
-              <div>
-                <p className={cn("text-sm font-semibold", selectedFile ? "text-brand-700 dark:text-brand-400" : "text-slate-700 dark:text-slate-300 group-hover:text-brand-700 dark:group-hover:text-brand-400")}>
-                  {selectedFile ? selectedFile.name : "Select Receipt"}
-                </p>
-                {!selectedFile && <p className="text-xs text-slate-500 dark:text-slate-500 mt-1">JPEG, PNG, or PDF</p>}
+              </select>
+              <div className="pointer-events-none absolute inset-y-0 right-3 flex items-center">
+                <svg className="w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
               </div>
             </div>
-
-            {error && (
-              <div className="mt-4 p-3 bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded-xl text-sm font-medium border border-red-100 dark:border-red-900/50">
-                {error}
-              </div>
-            )}
-
-            {uploadSuccess && (
-              <div className="mt-4 p-3 bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded-xl text-sm font-medium border border-green-100 dark:border-green-900/50 flex items-center gap-2">
-                <CheckCircle2 className="w-4 h-4" />
-                Receipt processed successfully
-              </div>
-            )}
-
-            <Button 
-              fullWidth 
-              className="mt-6 shadow-brand-500/20" 
-              variant={selectedFile ? "primary" : "secondary"}
-              disabled={!selectedFile || isLoading || textractLimitReached}
-              isLoading={isLoading}
-              onClick={handleUpload}
-            >
-              {textractLimitReached ? "Premium Coming Soon" : (isLoading ? "Processing via AWS..." : "Process Receipt")}
-            </Button>
-            {textractLimitReached && (
-              <p className="text-xs text-orange-600 dark:text-orange-400 mt-2 text-center font-medium">
-                Textract limit reached (2 scans). Premium features coming soon!
+            {payerId && (
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">
+                {group.members?.find((m: any) => m.user.id === payerId)?.user.name} fronted this bill. Balances updated automatically.
               </p>
             )}
           </Card>
-        </div>
-        
-        <div className="lg:col-span-3">
-          {isLoading && !bill ? (
-            <Card className="border-slate-200/60 dark:border-slate-700/50 shadow-lg text-center p-12 text-slate-500 dark:text-slate-400">
-              <div className="flex flex-col items-center justify-center gap-4">
-                <Loader2 className="w-8 h-8 animate-spin text-brand-500" />
-                <p>Loading bill details...</p>
-              </div>
-            </Card>
-          ) : bill ? (
-            <>
-              <SplitterTable 
-                bill={bill} 
-                group={group} 
-                onUpdateShare={updateShare} 
-                onSplitAllEqually={splitAllEqually}
-                onUpdateItemDetails={updateItemDetails}
-                onUpdateTax={updateTax}
-                onBulkAddItems={bulkAddItems}
-                onDeleteItem={deleteItem}
-                onResetAll={resetAllShares}
-                onRemoveUser={handleRemoveUserFromBill}
-              />
-              {hasInvalidItems && (
-                <div className="mt-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-900/50 rounded-xl text-center">
-                  <span className="text-sm font-medium text-red-600 dark:text-red-400">
-                    Fix the items highlighted in red (they must have at least one assigned share).
+        )}
+
+        {/* Add to Bill */}
+        {hasExplicitParticipants && membersToAdd.length > 0 && (
+          <Card className="border-slate-200/60 dark:border-slate-700/50 shadow-sm">
+            <div className="flex items-center gap-2 mb-3">
+              <UserPlus className="w-3.5 h-3.5 text-brand-500" />
+              <h3 className="font-bold text-sm text-slate-900 dark:text-white uppercase tracking-wider">Add to bill</h3>
+            </div>
+            <div className="space-y-2">
+              {membersToAdd.map((m: GroupMemberResponse) => (
+                <div
+                  key={m.user_id}
+                  className="flex items-center justify-between gap-2 rounded-lg bg-slate-50 dark:bg-slate-800/50 px-3 py-2"
+                >
+                  <span className="text-sm font-medium text-slate-700 dark:text-slate-300 truncate">
+                    {m.user.name}
                   </span>
+                  <Button
+                    variant="secondary"
+                    className="shrink-0 h-7 text-xs px-3 py-1.5"
+                    onClick={() => handleAddParticipant(m.user_id)}
+                    disabled={addingUserId === m.user_id}
+                    isLoading={addingUserId === m.user_id}
+                  >
+                    Add
+                  </Button>
                 </div>
-              )}
-            </>
-          ) : (
-            <Card className="border-slate-200/60 dark:border-slate-700/50 shadow-lg text-center p-12 text-slate-500 dark:text-slate-400">
-              <div className="flex flex-col items-center justify-center gap-4">
-                <FileText className="w-12 h-12 text-slate-300 dark:text-slate-600" />
-                <p className="font-semibold text-lg text-slate-700 dark:text-slate-300">No Bill Found</p>
-                <p>Upload a receipt to start splitting the bill.</p>
-              </div>
-            </Card>
+              ))}
+            </div>
+          </Card>
+        )}
+        
+        {/* Receipt Card */}
+        <Card className="border-slate-200/60 dark:border-slate-700/50 shadow-sm p-4">
+          <h3 className="font-bold text-sm text-slate-900 dark:text-white mb-3 uppercase tracking-wider">Receipt</h3>
+          
+          <input 
+            type="file" 
+            ref={fileInputRef} 
+            className="hidden" 
+            accept="image/jpeg, image/png, application/pdf"
+            onChange={handleFileSelect}
+          />
+
+          <div 
+            onClick={() => fileInputRef.current?.click()}
+            className={cn(
+              "border-2 border-dashed rounded-2xl p-6 flex flex-col items-center justify-center text-center gap-4 transition-all cursor-pointer group",
+              selectedFile ? "border-brand-400 dark:border-brand-500 bg-brand-50 dark:bg-brand-900/20" : "border-slate-300 dark:border-slate-700 hover:border-brand-400 dark:hover:border-brand-500 hover:bg-brand-50/50 dark:hover:bg-brand-900/10"
+            )}
+          >
+            <div className={cn(
+              "w-12 h-12 rounded-full flex items-center justify-center transition-colors shadow-sm",
+              selectedFile ? "bg-brand-500 text-white" : "bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 group-hover:bg-brand-100 dark:group-hover:bg-brand-900/50 group-hover:text-brand-600 dark:group-hover:text-brand-400"
+            )}>
+              {selectedFile ? <FileText className="w-5 h-5" /> : <Upload className="w-5 h-5" />}
+            </div>
+            <div>
+              <p className={cn("text-sm font-semibold", selectedFile ? "text-brand-700 dark:text-brand-400" : "text-slate-700 dark:text-slate-300 group-hover:text-brand-700 dark:group-hover:text-brand-400")}>
+                {selectedFile ? selectedFile.name : "Select Receipt"}
+              </p>
+              {!selectedFile && <p className="text-xs text-slate-500 dark:text-slate-500 mt-1">JPEG, PNG, or PDF</p>}
+            </div>
+          </div>
+
+          {error && (
+            <div className="mt-4 p-3 bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded-xl text-sm font-medium border border-red-100 dark:border-red-900/50">
+              {error}
+            </div>
           )}
+
+          {uploadSuccess && (
+            <div className="mt-4 p-3 bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded-xl text-sm font-medium border border-green-100 dark:border-green-900/50 flex items-center gap-2">
+              <CheckCircle2 className="w-4 h-4" />
+              Receipt processed successfully
+            </div>
+          )}
+
+          <Button 
+            fullWidth 
+            className="mt-6 shadow-brand-500/20" 
+            variant={selectedFile ? "primary" : "secondary"}
+            disabled={!selectedFile || isLoading || textractLimitReached}
+            isLoading={isLoading}
+            onClick={handleUpload}
+          >
+            {textractLimitReached ? "Premium Coming Soon" : (isLoading ? "Processing via AWS..." : "Process Receipt")}
+          </Button>
+          {textractLimitReached && (
+            <p className="text-xs text-orange-600 dark:text-orange-400 mt-2 text-center font-medium">
+              Textract limit reached (2 scans). Premium features coming soon!
+            </p>
+          )}
+        </Card>
+
         </div>
+
+      <div className="w-full xl:w-3/4 min-w-0">
+        {isLoading && !bill ? (
+          <Card className="border-slate-200/60 dark:border-slate-700/50 shadow-lg text-center p-12 text-slate-500 dark:text-slate-400">
+            <div className="flex flex-col items-center justify-center gap-4">
+              <Loader2 className="w-8 h-8 animate-spin text-brand-500" />
+              <p>Loading bill details...</p>
+            </div>
+          </Card>
+        ) : bill ? (
+          <>
+            <SplitterTable 
+              bill={bill} 
+              group={group} 
+              onUpdateShare={updateShare} 
+              onSplitAllEqually={splitAllEqually}
+              onUpdateItemDetails={updateItemDetails}
+              onUpdateTax={updateTax}
+              onBulkAddItems={bulkAddItems}
+              onDeleteItem={deleteItem}
+              onResetAll={resetAllShares}
+              onRemoveUser={handleRemoveUserFromBill}
+            />
+            {hasInvalidItems && (
+              <div className="mt-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-900/50 rounded-xl text-center">
+                <span className="text-sm font-medium text-red-600 dark:text-red-400">
+                  Fix the items highlighted in red (they must have at least one assigned share).
+                </span>
+              </div>
+            )}
+          </>
+        ) : (
+          <Card className="border-slate-200/60 dark:border-slate-700/50 shadow-lg text-center p-12 text-slate-500 dark:text-slate-400">
+            <div className="flex flex-col items-center justify-center gap-4">
+              <FileText className="w-12 h-12 text-slate-300 dark:text-slate-600" />
+              <p className="font-semibold text-lg text-slate-700 dark:text-slate-300">No Bill Found</p>
+              <p>Upload a receipt to start splitting the bill.</p>
+            </div>
+          </Card>
+        )}
       </div>
     </div>
+  </div>
   );
 }

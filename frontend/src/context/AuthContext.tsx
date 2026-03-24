@@ -5,6 +5,8 @@ import { api } from '../services/api';
 import { onAuthStateChanged } from 'firebase/auth';
 import { auth } from '../config/firebase';
 import { Loader2 } from 'lucide-react';
+import { DEMO_USER } from '../services/mock/db';
+import { isDemoMode } from '../config/demo';
 
 interface AuthContextType {
   currentUser: (FirebaseUser & Partial<BackendUser>) | null;
@@ -35,12 +37,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const refreshUserData = async () => {
+    if (isDemoMode()) {
+      setCurrentUser(DEMO_USER as any);
+      return;
+    }
     if (auth.currentUser) {
       await fetchBackendUser(auth.currentUser);
     }
   };
 
   useEffect(() => {
+    if (isDemoMode()) {
+      setCurrentUser(DEMO_USER as any);
+      setLoading(false);
+      return () => {};
+    }
+
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
         await fetchBackendUser(user);

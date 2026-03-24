@@ -6,11 +6,14 @@ import { useTheme } from '../../context/ThemeContext';
 import { logout } from '../../config/firebase';
 import { EditProfileModal } from '../profile/EditProfileModal';
 import { ConfirmModal } from '../ui/ConfirmModal';
+import { isDemoMode, disableDemoMode } from '../../config/demo';
 
 export function Navbar() {
   const { currentUser } = useAuth();
   const { theme, setTheme } = useTheme();
   const navigate = useNavigate();
+  const demoActive = isDemoMode();
+  
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isLogoutConfirmOpen, setIsLogoutConfirmOpen] = useState(false);
@@ -35,7 +38,18 @@ export function Navbar() {
   };
   return (
     <>
-      <nav className="fixed top-0 w-full bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-b border-slate-200 dark:border-slate-800 z-50 transition-colors duration-300">
+      {demoActive && (
+        <div className="fixed top-0 w-full h-8 bg-brand-500 text-white flex items-center justify-center text-xs sm:text-sm font-semibold z-50 shadow-md gap-4">
+          <span>Viewing interactive demo — data is local and not saved to our servers.</span>
+          <button 
+            onClick={() => { disableDemoMode(); window.location.href = '/'; }}
+            className="underline hover:text-slate-200"
+          >
+            Exit Demo
+          </button>
+        </div>
+      )}
+      <nav className={`fixed ${demoActive ? 'top-8' : 'top-0'} w-full bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-b border-slate-200 dark:border-slate-800 z-50 transition-colors duration-300`}>
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <Link to="/" className="flex items-center gap-2.5 transition-transform hover:scale-105">
