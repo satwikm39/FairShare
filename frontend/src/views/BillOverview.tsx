@@ -226,16 +226,16 @@ export function BillOverview() {
       <div className="flex flex-col lg:flex-row gap-6 items-start">
         
         {/* Left Sidebar Actions */}
-        <div className="w-full lg:w-[220px] xl:w-[240px] space-y-4 shrink-0">
+        <div className="w-full lg:w-[190px] xl:w-[210px] space-y-4 shrink-0 flex flex-col items-center">
         {/* Payer Selection Card */}
         {group && (
-          <Card className="border-slate-200/60 dark:border-slate-700/50 shadow-lg p-4 md:p-5">
-          <div className="flex items-center gap-2 mb-3">
+          <Card className="w-full border-slate-200/60 dark:border-slate-700/50 shadow-lg px-3.5 py-3 md:px-3.5 md:py-3 flex flex-col items-center text-center">
+          <div className="flex items-center justify-center gap-2 mb-2">
               <UserCheck className="w-3.5 h-3.5 text-brand-500" />
               <h3 className="font-bold text-sm text-slate-900 dark:text-white uppercase tracking-wider">Paid by</h3>
               {isSavingPayer && <Loader2 className="w-3 h-3 animate-spin text-slate-400" />}
             </div>
-            <div className="relative">
+            <div className="relative w-full">
               <select
                 value={payerId ?? ''}
                 onChange={(e) => handlePayerChange(e.target.value ? Number(e.target.value) : null)}
@@ -254,7 +254,7 @@ export function BillOverview() {
               </div>
             </div>
             {payerId && (
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1.5">
                 {group.members?.find((m: any) => m.user.id === payerId)?.user.name} fronted this bill. Balances updated automatically.
               </p>
             )}
@@ -293,8 +293,8 @@ export function BillOverview() {
         )}
         
         {/* Receipt Card */}
-        <Card className="border-slate-200/60 dark:border-slate-700/50 shadow-sm p-4 md:p-5">
-          <h3 className="font-bold text-sm text-slate-900 dark:text-white mb-3 uppercase tracking-wider">Receipt</h3>
+        <Card className="w-full border-slate-200/60 dark:border-slate-700/50 shadow-sm px-3.5 py-3 md:px-3.5 md:py-3 flex flex-col items-center text-center">
+          <h3 className="font-bold text-sm text-slate-900 dark:text-white mb-2 uppercase tracking-wider text-center">Upload receipt</h3>
           
           <input 
             type="file" 
@@ -307,7 +307,7 @@ export function BillOverview() {
           <div 
             onClick={() => fileInputRef.current?.click()}
             className={cn(
-              "border-2 border-dashed rounded-2xl p-6 flex flex-col items-center justify-center text-center gap-4 transition-all cursor-pointer group",
+              "border-2 border-dashed rounded-2xl px-3.5 py-2.5 flex flex-col items-center justify-center text-center gap-2 transition-all cursor-pointer group",
               selectedFile ? "border-brand-400 dark:border-brand-500 bg-brand-50 dark:bg-brand-900/20" : "border-slate-300 dark:border-slate-700 hover:border-brand-400 dark:hover:border-brand-500 hover:bg-brand-50/50 dark:hover:bg-brand-900/10"
             )}
           >
@@ -340,7 +340,7 @@ export function BillOverview() {
 
           <Button 
             fullWidth 
-            className="mt-6 shadow-brand-500/20" 
+            className="mt-2.5 shadow-brand-500/20" 
             variant={selectedFile ? "primary" : "secondary"}
             disabled={!selectedFile || isLoading || textractLimitReached}
             isLoading={isLoading}

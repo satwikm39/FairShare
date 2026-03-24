@@ -32,6 +32,7 @@ export function SplitterTable({ bill, group, onUpdateShare, onSplitAllEqually, o
   const [draftError, setDraftError] = useState<string | null>(null);
   const [itemNameColWidth, setItemNameColWidth] = useState(200);
   const [isResetMode, setIsResetMode] = useState(false);
+  const [hasHorizontalOverflow, setHasHorizontalOverflow] = useState(false);
 
   // Column resizing state (uncontrolled for performance)
   const itemNameColRef = useRef<HTMLTableCellElement>(null);
@@ -39,6 +40,7 @@ export function SplitterTable({ bill, group, onUpdateShare, onSplitAllEqually, o
   const startX = useRef(0);
   const startWidth = useRef(0);
   const headerScrollerRef = useRef<HTMLDivElement>(null);
+  const bodyScrollerRef = useRef<HTMLDivElement>(null);
 
   const handleBodyScroll = useCallback((e: React.UIEvent<HTMLDivElement>) => {
     if (headerScrollerRef.current) {
@@ -78,6 +80,26 @@ export function SplitterTable({ bill, group, onUpdateShare, onSplitAllEqually, o
       document.removeEventListener('mouseup', handleMouseUp);
     };
   }, [handleMouseMove, handleMouseUp]);
+
+  useEffect(() => {
+    const scroller = bodyScrollerRef.current;
+    if (!scroller) return;
+
+    const checkOverflow = () => {
+      // Tolerate sub-pixel rounding differences that can create tiny phantom scroll.
+      setHasHorizontalOverflow(scroller.scrollWidth - scroller.clientWidth > 2);
+    };
+
+    checkOverflow();
+    const observer = new ResizeObserver(checkOverflow);
+    observer.observe(scroller);
+    window.addEventListener('resize', checkOverflow);
+
+    return () => {
+      observer.disconnect();
+      window.removeEventListener('resize', checkOverflow);
+    };
+  }, [itemNameColWidth, bill.items.length, bill.participant_user_ids?.length, group?.members?.length]);
   const { currentUser } = useAuth();
 
   const openDraft = () => {
@@ -226,11 +248,14 @@ export function SplitterTable({ bill, group, onUpdateShare, onSplitAllEqually, o
             >
               <div className="pl-5 pr-4 flex flex-col items-start md:items-center justify-center min-h-[64px]">
                 <span className="font-extrabold">Item Name</span>
+                <span className="mt-0.5 text-[10px] normal-case tracking-normal font-semibold text-brand-600 dark:text-brand-400">
+                  Drag right edge to resize table
+                </span>
               </div>
               <div 
-                className="absolute top-0 right-[-3px] w-[6px] h-full cursor-col-resize hover:bg-brand-500/50 z-30 transition-colors"
+                className="absolute top-0 right-[-3px] w-[6px] h-full cursor-col-resize bg-brand-500/20 hover:bg-brand-500/50 z-30 transition-colors"
                 onMouseDown={handleMouseDown}
-                title="Drag to resize"
+                title="Drag right edge to resize table"
               />
             </th>
             <th className="w-[120px] min-w-[120px] p-2 text-center border-r border-slate-200/50 dark:border-slate-700/50">Unit Cost</th>
@@ -261,7 +286,11 @@ export function SplitterTable({ bill, group, onUpdateShare, onSplitAllEqually, o
       </div>
 
       <div 
-        className="overflow-x-auto pb-6 scrollbar-thin scrollbar-thumb-slate-200 dark:scrollbar-thumb-slate-700 rounded-b-[2rem]"
+        ref={bodyScrollerRef}
+        className={cn(
+          "rounded-b-[2rem] bill-table-scrollbar",
+          hasHorizontalOverflow ? "overflow-x-auto" : "overflow-x-hidden"
+        )}
         style={{ width: `${totalTableWidth}px`, maxWidth: '100%' }}
         onScroll={handleBodyScroll}
       >
