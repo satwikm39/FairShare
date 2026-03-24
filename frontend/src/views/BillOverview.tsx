@@ -223,13 +223,13 @@ export function BillOverview() {
         </div>
       </div>
 
-      <div className="flex flex-col xl:flex-row gap-6 items-start">
+      <div className="flex flex-col lg:flex-row gap-6 items-start">
         
         {/* Left Sidebar Actions */}
-        <div className="w-full xl:w-[280px] space-y-4 shrink-0">
+        <div className="w-full lg:w-[220px] xl:w-[240px] space-y-4 shrink-0">
         {/* Payer Selection Card */}
         {group && (
-          <Card className="border-slate-200/60 dark:border-slate-700/50 shadow-lg">
+          <Card className="border-slate-200/60 dark:border-slate-700/50 shadow-lg p-4 md:p-5">
           <div className="flex items-center gap-2 mb-3">
               <UserCheck className="w-3.5 h-3.5 text-brand-500" />
               <h3 className="font-bold text-sm text-slate-900 dark:text-white uppercase tracking-wider">Paid by</h3>
@@ -263,7 +263,7 @@ export function BillOverview() {
 
         {/* Add to Bill */}
         {hasExplicitParticipants && membersToAdd.length > 0 && (
-          <Card className="border-slate-200/60 dark:border-slate-700/50 shadow-sm">
+          <Card className="border-slate-200/60 dark:border-slate-700/50 shadow-sm p-4 md:p-5">
             <div className="flex items-center gap-2 mb-3">
               <UserPlus className="w-3.5 h-3.5 text-brand-500" />
               <h3 className="font-bold text-sm text-slate-900 dark:text-white uppercase tracking-wider">Add to bill</h3>
@@ -293,7 +293,7 @@ export function BillOverview() {
         )}
         
         {/* Receipt Card */}
-        <Card className="border-slate-200/60 dark:border-slate-700/50 shadow-sm p-4">
+        <Card className="border-slate-200/60 dark:border-slate-700/50 shadow-sm p-4 md:p-5">
           <h3 className="font-bold text-sm text-slate-900 dark:text-white mb-3 uppercase tracking-wider">Receipt</h3>
           
           <input 
@@ -372,11 +372,11 @@ export function BillOverview() {
               group={group} 
               onUpdateShare={updateShare} 
               onSplitAllEqually={splitAllEqually}
+              onResetAll={resetAllShares}
               onUpdateItemDetails={updateItemDetails}
               onUpdateTax={updateTax}
               onBulkAddItems={bulkAddItems}
               onDeleteItem={deleteItem}
-              onResetAll={resetAllShares}
               onRemoveUser={handleRemoveUserFromBill}
             />
             {hasInvalidItems && (
