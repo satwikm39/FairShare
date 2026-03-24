@@ -26,6 +26,13 @@ export function BillOverview() {
   const [payerId, setPayerId] = useState<number | null>(null);
   const [isSavingPayer, setIsSavingPayer] = useState(false);
 
+  const [isScrolled, setIsScrolled] = useState(false);
+  useEffect(() => {
+    const onScroll = () => setIsScrolled(window.scrollY > 40);
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+
   const handleRemoveUserFromBill = useCallback(async (userId: number, userName: string) => {
     if (!window.confirm(`Remove ${userName} from this bill? All their shares will be cleared.`)) return;
     try {
@@ -155,8 +162,8 @@ export function BillOverview() {
 
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-      <div className="sticky top-[4rem] z-30 bg-slate-50/95 dark:bg-slate-950/95 backdrop-blur-md pt-2 pb-4 mb-6 border-b border-slate-200/60 dark:border-slate-800/60">
-        <div className="flex items-center justify-between mb-3">
+      <div className={cn("sticky top-[4rem] z-30 bg-slate-50/95 dark:bg-slate-950/95 backdrop-blur-md pt-2 border-b border-slate-200/60 dark:border-slate-800/60 transition-all duration-300", isScrolled ? "pb-2 mb-4 shadow-sm" : "pb-4 mb-6")}>
+        <div className={cn("flex items-center justify-between transition-all duration-300", isScrolled ? "hidden md:flex mb-1" : "mb-3")}>
           <Link to={bill?.group_id ? `/groups/${bill.group_id}` : '/dashboard'} className="inline-flex items-center text-xs font-medium text-brand-600 dark:text-brand-500 hover:text-brand-700 dark:hover:text-brand-400 transition-colors">
             <ArrowLeft className="w-3 h-3 mr-1" /> Back to Group
           </Link>
@@ -170,12 +177,17 @@ export function BillOverview() {
             ) : null}
           </div>
         </div>
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-            <div className="flex-1 min-w-0">
-              <h1 className="text-2xl font-extrabold text-slate-900 dark:text-white tracking-tight truncate">
+        <div className={cn("flex justify-between items-center transition-all duration-300", isScrolled ? "gap-4" : "flex-col md:flex-row gap-4 items-start md:items-center")}>
+            <div className="flex-1 min-w-0 flex items-center gap-3">
+              {isScrolled && (
+                <Link to={bill?.group_id ? `/groups/${bill.group_id}` : '/dashboard'} className="shrink-0 text-slate-400 hover:text-brand-600 transition-colors md:hidden">
+                  <ArrowLeft className="w-4 h-4" />
+                </Link>
+              )}
+              <h1 className={cn("font-extrabold text-slate-900 dark:text-white tracking-tight truncate transition-all duration-300", isScrolled ? "text-lg" : "text-2xl")}>
                 {isLoading && !bill ? 'Loading Bill...' : (bill?.name || (group?.name ? `${group.name} Bill` : 'Bill Details'))}
               </h1>
-              <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-1">
+              <div className={cn("flex-wrap items-center gap-x-4 gap-y-1 transition-all duration-300", isScrolled ? "hidden lg:flex text-xs" : "flex mt-1 text-sm")}>
                 {bill?.date && (
                   <p className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded">
                     {new Date(bill.date).toLocaleDateString(undefined, {
@@ -185,7 +197,7 @@ export function BillOverview() {
                     })}
                   </p>
                 )}
-                {bill && (
+                {bill && !isScrolled && (
                   <div className="flex items-center gap-1.5">
                     <span className="text-sm font-bold text-slate-500 dark:text-slate-400">Total:</span>
                     <span className="text-lg font-black text-brand-600 dark:text-brand-400 flex items-baseline">
@@ -194,16 +206,27 @@ export function BillOverview() {
                     </span>
                   </div>
                 )}
-                <p className="text-xs text-slate-400 dark:text-slate-500 font-medium italic">Split exactly as ordered.</p>
+                {!isScrolled && <p className="text-xs text-slate-400 dark:text-slate-500 font-medium italic">Split exactly as ordered.</p>}
               </div>
             </div>
+            {bill && isScrolled && (
+              <div className="flex items-center gap-3 ml-auto shrink-0 animate-in fade-in slide-in-from-right-4 duration-300">
+                <div className="flex items-center gap-1.5">
+                  <span className="text-xs font-bold text-slate-500 dark:text-slate-400 hidden sm:inline-block">Total:</span>
+                  <span className="text-base font-black text-brand-600 dark:text-brand-400 flex items-baseline">
+                    <span className="text-lg font-black mr-0.5">{getCurrencySymbol(group?.currency || '$')}</span>
+                    <span>{bill.grand_total.toFixed(2)}</span>
+                  </span>
+                </div>
+              </div>
+            )}
         </div>
       </div>
 
       <div className="flex flex-col xl:flex-row gap-6 items-start">
         
         {/* Left Sidebar Actions */}
-        <div className="w-full xl:w-1/4 xl:max-w-xs space-y-4 shrink-0">
+        <div className="w-full xl:w-[280px] space-y-4 shrink-0">
         {/* Payer Selection Card */}
         {group && (
           <Card className="border-slate-200/60 dark:border-slate-700/50 shadow-lg">
@@ -334,7 +357,7 @@ export function BillOverview() {
 
         </div>
 
-      <div className="w-full xl:w-3/4 min-w-0">
+      <div className="flex-1 w-full min-w-0">
         {isLoading && !bill ? (
           <Card className="border-slate-200/60 dark:border-slate-700/50 shadow-lg text-center p-12 text-slate-500 dark:text-slate-400">
             <div className="flex flex-col items-center justify-center gap-4">
