@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { Plus, Receipt, Loader2, ArrowLeft, Trash2, Edit2, Calendar, Check, X, TrendingUp, TrendingDown, ArrowRight, RefreshCw, DollarSign } from 'lucide-react';
+import { Plus, Receipt, Loader2, ArrowLeft, Trash2, Edit2, Calendar, Check, X, TrendingUp, TrendingDown, ArrowRight, RefreshCw, DollarSign, SortAsc, SortDesc } from 'lucide-react';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { useGroupDetails } from '../hooks/useGroupDetails';
@@ -33,6 +33,13 @@ export function GroupDetails() {
 
   const [isSettleUpModalOpen, setIsSettleUpModalOpen] = useState(false);
   const [isTogglingSmartSync, setIsTogglingSmartSync] = useState(false);
+  const [sortOrder, setSortOrder] = useState<'desc' | 'asc'>('desc');
+
+  const sortedBills = [...bills].sort((a, b) => {
+    const dateA = a.date ? new Date(a.date).getTime() : 0;
+    const dateB = b.date ? new Date(b.date).getTime() : 0;
+    return sortOrder === 'desc' ? dateB - dateA : dateA - dateB;
+  });
 
   const fetchBalances = async (forceRefresh = false) => {
     setIsLoadingBalances(true);
@@ -308,17 +315,27 @@ export function GroupDetails() {
         <div className="lg:col-span-2 space-y-4">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-bold text-slate-800 dark:text-slate-100 uppercase tracking-wider">Group Bills</h2>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setSortOrder(prev => prev === 'desc' ? 'asc' : 'desc')}
+                className="flex items-center gap-1.5 text-[10px] font-bold text-slate-500 hover:text-brand-600 dark:text-slate-400 dark:hover:text-brand-400 uppercase tracking-widest bg-white dark:bg-slate-800/80 px-2.5 py-1.5 rounded-lg border border-slate-200/60 dark:border-slate-700/50 shadow-sm transition-all flex-shrink-0"
+                title={sortOrder === 'desc' ? 'Sorting by date (Newest First)' : 'Sorting by date (Oldest First)'}
+              >
+                {sortOrder === 'desc' ? <SortDesc className="w-3.5 h-3.5" /> : <SortAsc className="w-3.5 h-3.5" />}
+                <span>{sortOrder === 'desc' ? 'Newest' : 'Oldest'}</span>
+              </button>
+            </div>
           </div>
 {/* ── Bills list ── */}
       <div className="flex flex-col gap-4">
-        {bills.length === 0 ? (
+        {sortedBills.length === 0 ? (
           <div className="text-center p-16 bg-slate-50 dark:bg-slate-900/50 rounded-3xl border border-dashed border-slate-300 dark:border-slate-700">
             <Receipt className="w-12 h-12 text-slate-300 dark:text-slate-600 mx-auto mb-4" />
             <h3 className="text-xl font-bold text-slate-700 dark:text-slate-300">No bills yet</h3>
             <p className="text-slate-500 dark:text-slate-400 mt-2">Create a new bill to start splitting expenses.</p>
           </div>
         ) : (
-          bills.map(bill => (
+          sortedBills.map(bill => (
             <div key={bill.id} className="relative group/bill">
               <Link to={`/bills/${bill.id}`} className="block">
                 <Card className="border border-slate-200/60 dark:border-slate-700/50 shadow-sm hover:shadow-md hover:border-brand-200 dark:hover:border-brand-500/50 transition-all duration-300 py-4 px-6">
