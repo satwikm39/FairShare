@@ -1,94 +1,75 @@
-import { Camera, CheckCircle2, Clock, Users, Receipt, SplitSquareVertical } from 'lucide-react';
+import { Rocket, Globe, Database, UserX, Clock } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 import { Link } from 'react-router-dom';
 import { enableDemoMode } from '../config/demo';
 
+const bullets = [
+  {
+    icon: Globe,
+    text: 'Runs entirely in your browser — no servers involved.',
+  },
+  {
+    icon: Database,
+    text: 'Pre-loaded with sample groups, bills, and members to explore.',
+  },
+  {
+    icon: UserX,
+    text: 'No signup or account required. Jump right in.',
+  },
+];
+
 export function LiveDemo() {
-  const features = [
-    {
-      title: 'Create Groups',
-      description: 'Easily organize shared expenses by creating groups for trips, roommates, or events.',
-      icon: Users,
-    },
-    {
-      title: 'Upload Receipts',
-      description: 'Snap a picture of your receipt and let our smart OCR technology extract items and prices.',
-      icon: Receipt,
-    },
-    {
-      title: 'Assign Shares',
-      description: 'Split each item exactly as consumed. No more confusing math or unfair splits.',
-      icon: SplitSquareVertical,
-    },
-    {
-      title: 'Track Balances',
-      description: 'See exactly who owes what in real-time within your group dashboard.',
-      icon: CheckCircle2,
-    },
-  ];
-
   return (
-    <div className="max-w-4xl mx-auto px-4 py-12">
-      <div className="text-center mb-16">
-        <div className="inline-flex items-center justify-center p-4 bg-brand-50 dark:bg-brand-900/20 rounded-full mb-6">
-          <Camera className="w-12 h-12 text-brand-500" />
-        </div>
-        <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight text-slate-900 dark:text-white mb-6">
-          Live Demo Coming Soon!
-        </h1>
-        <p className="text-xl text-slate-600 dark:text-slate-300 max-w-2xl mx-auto leading-relaxed mb-8">
-          Experience FairShare instantly! Our interactive demo runs entirely in your browser using local storage. No signup required, and no data is saved to our servers.
-        </p>
-
-        <Button 
-          className="text-lg px-8 py-4 rounded-2xl shadow-xl shadow-brand-500/20 hover:shadow-brand-500/40 transition-all font-bold animate-bounce hover:animate-none"
-          onClick={() => {
-            enableDemoMode();
-            window.location.href = '/dashboard';
-          }}
-        >
-          Try it out now
-        </Button>
+    <div className="max-w-2xl mx-auto px-4 py-6 sm:py-8 flex flex-col items-center text-center">
+      {/* Icon */}
+      <div className="inline-flex items-center justify-center p-5 bg-brand-50 dark:bg-brand-900/20 rounded-full mb-4 shadow-lg shadow-brand-500/10">
+        <Rocket className="w-14 h-14 text-brand-500" />
       </div>
 
-      <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 p-8 mb-12">
-        <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-8 text-center">
-          What you'll see in the demo:
-        </h2>
-        <div className="grid sm:grid-cols-2 gap-8">
-          {features.map((feature, idx) => (
-            <div key={idx} className="flex gap-4">
-              <div className="flex-shrink-0">
-                <div className="w-12 h-12 rounded-xl bg-brand-50 dark:bg-brand-900/20 flex items-center justify-center text-brand-600 dark:text-brand-400">
-                  <feature.icon className="w-6 h-6" />
-                </div>
-              </div>
-              <div>
-                <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-2">
-                  {feature.title}
-                </h3>
-                <p className="text-slate-600 dark:text-slate-400 leading-relaxed">
-                  {feature.description}
-                </p>
-              </div>
+      {/* Heading */}
+      <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight text-slate-900 dark:text-white mb-4 leading-tight">
+        Try FairShare — <br className="hidden sm:block" />No Signup Required
+      </h1>
+      <p className="text-lg text-slate-600 dark:text-slate-300 max-w-lg mx-auto leading-relaxed mb-6">
+        Experience the full app instantly. The interactive demo runs locally in your browser so you can explore every feature risk-free.
+      </p>
+
+      {/* CTA */}
+      <Button
+        className="text-lg px-10 py-4 rounded-2xl shadow-xl shadow-brand-500/25 hover:shadow-brand-500/40 transition-all font-bold mb-8"
+        onClick={() => {
+          enableDemoMode();
+          window.location.href = '/dashboard';
+        }}
+      >
+        🚀 Launch Demo
+      </Button>
+
+      {/* Bullet points */}
+      <div className="w-full bg-white dark:bg-slate-800/60 rounded-2xl border border-slate-200 dark:border-slate-700/60 p-6 space-y-5 mb-6 text-left">
+        {bullets.map((b, idx) => (
+          <div key={idx} className="flex items-start gap-4">
+            <div className="flex-shrink-0 w-10 h-10 rounded-xl bg-brand-50 dark:bg-brand-900/30 flex items-center justify-center text-brand-600 dark:text-brand-400">
+              <b.icon className="w-5 h-5" />
             </div>
-          ))}
-        </div>
+            <span className="text-slate-700 dark:text-slate-300 font-medium leading-relaxed pt-2">
+              {b.text}
+            </span>
+          </div>
+        ))}
       </div>
 
-      <div className="text-center space-y-6">
-        <div className="inline-flex items-center gap-2 text-brand-600 dark:text-brand-400 bg-brand-50 dark:bg-brand-900/20 px-4 py-2 rounded-full font-medium">
-          <Clock className="w-4 h-4" />
-          <span>The demo resets automatically if you clear your browser data.</span>
-        </div>
-        <div>
-          <Link to="/">
-            <Button variant="secondary" className="px-8 mt-4">
-              Return Home
-            </Button>
-          </Link>
-        </div>
+      {/* Footer info */}
+      <div className="inline-flex items-center gap-2 text-brand-600 dark:text-brand-400 bg-brand-50 dark:bg-brand-900/20 px-4 py-2 rounded-full font-medium text-sm mb-4">
+        <Clock className="w-4 h-4" />
+        <span>Demo data resets when you clear your browser storage.</span>
       </div>
+
+      <Link to="/">
+        <Button variant="secondary" className="px-8">
+          Return Home
+        </Button>
+      </Link>
     </div>
   );
 }
