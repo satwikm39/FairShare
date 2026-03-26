@@ -20,39 +20,39 @@ const bullets = [
 
 export function LiveDemo() {
   return (
-    <div className="max-w-2xl mx-auto px-4 py-6 sm:py-8 flex flex-col items-center text-center">
+    <div className="max-w-2xl mx-auto px-4 py-4 sm:py-6 flex flex-col items-center text-center">
       {/* Icon */}
-      <div className="inline-flex items-center justify-center p-5 bg-brand-50 dark:bg-brand-900/20 rounded-full mb-4 shadow-lg shadow-brand-500/10">
-        <Rocket className="w-14 h-14 text-brand-500" />
+      <div className="inline-flex items-center justify-center p-4 bg-brand-50 dark:bg-brand-900/20 rounded-xl mb-4 border border-brand-500/20">
+        <Rocket className="w-10 h-10 text-brand-500" />
       </div>
 
       {/* Heading */}
-      <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight text-slate-900 dark:text-white mb-4 leading-tight">
-        Try FairShare — <br className="hidden sm:block" />No Signup Required
+      <h1 className="text-4xl sm:text-5xl font-black tracking-tighter text-zinc-900 dark:text-white mb-3 leading-none uppercase">
+        Try FairShare
       </h1>
-      <p className="text-lg text-slate-600 dark:text-slate-300 max-w-lg mx-auto leading-relaxed mb-6">
-        Experience the full app instantly. The interactive demo runs locally in your browser so you can explore every feature risk-free.
+      <p className="text-sm text-zinc-500 dark:text-zinc-400 max-w-md mx-auto leading-relaxed mb-6">
+        Experience the full app instantly. The interactive demo runs locally in your browser.
       </p>
 
       {/* CTA */}
       <Button
-        className="text-lg px-10 py-4 rounded-2xl shadow-xl shadow-brand-500/25 hover:shadow-brand-500/40 transition-all font-bold mb-8"
+        className="text-sm px-12 py-4 font-bold tracking-wide mb-10"
         onClick={() => {
           enableDemoMode();
           window.location.href = '/dashboard';
         }}
       >
-        🚀 Launch Demo
+        Launch Instant Demo
       </Button>
 
       {/* Bullet points */}
-      <div className="w-full bg-white dark:bg-slate-800/60 rounded-2xl border border-slate-200 dark:border-slate-700/60 p-6 space-y-5 mb-6 text-left">
+      <div className="w-full bg-white dark:bg-zinc-900/50 dark:backdrop-blur-sm rounded-xl border border-zinc-200 dark:border-zinc-800/60 p-6 space-y-4 mb-6 text-left shadow-sm">
         {bullets.map((b, idx) => (
           <div key={idx} className="flex items-start gap-4">
-            <div className="flex-shrink-0 w-10 h-10 rounded-xl bg-brand-50 dark:bg-brand-900/30 flex items-center justify-center text-brand-600 dark:text-brand-400">
-              <b.icon className="w-5 h-5" />
+            <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-brand-50 dark:bg-brand-900/20 flex items-center justify-center text-brand-600 dark:text-brand-400 border border-brand-500/10">
+              <b.icon className="w-4 h-4" />
             </div>
-            <span className="text-slate-700 dark:text-slate-300 font-medium leading-relaxed pt-2">
+            <span className="text-sm text-zinc-600 dark:text-zinc-400 leading-relaxed pt-2">
               {b.text}
             </span>
           </div>
@@ -60,13 +60,13 @@ export function LiveDemo() {
       </div>
 
       {/* Footer info */}
-      <div className="inline-flex items-center gap-2 text-brand-600 dark:text-brand-400 bg-brand-50 dark:bg-brand-900/20 px-4 py-2 rounded-full font-medium text-sm mb-4">
-        <Clock className="w-4 h-4" />
-        <span>Demo data resets when you clear your browser storage.</span>
+      <div className="inline-flex items-center gap-2 text-brand-600 dark:text-brand-400 bg-brand-50 dark:bg-brand-900/20 px-4 py-2 rounded-lg border border-brand-500/10 font-semibold text-xs mb-6">
+        <Clock className="w-3.5 h-3.5" />
+        <span>Demo data resets when you clear storage.</span>
       </div>
 
       <Link to="/">
-        <Button variant="secondary" className="px-8">
+        <Button variant="secondary" className="px-8 py-2.5 text-sm">
           Return Home
         </Button>
       </Link>

@@ -11,7 +11,7 @@ export function Card({ children, className, noPadding = false, allowOverflow = f
   return (
     <div 
       className={cn(
-        "bg-white dark:bg-slate-800 rounded-[2rem] shadow-2xl shadow-slate-200/50 dark:shadow-slate-900/50 border border-slate-100 dark:border-slate-700/50",
+        "bg-white dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-800",
         !allowOverflow && "overflow-hidden",
         !noPadding && "p-6 md:p-8",
         className

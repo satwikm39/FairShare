@@ -48,14 +48,14 @@ export function SettleUpModal({ isOpen, onClose, onSubmit, members, currentUserI
   return (
     <ModalPortal>
       <div
-        className="bg-white dark:bg-slate-800 rounded-3xl shadow-2xl w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-200 flex flex-col"
+        className="bg-white dark:bg-black rounded-sharp border border-zinc-200 dark:border-zinc-800 shadow-2xl w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-200 flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="px-6 py-4 flex items-center justify-between border-b border-slate-100 dark:border-slate-700/50">
-          <h2 className="text-xl font-bold text-slate-800 dark:text-white">Record a Payment</h2>
+        <div className="px-6 py-4 flex items-center justify-between border-b border-zinc-100 dark:border-zinc-800">
+          <h2 className="text-xl font-black text-zinc-900 dark:text-white uppercase tracking-tight">Record a Payment</h2>
           <button
             onClick={onClose}
-            className="p-2 text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700/50 rounded-full transition-colors"
+            className="p-2 text-zinc-400 dark:text-zinc-500 hover:text-zinc-600 dark:hover:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-sharp border border-transparent hover:border-zinc-200 dark:hover:border-zinc-700 transition-colors"
           >
             <X className="w-5 h-5" />
           </button>
@@ -67,13 +67,13 @@ export function SettleUpModal({ isOpen, onClose, onSubmit, members, currentUserI
             {/* Who is paying whom */}
             <div className="flex items-center justify-between gap-4">
               <div className="flex-1">
-                <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">
+                <label className="block text-xs font-black text-zinc-500 dark:text-zinc-500 uppercase tracking-widest mb-2">
                   Who paid
                 </label>
                 <select
                   value={fromUserId}
                   onChange={(e) => setFromUserId(Number(e.target.value))}
-                  className="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-500/50 appearance-none cursor-pointer"
+                  className="w-full px-3 py-2.5 rounded-sharp border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 text-zinc-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-brand-500/50 appearance-none cursor-pointer font-bold text-sm uppercase tracking-tight"
                   disabled={isLoading}
                 >
                   {members.map((m) => (
@@ -82,18 +82,18 @@ export function SettleUpModal({ isOpen, onClose, onSubmit, members, currentUserI
                 </select>
               </div>
 
-              <div className="pt-6 shrink-0 text-slate-300 dark:text-slate-600">
+              <div className="pt-6 shrink-0 text-zinc-300 dark:text-zinc-700">
                 <ArrowRight className="w-5 h-5" />
               </div>
 
               <div className="flex-1">
-                <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">
+                <label className="block text-xs font-black text-zinc-500 dark:text-zinc-500 uppercase tracking-widest mb-2">
                   Who received
                 </label>
                 <select
                   value={toUserId}
                   onChange={(e) => setToUserId(Number(e.target.value))}
-                  className="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-500/50 appearance-none cursor-pointer"
+                  className="w-full px-3 py-2.5 rounded-sharp border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 text-zinc-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-brand-500/50 appearance-none cursor-pointer font-bold text-sm uppercase tracking-tight"
                   disabled={isLoading}
                 >
                   <option value={0} disabled>Select...</option>
@@ -113,11 +113,11 @@ export function SettleUpModal({ isOpen, onClose, onSubmit, members, currentUserI
 
             {/* Amount */}
             <div>
-              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+              <label className="block text-xs font-black text-zinc-500 dark:text-zinc-500 uppercase tracking-widest mb-2">
                 Amount
               </label>
               <div className="relative">
-                <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold">
+                <div className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-400 font-black italic">
                   {currencySymbol}
                 </div>
                 <input
@@ -128,7 +128,7 @@ export function SettleUpModal({ isOpen, onClose, onSubmit, members, currentUserI
                   placeholder="0.00"
                   value={amount}
                   onChange={(e) => setAmount(e.target.value)}
-                  className="w-full pl-8 pr-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900/50 text-slate-900 dark:text-white focus:border-brand-500 dark:focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 outline-none transition-all placeholder:text-slate-400 dark:placeholder:text-slate-500 text-lg font-semibold"
+                  className="w-full pl-8 pr-4 py-3 rounded-sharp border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 text-zinc-900 dark:text-white focus:border-brand-500 dark:focus:border-brand-500 focus:ring-1 focus:ring-brand-500/20 outline-none transition-all placeholder:text-zinc-400 dark:placeholder:text-zinc-700 text-2xl font-black tracking-tighter"
                   disabled={isLoading}
                 />
               </div>

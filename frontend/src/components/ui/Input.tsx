@@ -22,8 +22,8 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
           <input
             ref={ref}
             className={cn(
-              "w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white text-base rounded-2xl block p-3.5 outline-none transition-all duration-200 shadow-sm",
-              "focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 dark:focus:border-brand-500",
+              "w-full bg-zinc-50 dark:bg-black border border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-white text-base rounded-sharp block p-3.5 outline-none transition-all duration-200",
+              "focus:bg-white dark:focus:bg-zinc-900 focus:ring-1 focus:ring-brand-500/20 focus:border-brand-500 dark:focus:border-brand-500",
               "placeholder:text-slate-400 dark:placeholder:text-slate-500",
               icon ? 'pl-11' : '',
               error ? 'border-red-500 focus:ring-red-500 focus:border-red-500 bg-red-50 dark:bg-red-900/30 dark:focus:bg-red-900/50 focus:bg-white dark:focus:border-red-500' : '',

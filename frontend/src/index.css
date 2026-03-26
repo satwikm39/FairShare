@@ -5,7 +5,7 @@
 @layer base {
   body {
     font-family: 'Inter', system-ui, sans-serif;
-    @apply bg-slate-50 text-slate-900 transition-colors duration-300 antialiased dark:bg-slate-950 dark:text-slate-100;
+    @apply bg-white text-zinc-900 transition-colors duration-300 antialiased dark:bg-zinc-950 dark:text-zinc-100;
   }
 }
 
@@ -26,41 +26,52 @@ input[type=number] {
   -moz-appearance: textfield;
 }
 
-/* Modern themed horizontal scrollbar for bill split table */
+/* ── Global scrollbar ── */
+html {
+  scrollbar-width: thin;
+  scrollbar-color: #a1a1aa #f4f4f5;
+}
+
+.dark html,
+html.dark {
+  scrollbar-color: #3f3f46 #18181b;
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f4f4f5;
+}
+
+.dark ::-webkit-scrollbar-track,
+:root.dark ::-webkit-scrollbar-track {
+  background: #18181b;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #a1a1aa;
+  border-radius: 9999px;
+  border: 2px solid #f4f4f5;
+}
+
+.dark ::-webkit-scrollbar-thumb,
+:root.dark ::-webkit-scrollbar-thumb {
+  background: #3f3f46;
+  border-color: #18181b;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #00f396;
+}
+
+/* ── Bill table horizontal scrollbar (inherits global, overrides where needed) ── */
 .bill-table-scrollbar {
   scrollbar-width: thin;
-  scrollbar-color: #94a3b8 transparent;
-}
-
-.dark .bill-table-scrollbar {
-  scrollbar-color: #475569 transparent;
-}
-
-.bill-table-scrollbar::-webkit-scrollbar {
-  height: 10px;
 }
 
 .bill-table-scrollbar::-webkit-scrollbar-track {
   background: transparent;
-  border-radius: 9999px;
-}
-
-.bill-table-scrollbar::-webkit-scrollbar-thumb {
-  background: linear-gradient(90deg, rgba(148, 163, 184, 0.95), rgba(100, 116, 139, 0.95));
-  border-radius: 9999px;
-  border: 2px solid transparent;
-  background-clip: padding-box;
-  transition: background 160ms ease;
-}
-
-.bill-table-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(90deg, rgba(100, 116, 139, 1), rgba(71, 85, 105, 1));
-}
-
-.dark .bill-table-scrollbar::-webkit-scrollbar-thumb {
-  background: linear-gradient(90deg, rgba(71, 85, 105, 0.95), rgba(51, 65, 85, 0.95));
-}
-
-.dark .bill-table-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(90deg, rgba(100, 116, 139, 1), rgba(71, 85, 105, 1));
 }

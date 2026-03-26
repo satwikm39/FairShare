@@ -229,9 +229,9 @@ export function GroupDetails() {
 
   if (error || !group) {
     return (
-      <div className="text-center p-12">
-        <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-100">Group not found</h2>
-        <p className="text-slate-500 dark:text-slate-400 mt-2">{error}</p>
+      <div className="text-center p-12 bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 rounded-sharp">
+        <h2 className="text-2xl font-black text-zinc-900 dark:text-white uppercase tracking-tight">Group not found</h2>
+        <p className="text-zinc-500 dark:text-zinc-500 mt-2 uppercase font-bold text-xs">The group you are looking for does not exist or you do not have access.</p>
         <Link to="/dashboard">
           <Button className="mt-6" variant="outline">Back to Dashboard</Button>
         </Link>
@@ -247,11 +247,11 @@ export function GroupDetails() {
         </Link>
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
           <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-3">
-              <h1 className="text-2xl font-extrabold text-slate-900 dark:text-white tracking-tight truncate">{group.name}</h1>
-              <div className="flex items-center gap-1.5 text-[10px] font-bold text-brand-600 dark:text-brand-400 uppercase tracking-widest bg-brand-50 dark:bg-brand-900/20 px-2.5 py-1 rounded-full border border-brand-100/50 dark:border-brand-800/40 shadow-sm transition-all">
+            <div className="flex flex-wrap items-center gap-3">
+              <h1 className="text-3xl font-black text-zinc-900 dark:text-white tracking-tighter uppercase">{group.name}</h1>
+              <div className="flex items-center gap-1.5 text-[10px] font-black text-brand-600 dark:text-brand-400 uppercase tracking-widest bg-brand-50 dark:bg-brand-900/20 px-2.5 py-1 rounded-sharp border border-brand-500/20 shadow-sm">
                 <span className="flex items-center gap-1">
-                  <span className="text-sm font-black">{getCurrencySymbol(group.currency)}</span>
+                  <span className="text-sm font-black italic">{getCurrencySymbol(group.currency)}</span>
                   <span className="text-sm font-black">{getCurrencyCode(group.currency)}</span>
                 </span>
               </div>
@@ -263,21 +263,21 @@ export function GroupDetails() {
                 <Edit2 className="w-3.5 h-3.5" />
               </button>
             </div>
-            <p className="text-sm text-slate-500 dark:text-slate-400 font-medium mt-0.5 italic">Manage bills and expenses.</p>
+            <p className="text-xs text-zinc-500 dark:text-zinc-500 font-bold mt-1 uppercase tracking-wider">Manage bills and expenses.</p>
             {group.members && group.members.length > 0 && (
               <div className="flex flex-wrap items-center gap-1.5 mt-3">
                 {group.members.map(member => {
                   const isMe = member.user_id === currentUser?.id;
                   return (
-                    <div key={member.user_id} className="group/member flex items-center gap-1.5 bg-slate-50 dark:bg-slate-800/50 rounded-full px-2 py-0.5 text-xs font-semibold text-slate-600 dark:text-slate-400 border border-slate-200/60 dark:border-slate-700/50">
-                      <div className="w-4 h-4 rounded-full bg-brand-50 dark:bg-brand-900/30 flex items-center justify-center text-brand-600 dark:text-brand-400 text-[10px] font-bold shrink-0">
+                    <div key={member.user_id} className="group/member flex items-center gap-1.5 bg-zinc-50 dark:bg-zinc-900 rounded-sharp px-2 py-0.5 text-[10px] font-bold text-zinc-600 dark:text-zinc-400 border border-zinc-200 dark:border-zinc-800 uppercase tracking-tight">
+                      <div className="w-4 h-4 rounded-sharp bg-brand-50 dark:bg-brand-900/30 flex items-center justify-center text-brand-600 dark:text-brand-400 text-[10px] font-black shrink-0 border border-brand-500/10">
                         {member.user?.name?.charAt(0)?.toUpperCase() || 'U'}
                       </div>
                       <span>{member.user?.name?.split(' ')[0] || member.user?.email || 'User'}</span>
                       {!isMe && (
                         <button
                           onClick={() => setMemberToRemove({ user_id: member.user_id, name: member.user?.name || member.user?.email || 'this member' })}
-                          className="ml-0.5 text-slate-300 hover:text-red-500 dark:text-slate-600 dark:hover:text-red-400 transition-colors opacity-0 group-hover/member:opacity-100"
+                          className="ml-0.5 text-zinc-300 hover:text-red-500 dark:text-zinc-700 dark:hover:text-red-400 transition-colors opacity-0 group-hover/member:opacity-100"
                           title={`Remove ${member.user?.name || 'member'} from group`}
                         >
                           <X className="w-3 h-3" />
@@ -314,11 +314,11 @@ export function GroupDetails() {
         {/* ── Main Content (Bills list) ── */}
         <div className="lg:col-span-2 space-y-4">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-bold text-slate-800 dark:text-slate-100 uppercase tracking-wider">Group Bills</h2>
+            <h2 className="text-xs font-black text-zinc-900 dark:text-white uppercase tracking-widest">Group Bills</h2>
             <div className="flex items-center gap-2">
               <button
                 onClick={() => setSortOrder(prev => prev === 'desc' ? 'asc' : 'desc')}
-                className="flex items-center gap-1.5 text-[10px] font-bold text-slate-500 hover:text-brand-600 dark:text-slate-400 dark:hover:text-brand-400 uppercase tracking-widest bg-white dark:bg-slate-800/80 px-2.5 py-1.5 rounded-lg border border-slate-200/60 dark:border-slate-700/50 shadow-sm transition-all flex-shrink-0"
+                className="flex items-center gap-1.5 text-[10px] font-black text-zinc-500 hover:text-brand-600 dark:text-zinc-500 dark:hover:text-brand-400 uppercase tracking-widest bg-white dark:bg-black px-2.5 py-1.5 rounded-sharp border border-zinc-200 dark:border-zinc-800 shadow-sm transition-all flex-shrink-0"
                 title={sortOrder === 'desc' ? 'Sorting by date (Newest First)' : 'Sorting by date (Oldest First)'}
               >
                 {sortOrder === 'desc' ? <SortDesc className="w-3.5 h-3.5" /> : <SortAsc className="w-3.5 h-3.5" />}
@@ -329,16 +329,16 @@ export function GroupDetails() {
 {/* ── Bills list ── */}
       <div className="flex flex-col gap-4">
         {sortedBills.length === 0 ? (
-          <div className="text-center p-16 bg-slate-50 dark:bg-slate-900/50 rounded-3xl border border-dashed border-slate-300 dark:border-slate-700">
-            <Receipt className="w-12 h-12 text-slate-300 dark:text-slate-600 mx-auto mb-4" />
-            <h3 className="text-xl font-bold text-slate-700 dark:text-slate-300">No bills yet</h3>
-            <p className="text-slate-500 dark:text-slate-400 mt-2">Create a new bill to start splitting expenses.</p>
+           <div className="text-center p-16 bg-zinc-50 dark:bg-black rounded-sharp border border-zinc-200 dark:border-zinc-800 shadow-inner">
+            <Receipt className="w-12 h-12 text-zinc-300 dark:text-zinc-800 mx-auto mb-4" />
+            <h3 className="text-xl font-black text-zinc-900 dark:text-white uppercase tracking-tight">No bills yet</h3>
+            <p className="text-xs font-bold text-zinc-500 dark:text-zinc-500 mt-2 uppercase tracking-wide">Create a new bill to start splitting expenses.</p>
           </div>
         ) : (
           sortedBills.map(bill => (
             <div key={bill.id} className="relative group/bill">
               <Link to={`/bills/${bill.id}`} className="block">
-                <Card className="border border-slate-200/60 dark:border-slate-700/50 shadow-sm hover:shadow-md hover:border-brand-200 dark:hover:border-brand-500/50 transition-all duration-300 py-4 px-6">
+                <Card className="border border-zinc-200 dark:border-zinc-800 shadow-sm hover:shadow-lg hover:border-brand-500 dark:hover:border-brand-500 transition-all duration-300 py-4 px-6 bg-white dark:bg-black rounded-sharp">
                   <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                     
                     {/* Bill Info Section */}
@@ -352,7 +352,7 @@ export function GroupDetails() {
                               type="text"
                               value={editNameValue}
                               onChange={(e) => setEditNameValue(e.target.value)}
-                              className="bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded px-2 py-1 text-lg font-bold text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-500/50 w-full max-w-xs"
+                              className="bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 rounded-sharp px-2 py-1 text-lg font-black text-zinc-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-brand-500/50 w-full max-w-xs uppercase tracking-tight"
                               placeholder="Bill Name"
                               autoFocus
                             />
@@ -433,7 +433,7 @@ export function GroupDetails() {
                     </div>
 
                   </div>
-                </Card>
+                    </Card>
               </Link>
               
               {/* Delete Button */}
@@ -460,7 +460,7 @@ export function GroupDetails() {
 
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <h2 className="text-lg font-bold text-slate-800 dark:text-slate-100 uppercase tracking-wider">Balances</h2>
+          <h2 className="text-[10px] font-black text-zinc-900 dark:text-white uppercase tracking-widest">Balances</h2>
           <button
             onClick={() => fetchBalances(true)}
             className="flex items-center gap-1.5 text-sm font-medium text-slate-500 hover:text-brand-600 dark:text-slate-400 dark:hover:text-brand-400 transition-colors"
@@ -472,38 +472,38 @@ export function GroupDetails() {
         </div>
 
         {isLoadingBalances ? (
-          <Card className="border-slate-200/60 dark:border-slate-700/50 shadow-sm">
-            <div className="flex items-center justify-center py-6 text-slate-400 gap-2">
+          <Card className="border-zinc-200 dark:border-zinc-800 shadow-sm bg-white dark:bg-black rounded-sharp">
+            <div className="flex items-center justify-center py-6 text-zinc-400 gap-2">
               <Loader2 className="w-5 h-5 animate-spin" />
-              <span className="text-sm">Loading balances...</span>
+              <span className="text-[10px] font-black uppercase tracking-widest">Loading...</span>
             </div>
           </Card>
         ) : balances && (balances.debts.length > 0 || balances.balances.length > 0) ? (
           <>
-            <Card className="border-slate-200/60 dark:border-slate-700/50 shadow-sm space-y-4 p-4">
+            <Card className="border-zinc-200 dark:border-zinc-800 shadow-sm space-y-4 p-4 bg-white dark:bg-black rounded-sharp">
 
               {/* Your personal summary */}
               {currentUser && (() => {
                 const myNet = balances.my_net_amount;
                 const absNet = Math.abs(myNet);
                 if (absNet < 0.01) return (
-                  <div className="flex items-center gap-3 p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60">
-                    <span className="text-sm font-semibold text-slate-500 dark:text-slate-400">You are all settled up in this group 🎉</span>
+                  <div className="flex items-center gap-3 p-3 rounded-sharp bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800">
+                    <span className="text-[10px] font-black text-zinc-500 uppercase tracking-widest px-4 py-3 bg-zinc-50 dark:bg-zinc-900 rounded-sharp border border-zinc-200 dark:border-zinc-800 w-full text-center">All settled up 🎉</span>
                   </div>
                 );
                 if (myNet > 0) return (
-                  <div className="flex items-center gap-3 p-3 rounded-xl bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800/40">
-                    <TrendingUp className="w-5 h-5 text-emerald-600 dark:text-emerald-400 shrink-0" />
-                    <span className="text-sm font-semibold text-emerald-700 dark:text-emerald-400">
-                      Overall, you are owed <strong><span className="text-base font-black">{getCurrencySymbol(group?.currency || '$')}</span>{absNet.toFixed(2)}</strong> in this group.
+                  <div className="flex items-center gap-3 p-3 rounded-sharp bg-emerald-50 dark:bg-brand-900/10 border border-emerald-200 dark:border-brand-500/30">
+                    <TrendingUp className="w-5 h-5 text-emerald-600 dark:text-brand-400 shrink-0" />
+                    <span className="text-sm font-bold text-emerald-700 dark:text-brand-400 uppercase tracking-tight">
+                      You are owed <strong><span className="text-base font-black italic">{getCurrencySymbol(group?.currency || '$')}</span><span className="text-lg tracking-tighter">{absNet.toFixed(2)}</span></strong>
                     </span>
                   </div>
                 );
                 return (
-                  <div className="flex items-center gap-3 p-3 rounded-xl bg-rose-50 dark:bg-rose-900/20 border border-rose-200 dark:border-rose-800/40">
+                  <div className="flex items-center gap-3 p-3 rounded-sharp bg-rose-50 dark:bg-red-900/10 border border-rose-200 dark:border-red-500/30">
                     <TrendingDown className="w-5 h-5 text-rose-600 dark:text-rose-400 shrink-0" />
-                    <span className="text-sm font-semibold text-rose-700 dark:text-rose-400">
-                      Overall, you owe <strong><span className="text-base font-black">{getCurrencySymbol(group?.currency || '$')}</span>{absNet.toFixed(2)}</strong> in this group.
+                    <span className="text-sm font-bold text-rose-700 dark:text-rose-400 uppercase tracking-tight">
+                      You owe <strong><span className="text-base font-black italic">{getCurrencySymbol(group?.currency || '$')}</span><span className="text-lg tracking-tighter">{absNet.toFixed(2)}</span></strong>
                     </span>
                   </div>
                 );
@@ -519,12 +519,12 @@ export function GroupDetails() {
                     return (
                       <div
                         key={i}
-                        className={`flex items-center justify-between gap-3 rounded-xl px-4 py-3 text-sm font-medium transition-colors ${
+                        className={`flex items-center justify-between gap-3 rounded-sharp px-4 py-3 text-[11px] font-black uppercase tracking-tight transition-all border ${
                           isMe
                             ? iOwe
-                              ? 'bg-rose-50 dark:bg-rose-900/20 border border-rose-100 dark:border-rose-800/30 text-rose-800 dark:text-rose-300'
-                              : 'bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-100 dark:border-emerald-800/30 text-emerald-800 dark:text-emerald-300'
-                            : 'bg-slate-50 dark:bg-slate-800/50 text-slate-700 dark:text-slate-300'
+                              ? 'bg-rose-50 dark:bg-red-900/20 border-rose-200 dark:border-red-900/50 text-rose-800 dark:text-red-400'
+                              : 'bg-emerald-50 dark:bg-brand-900/20 border-emerald-200 dark:border-brand-900/50 text-emerald-800 dark:text-brand-400'
+                            : 'bg-zinc-50 dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-400'
                         }`}
                       >
                         <div className="flex items-center gap-2 min-w-0">
@@ -576,15 +576,15 @@ export function GroupDetails() {
               type="button"
               onClick={handleToggleSmartSync}
               disabled={isTogglingSmartSync}
-              className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-brand-500/50 focus:ring-offset-2 overflow-hidden ${
-                group.simplify_debts ? 'bg-brand-500' : 'bg-slate-200 dark:bg-slate-700'
+              className={`relative inline-flex h-5 w-10 flex-shrink-0 cursor-pointer rounded-sharp border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-1 focus:ring-brand-500/50 overflow-hidden ${
+                group.simplify_debts ? 'bg-brand-500' : 'bg-zinc-200 dark:bg-zinc-800'
               }`}
             >
               <span className="sr-only">Toggle Smart Sync</span>
               <span
                 aria-hidden="true"
-                className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
-                  group.simplify_debts ? 'translate-x-5' : 'translate-x-0'
+                className={`pointer-events-none inline-block h-4 w-4 transform rounded-sharp bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                  group.simplify_debts ? 'translate-x-[20px]' : 'translate-x-0'
                 }`}
               />
             </button>

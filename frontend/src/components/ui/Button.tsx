@@ -18,14 +18,14 @@ export function Button({
   className,
   ...props
 }: ButtonProps) {
-  const baseStyles = "relative inline-flex items-center justify-center font-semibold rounded-2xl transition-all duration-200 active:scale-[0.98] outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:opacity-60 disabled:cursor-not-allowed px-5 py-3";
+  const baseStyles = "relative inline-flex items-center justify-center font-bold rounded-lg border transition-all duration-150 active:scale-[0.98] outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:opacity-60 disabled:cursor-not-allowed px-6 py-3";
   
   const variants = {
-    primary: "bg-brand-500 hover:bg-brand-600 text-white shadow-lg shadow-brand-500/30 dark:shadow-brand-500/20 focus-visible:ring-brand-500",
-    secondary: "bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-100 border border-slate-200 dark:border-slate-700 shadow-sm focus-visible:ring-slate-300 dark:focus-visible:ring-slate-600",
-    outline: "border border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 shadow-sm focus-visible:ring-slate-300",
-    ghost: "hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white focus-visible:ring-slate-200",
-    danger: "bg-red-500 hover:bg-red-600 text-white shadow-lg shadow-red-500/30 dark:shadow-red-500/20 focus-visible:ring-red-500",
+    primary: "bg-brand-500 border-brand-500 hover:bg-brand-600 hover:border-brand-600 text-zinc-950 focus-visible:ring-brand-500",
+    secondary: "bg-white dark:bg-zinc-900 hover:bg-zinc-50 dark:hover:bg-zinc-800 text-zinc-800 dark:text-zinc-100 border-zinc-200 dark:border-zinc-800 focus-visible:ring-zinc-300 dark:focus-visible:ring-zinc-700",
+    outline: "bg-transparent border-zinc-200 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-900 text-zinc-700 dark:text-zinc-200 focus-visible:ring-zinc-300",
+    ghost: "border-transparent hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-600 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white focus-visible:ring-zinc-200",
+    danger: "bg-red-500 border-red-500 hover:bg-red-600 hover:border-red-600 text-white focus-visible:ring-red-500",
   };
 
   return (

@@ -18,6 +18,7 @@ interface SplitterTableProps {
   onBulkAddItems?: (items: { item_name: string; unit_cost: number }[]) => void;
   onDeleteItem?: (itemId: number) => Promise<void>;
   onRemoveUser?: (userId: number, userName: string) => void;
+  demoMode?: boolean;
 }
 
 type DraftRow = { key: string; name: string; cost: string };
@@ -26,7 +27,7 @@ function newDraftRow(): DraftRow {
   return { key: `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`, name: '', cost: '' };
 }
 
-export function SplitterTable({ bill, group, onUpdateShare, onSplitAllEqually, onResetAll, onUpdateItemDetails, onUpdateTax, onBulkAddItems, onDeleteItem, onRemoveUser }: SplitterTableProps) {
+export function SplitterTable({ bill, group, onUpdateShare, onSplitAllEqually, onResetAll, onUpdateItemDetails, onUpdateTax, onBulkAddItems, onDeleteItem, onRemoveUser, demoMode }: SplitterTableProps) {
   const [draftOpen, setDraftOpen] = useState(false);
   const [draftRows, setDraftRows] = useState<DraftRow[]>([]);
   const [draftError, setDraftError] = useState<string | null>(null);
@@ -172,9 +173,9 @@ export function SplitterTable({ bill, group, onUpdateShare, onSplitAllEqually, o
 
   if (!group) {
     return (
-      <div className="border border-slate-200/60 dark:border-slate-700/50 shadow-lg text-center p-12 text-slate-500 dark:text-slate-400 rounded-xl bg-white dark:bg-slate-900">
+      <div className="border border-zinc-200 dark:border-zinc-800 shadow-lg text-center p-12 text-zinc-500 dark:text-zinc-500 rounded-sharp bg-white dark:bg-black">
         <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4 text-brand-500" />
-        Loading group members...
+        Loading members...
       </div>
     );
   }
@@ -194,12 +195,12 @@ export function SplitterTable({ bill, group, onUpdateShare, onSplitAllEqually, o
   const totalTableWidth = itemNameColWidth + (users.length + 1) * 120;
 
   return (
-    <Card className="border-slate-200/60 dark:border-slate-700/50 shadow-lg overflow-visible w-fit max-w-full" noPadding allowOverflow style={{ width: `${totalTableWidth}px` }}>
-      <div className="p-4 border-b border-slate-200/80 dark:border-slate-700 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white dark:bg-slate-900 rounded-t-[2rem]">
+    <Card className="border-zinc-200/60 dark:border-zinc-700/50 shadow-lg overflow-visible w-fit max-w-full" noPadding allowOverflow style={{ width: `${totalTableWidth}px` }}>
+      <div className="p-5 border-b border-zinc-200 dark:border-zinc-800 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white dark:bg-black rounded-t-sharp">
         <div>
-          <h3 className="font-bold text-slate-800 dark:text-slate-100">Bill Items</h3>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-            Edit shares or use auto-split. <span className="md:hidden text-brand-500 font-medium">Scroll right to see all members →</span>
+          <h3 className="font-black text-zinc-900 dark:text-white uppercase tracking-tight">Bill Items</h3>
+          <p className="text-[10px] text-zinc-500 dark:text-zinc-500 mt-0.5 uppercase font-bold tracking-wider">
+            Edit shares or use auto-split <span className="md:hidden text-brand-500">— Scroll right →</span>
           </p>
         </div>
         {onSplitAllEqually && onResetAll && (
@@ -234,16 +235,16 @@ export function SplitterTable({ bill, group, onUpdateShare, onSplitAllEqually, o
         )}
       </div>
       <div 
-        className="sticky top-[108px] md:top-[128px] z-30 overflow-hidden bg-slate-100 dark:bg-slate-900 border-b-2 border-slate-300 dark:border-slate-600 shadow-sm"
-        style={{ width: `${totalTableWidth}px`, maxWidth: '100%' }}
+        className="sticky z-30 overflow-hidden bg-zinc-50 dark:bg-black border-b-2 border-zinc-200 dark:border-zinc-800"
+        style={{ top: demoMode ? '10.25rem' : '8.25rem', width: `${totalTableWidth}px`, maxWidth: '100%' }}
         ref={headerScrollerRef}
       >
         <table className="text-left border-collapse whitespace-nowrap table-fixed" style={{ width: `${totalTableWidth}px` }}>
           <thead>
-          <tr className="text-[13px] text-slate-800 dark:text-slate-100 font-extrabold uppercase tracking-widest text-center">
+          <tr className="text-[13px] text-zinc-800 dark:text-zinc-100 font-extrabold uppercase tracking-widest text-center">
             <th 
               ref={itemNameColRef}
-              className="border-r border-slate-200/50 dark:border-slate-700/50 p-0 relative item-name-col"
+              className="border-r border-zinc-200/50 dark:border-zinc-700/50 p-0 relative item-name-col"
               style={{ width: `${itemNameColWidth}px`, minWidth: `${itemNameColWidth}px`, maxWidth: `${itemNameColWidth}px` }}
             >
               <div className="pl-5 pr-4 flex flex-col items-start md:items-center justify-center min-h-[64px]">
@@ -258,25 +259,25 @@ export function SplitterTable({ bill, group, onUpdateShare, onSplitAllEqually, o
                 title="Drag right edge to resize table"
               />
             </th>
-            <th className="w-[120px] min-w-[120px] p-2 text-center border-r border-slate-200/50 dark:border-slate-700/50">Unit Cost</th>
+            <th className="w-[120px] min-w-[120px] p-2 text-center border-r border-zinc-200/50 dark:border-zinc-700/50">Unit Cost</th>
             {users.map((user, idx) => (
-              <th key={user.id} className={cn("w-[120px] min-w-[120px] p-2 text-center", idx !== users.length - 1 && "border-r border-slate-200/50 dark:border-slate-700/50")}>
+              <th key={user.id} className={cn("w-[120px] min-w-[120px] p-2 text-center", idx !== users.length - 1 && "border-r border-zinc-200/50 dark:border-zinc-700/50")}>
                 <div className="flex flex-col items-center gap-1.5 group/user py-1">
                   <div className="relative">
-                    <div className="w-9 h-9 rounded-full bg-brand-100 dark:bg-brand-900/30 text-brand-700 dark:text-brand-300 flex items-center justify-center font-extrabold ring-2 ring-transparent group-hover/user:ring-brand-200 dark:group-hover/user:ring-brand-700 transition-all shadow-sm">
+                    <div className="w-9 h-9 rounded-sharp bg-brand-50 dark:bg-brand-900/30 text-brand-700 dark:text-brand-300 flex items-center justify-center font-black border border-brand-500/20 group-hover/user:border-brand-500 transition-all">
                       {user.name.charAt(0).toUpperCase()}
                     </div>
                     {onRemoveUser && user.id !== currentUser?.id && (
                       <button
                         onClick={() => onRemoveUser(user.id, user.name)}
-                        className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-red-500 text-white flex items-center justify-center opacity-0 group-hover/user:opacity-100 transition-opacity shadow-sm hover:bg-red-600"
+                        className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-sharp bg-red-500 text-white flex items-center justify-center opacity-0 group-hover/user:opacity-100 transition-opacity shadow-sm hover:bg-red-600"
                         title={`Remove ${user.name} from this bill`}
                       >
                         <X className="w-2.5 h-2.5" />
                       </button>
                     )}
                   </div>
-                  <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">{user.name.split(' ')[0]}</span>
+                  <span className="text-[10px] font-bold text-zinc-500 dark:text-zinc-500 uppercase tracking-widest">{user.name.split(' ')[0]}</span>
                 </div>
               </th>
             ))}
@@ -288,21 +289,21 @@ export function SplitterTable({ bill, group, onUpdateShare, onSplitAllEqually, o
       <div 
         ref={bodyScrollerRef}
         className={cn(
-          "rounded-b-[2rem] bill-table-scrollbar",
+          "rounded-b-sharp bill-table-scrollbar",
           hasHorizontalOverflow ? "overflow-x-auto" : "overflow-x-hidden"
         )}
         style={{ width: `${totalTableWidth}px`, maxWidth: '100%' }}
         onScroll={handleBodyScroll}
       >
         <table className="text-left border-collapse whitespace-nowrap table-fixed" style={{ width: `${totalTableWidth}px` }}>
-        <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+        <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
           {bill.items.map(item => {
             const totalItemShares = item.shares.reduce((sum, share) => sum + share.share_count, 0);
             const isZeroShares = totalItemShares === 0;
             return (
-              <tr key={item.id} className={cn("transition-colors group", isZeroShares ? "bg-red-50/80 dark:bg-red-900/20 hover:bg-red-100/80 dark:hover:bg-red-900/30 ring-1 ring-inset ring-red-200 dark:ring-red-800/60" : "hover:bg-slate-50/50 dark:hover:bg-slate-700/30")}>
+              <tr key={item.id} className={cn("transition-colors group", isZeroShares ? "bg-red-50/50 dark:bg-red-900/10 hover:bg-red-50 dark:hover:bg-red-900/20" : "hover:bg-zinc-50/50 dark:hover:bg-zinc-900/50")}>
                 <td
-                  className="p-3 border-r border-slate-200/50 dark:border-slate-700/50 item-name-col"
+                  className="p-3 border-r border-zinc-200/50 dark:border-zinc-700/50 item-name-col"
                   style={{ width: `${itemNameColWidth}px`, minWidth: `${itemNameColWidth}px`, maxWidth: `${itemNameColWidth}px` }}
                 >
                   <div className="flex items-center gap-2 group/item">
@@ -313,7 +314,7 @@ export function SplitterTable({ bill, group, onUpdateShare, onSplitAllEqually, o
                             onDeleteItem(item.id);
                           }
                         }}
-                        className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 rounded transition-colors"
+                        className="p-1.5 text-zinc-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 rounded transition-colors"
                         title="Delete item"
                       >
                         <Trash2 className="w-4 h-4" />
@@ -324,15 +325,15 @@ export function SplitterTable({ bill, group, onUpdateShare, onSplitAllEqually, o
                       value={item.item_name}
                       onChange={(e) => onUpdateItemDetails?.(item.id, e.target.value, item.unit_cost)}
                       className={cn(
-                        "w-full min-w-0 bg-transparent border-0 border-b border-transparent hover:border-slate-300 dark:hover:border-slate-600 focus:border-brand-500 focus:ring-0 px-2 py-1.5 font-semibold text-slate-800 dark:text-slate-200 transition-colors",
+                        "w-full min-w-0 bg-transparent border-0 border-b border-transparent hover:border-zinc-300 dark:hover:border-zinc-700 focus:border-brand-500 focus:ring-0 px-2 py-1.5 font-bold text-zinc-900 dark:text-zinc-100 transition-colors uppercase tracking-tight text-sm",
                         !onUpdateItemDetails && "pointer-events-none"
                       )}
                       placeholder="Item Name"
                     />
                   </div>
                 </td>
-                <td className="p-3 text-center border-r border-slate-200/50 dark:border-slate-700/50 relative w-[120px] min-w-[120px]">
-                  <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 font-black text-sm">{currencySign}</div>
+                <td className="p-3 text-center border-r border-zinc-200/50 dark:border-zinc-700/50 relative w-[120px] min-w-[120px]">
+                  <div className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400 font-black text-sm">{currencySign}</div>
                   <input
                     type="number"
                     min="0"
@@ -340,7 +341,7 @@ export function SplitterTable({ bill, group, onUpdateShare, onSplitAllEqually, o
                     value={item.unit_cost}
                     onChange={(e) => onUpdateItemDetails?.(item.id, item.item_name, parseFloat(e.target.value) || 0)}
                     className={cn(
-                      "w-[80px] bg-transparent border-0 border-b border-transparent hover:border-slate-300 dark:hover:border-slate-600 focus:border-brand-500 focus:ring-0 px-2 py-1.5 font-bold text-right text-slate-700 dark:text-slate-300 transition-colors",
+                      "w-[80px] bg-transparent border-0 border-b border-transparent hover:border-zinc-300 dark:hover:border-zinc-700 focus:border-brand-500 focus:ring-0 px-2 py-1.5 font-black text-right text-zinc-900 dark:text-zinc-100 transition-colors",
                       !onUpdateItemDetails && "pointer-events-none"
                     )}
                   />
@@ -350,19 +351,19 @@ export function SplitterTable({ bill, group, onUpdateShare, onSplitAllEqually, o
                   const currentShares = userShareObj ? userShareObj.share_count : 0;
                   
                   return (
-                    <td key={user.id} className={cn("p-5 text-center w-[120px] min-w-[120px]", idx !== users.length - 1 && "border-r border-slate-200/50 dark:border-slate-700/50")}>
+                    <td key={user.id} className={cn("p-5 text-center w-[120px] min-w-[120px]", idx !== users.length - 1 && "border-r border-zinc-200/50 dark:border-zinc-700/50")}>
                       <div className="flex items-center justify-center gap-2.5">
                         <button 
                           onClick={() => onUpdateShare(item.id, user.id, currentShares - 1)}
-                          className={cn("p-1.5 rounded-full transition-all active:scale-95", currentShares > 0 ? 'bg-slate-200 dark:bg-slate-600 hover:bg-slate-300 dark:hover:bg-slate-500 text-slate-700 dark:text-slate-200 shadow-sm' : 'bg-slate-100 dark:bg-slate-800 text-slate-300 dark:text-slate-600 cursor-default opacity-50')}
+                          className={cn("p-1.5 rounded-sharp transition-all border active:scale-95", currentShares > 0 ? 'bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-900 dark:text-zinc-100 border-zinc-200 dark:border-zinc-700' : 'bg-transparent text-zinc-300 dark:text-zinc-700 border-transparent cursor-default')}
                           disabled={currentShares === 0}
                         >
                          <Minus className="w-3.5 h-3.5" />
                       </button>
-                      <span className="w-4 text-center font-extrabold text-slate-800 dark:text-slate-200 text-sm">{currentShares}</span>
+                      <span className="w-4 text-center font-black text-zinc-900 dark:text-white text-sm">{currentShares}</span>
                       <button 
                          onClick={() => onUpdateShare(item.id, user.id, currentShares + 1)}
-                        className="p-1.5 rounded-full bg-brand-100 dark:bg-brand-900/30 hover:bg-brand-200 dark:hover:bg-brand-800/50 text-brand-700 dark:text-brand-400 transition-all shadow-sm active:scale-95"
+                        className="p-1.5 rounded-sharp bg-brand-50 dark:bg-brand-900/20 hover:bg-brand-100 dark:hover:bg-brand-900/40 text-brand-700 dark:text-brand-400 transition-all border border-brand-500/10 hover:border-brand-500 active:scale-95"
                       >
                         <Plus className="w-3.5 h-3.5" />
                       </button>
@@ -380,7 +381,7 @@ export function SplitterTable({ bill, group, onUpdateShare, onSplitAllEqually, o
                 <button
                   type="button"
                   onClick={openDraft}
-                  className="flex items-center gap-2 text-sm font-semibold text-brand-600 dark:text-brand-400 hover:text-brand-700 dark:hover:text-brand-300 transition-colors px-2 py-1.5 rounded-lg hover:bg-brand-50 dark:hover:bg-brand-900/20 w-fit"
+                  className="flex items-center gap-2 text-sm font-semibold text-brand-600 dark:text-brand-400 hover:text-brand-700 dark:hover:text-brand-300 transition-colors px-2 py-1.5 rounded-sharp hover:bg-brand-50 dark:hover:bg-brand-900/20 w-fit"
                 >
                   <PlusCircle className="w-4 h-4" />
                   Add items
@@ -396,7 +397,7 @@ export function SplitterTable({ bill, group, onUpdateShare, onSplitAllEqually, o
                 onKeyDown={handleDraftKeyDown}
               >
                 <td
-                  className="p-3 border-r border-slate-200/50 dark:border-slate-700/50 item-name-col"
+                  className="p-3 border-r border-zinc-200 dark:border-zinc-800 item-name-col"
                   style={{ width: `${itemNameColWidth}px`, minWidth: `${itemNameColWidth}px`, maxWidth: `${itemNameColWidth}px` }}
                 >
                   <input
@@ -405,11 +406,11 @@ export function SplitterTable({ bill, group, onUpdateShare, onSplitAllEqually, o
                     value={row.name}
                     onChange={(e) => updateDraftRow(row.key, { name: e.target.value })}
                     placeholder="Item name..."
-                    className="w-full min-w-0 bg-transparent border-0 border-b border-brand-300 dark:border-brand-700 focus:border-brand-500 focus:ring-0 px-2 py-1.5 font-semibold text-slate-800 dark:text-slate-200 placeholder:text-slate-400"
+                    className="w-full min-w-0 bg-transparent border-0 border-b border-brand-300 dark:border-brand-700 focus:border-brand-500 focus:ring-0 px-2 py-1.5 font-bold text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-500 uppercase tracking-tight text-sm"
                   />
                 </td>
-                <td className="p-3 border-r border-slate-200/50 dark:border-slate-700/50 text-center relative w-[120px] min-w-[120px]">
-                  <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 font-black text-sm">{currencySign}</div>
+                <td className="p-3 border-r border-zinc-200 dark:border-zinc-800 text-center relative w-[120px] min-w-[120px]">
+                  <div className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500 font-black text-sm">{currencySign}</div>
                   <input
                     type="number"
                     min="0"
@@ -417,7 +418,7 @@ export function SplitterTable({ bill, group, onUpdateShare, onSplitAllEqually, o
                     value={row.cost}
                     onChange={(e) => updateDraftRow(row.key, { cost: e.target.value })}
                     placeholder="0.00"
-                    className="w-[80px] bg-transparent border-0 border-b border-brand-300 dark:border-brand-700 focus:border-brand-500 focus:ring-0 px-2 py-1.5 font-bold text-right text-slate-700 dark:text-slate-300 placeholder:text-slate-400"
+                    className="w-[80px] bg-transparent border-0 border-b border-brand-300 dark:border-brand-700 focus:border-brand-500 focus:ring-0 px-2 py-1.5 font-black text-right text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-500"
                   />
                 </td>
                 <td colSpan={99} className="p-3">
@@ -426,7 +427,7 @@ export function SplitterTable({ bill, group, onUpdateShare, onSplitAllEqually, o
                       <button
                         type="button"
                         onClick={addDraftRow}
-                        className="flex items-center gap-1 rounded-lg bg-brand-100 px-3 py-1.5 text-xs font-bold text-brand-800 hover:bg-brand-200 dark:bg-brand-900/40 dark:text-brand-200 dark:hover:bg-brand-900/60"
+                        className="flex items-center gap-1 rounded-sharp bg-brand-50 px-3 py-1.5 text-[10px] font-black uppercase tracking-widest text-brand-700 border border-brand-500/20 hover:border-brand-500 dark:bg-brand-900/20 dark:text-brand-400 transition-all"
                       >
                         <Plus className="h-3.5 w-3.5" />
                         Another row
@@ -436,7 +437,7 @@ export function SplitterTable({ bill, group, onUpdateShare, onSplitAllEqually, o
                       <button
                         type="button"
                         onClick={() => removeDraftRow(row.key)}
-                        className="rounded-lg p-1.5 text-slate-500 hover:bg-slate-200 dark:hover:bg-slate-700"
+                        className="rounded-sharp p-1.5 text-zinc-500 hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-900/20 transition-all"
                         title="Remove row"
                       >
                         <Trash2 className="h-4 w-4" />
@@ -464,34 +465,34 @@ export function SplitterTable({ bill, group, onUpdateShare, onSplitAllEqually, o
             </tr>
           )}
         </tbody>
-        <tfoot className="bg-slate-50 dark:bg-slate-900/50 border-t-2 border-slate-200/80 dark:border-slate-700">
+        <tfoot className="bg-zinc-50 dark:bg-black border-t-2 border-zinc-200 dark:border-zinc-800">
           <tr>
             <td
-              className="p-5 text-right font-extrabold text-slate-700 dark:text-slate-300 border-r border-slate-200/50 dark:border-slate-700/50 item-name-col"
+              className="p-5 text-right font-black text-zinc-900 dark:text-zinc-100 border-r border-zinc-200 dark:border-zinc-800 item-name-col uppercase tracking-tighter"
               style={{ width: `${itemNameColWidth}px`, minWidth: `${itemNameColWidth}px`, maxWidth: `${itemNameColWidth}px` }}
             >
               Subtotal
             </td>
-            <td className="p-5 text-center font-extrabold text-slate-800 dark:text-slate-100 border-r border-slate-200/50 dark:border-slate-700/50 w-[120px] min-w-[120px]">
-              <span className="text-sm font-black mr-0.5">{currencySign}</span>
+            <td className="p-5 text-center font-black text-zinc-900 dark:text-white border-r border-zinc-200 dark:border-zinc-800 w-[120px] min-w-[120px]">
+              <span className="text-sm font-black mr-0.5 italic">{currencySign}</span>
               {totalBillSubtotal.toFixed(2)}
             </td>
             {users.map((user, idx) => (
-              <td key={user.id} className={cn("p-5 text-center font-extrabold text-slate-800 dark:text-slate-100 w-[120px] min-w-[120px]", idx !== users.length - 1 && "border-r border-slate-200/50 dark:border-slate-700/50")}>
-                <span className="text-sm font-black mr-0.5">{currencySign}</span>
+              <td key={user.id} className={cn("p-5 text-center font-black text-zinc-900 dark:text-white w-[120px] min-w-[120px]", idx !== users.length - 1 && "border-r border-zinc-200 dark:border-zinc-800")}>
+                <span className="text-sm font-black mr-0.5 italic">{currencySign}</span>
                 {getSubtotalForUser(user.id).toFixed(2)}
               </td>
             ))}
           </tr>
           <tr>
             <td
-              className="px-5 py-3 text-right font-bold text-slate-500 dark:text-slate-400 text-sm border-r border-slate-200/50 dark:border-slate-700/50 item-name-col"
+              className="px-5 py-3 text-right font-bold text-zinc-500 dark:text-zinc-500 text-[10px] border-r border-zinc-200 dark:border-zinc-800 item-name-col uppercase tracking-widest"
               style={{ width: `${itemNameColWidth}px`, minWidth: `${itemNameColWidth}px`, maxWidth: `${itemNameColWidth}px` }}
             >
               Tax / Fees
             </td>
-            <td className="px-5 py-3 text-center font-bold text-slate-500 dark:text-slate-400 text-sm border-r border-slate-200/50 dark:border-slate-700/50 relative w-[120px] min-w-[120px]">
-              <div className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-400 font-black">{currencySign}</div>
+            <td className="px-5 py-3 text-center font-bold text-zinc-500 dark:text-zinc-500 text-[10px] border-r border-zinc-200 dark:border-zinc-800 relative w-[120px] min-w-[120px]">
+              <div className="absolute left-6 top-1/2 -translate-y-1/2 text-zinc-500 font-black">{currencySign}</div>
               <input
                 type="number"
                 min="0"
@@ -499,7 +500,7 @@ export function SplitterTable({ bill, group, onUpdateShare, onSplitAllEqually, o
                 value={bill.total_tax}
                 onChange={(e) => onUpdateTax?.(parseFloat(e.target.value) || 0)}
                 className={cn(
-                  "w-16 bg-transparent border-0 border-b border-transparent hover:border-slate-300 dark:hover:border-slate-600 focus:border-brand-500 focus:ring-0 px-2 py-0.5 text-right transition-colors",
+                  "w-16 bg-transparent border-0 border-b border-transparent hover:border-zinc-300 dark:hover:border-zinc-700 focus:border-brand-500 focus:ring-0 px-2 py-0.5 text-right transition-colors text-[10px] font-black text-zinc-900 dark:text-zinc-100",
                   !onUpdateTax && "pointer-events-none"
                 )}
               />
@@ -508,31 +509,31 @@ export function SplitterTable({ bill, group, onUpdateShare, onSplitAllEqually, o
               const userSub = getSubtotalForUser(user.id);
               const userShareOfFees = totalBillSubtotal > 0 ? (userSub / totalBillSubtotal) * totalFees : 0;
               return (
-                <td key={user.id} className={cn("px-5 py-3 text-center font-bold text-slate-500 dark:text-slate-400 text-sm w-[120px] min-w-[120px]", idx !== users.length - 1 && "border-r border-slate-200/50 dark:border-slate-700/50")}>
-                   +<span className="font-black">{currencySign}</span>{userShareOfFees.toFixed(2)}
+                <td key={user.id} className={cn("px-5 py-3 text-center font-bold text-zinc-500 dark:text-zinc-500 text-[10px] w-[120px] min-w-[120px] uppercase tracking-wider", idx !== users.length - 1 && "border-r border-zinc-200 dark:border-zinc-800")}>
+                   +<span className="font-black italic">{currencySign}</span>{userShareOfFees.toFixed(2)}
                 </td>
               );
             })}
           </tr>
           <tr className="bg-brand-50/50 dark:bg-brand-900/10">
             <td
-              className="p-5 text-right font-black text-brand-900 dark:text-brand-300 border-t border-brand-100 dark:border-brand-900/50 border-r border-brand-100/50 dark:border-brand-900/30 item-name-col"
+              className="p-5 text-right font-black text-brand-600 dark:text-brand-400 border-t-2 border-brand-500/20 border-r border-zinc-200 dark:border-zinc-800 item-name-col uppercase tracking-tighter text-lg bg-brand-500/[0.02]"
               style={{ width: `${itemNameColWidth}px`, minWidth: `${itemNameColWidth}px`, maxWidth: `${itemNameColWidth}px` }}
             >
               Grand Total
             </td>
-            <td className="p-5 text-center font-black text-brand-700 dark:text-brand-400 text-xl border-t border-brand-100 dark:border-brand-900/50 border-r border-brand-100/50 dark:border-brand-900/30 font-black flex items-baseline justify-center w-[120px] min-w-[120px]">
-              <span className="text-2xl mr-1">{currencySign}</span>
-              <span>{billGrandTotal.toFixed(2)}</span>
+            <td className="p-5 text-center font-black text-brand-600 dark:text-brand-400 text-2xl border-t-2 border-brand-500/20 border-r border-zinc-200 dark:border-zinc-800 font-black flex items-baseline justify-center w-[120px] min-w-[120px] bg-brand-500/[0.02]">
+              <span className="text-3xl mr-1 italic">{currencySign}</span>
+              <span className="tracking-tighter">{billGrandTotal.toFixed(2)}</span>
             </td>
-            {users.map((user, idx) => {
+      {users.map((user, idx) => {
               const userSub = getSubtotalForUser(user.id);
               const userShareOfFees = totalBillSubtotal > 0 ? (userSub / totalBillSubtotal) * totalFees : 0;
               return (
-                <td key={user.id} className={cn("p-5 text-center font-black text-brand-700 dark:text-brand-400 text-xl border-t border-brand-100 dark:border-brand-900/50 w-[120px] min-w-[120px]", idx !== users.length - 1 && "border-r border-brand-100/50 dark:border-brand-900/30")}>
+                <td key={user.id} className={cn("p-5 text-center font-black text-brand-700 dark:text-brand-400 text-xl border-t border-brand-500/20 w-[120px] min-w-[120px]", idx !== users.length - 1 && "border-r border-brand-500/10")}>
                   <div className="flex items-baseline justify-center">
-                    <span className="text-2xl mr-1">{currencySign}</span>
-                    <span>{(userSub + userShareOfFees).toFixed(2)}</span>
+                    <span className="text-2xl mr-1 italic">{currencySign}</span>
+                    <span className="tracking-tighter">{(userSub + userShareOfFees).toFixed(2)}</span>
                   </div>
                 </td>
               );

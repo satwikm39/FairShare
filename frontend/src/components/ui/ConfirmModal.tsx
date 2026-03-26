@@ -56,20 +56,20 @@ export function ConfirmModal({
   return (
     <ModalPortal className="bg-slate-900/40 dark:bg-slate-900/80">
       <div 
-        className="bg-white dark:bg-slate-800 rounded-3xl shadow-2xl w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-200"
+        className="bg-white dark:bg-black rounded-sharp border border-zinc-200 dark:border-zinc-800 shadow-2xl w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-200"
         onClick={e => e.stopPropagation()}
       >
-        <div className="px-6 py-4 flex items-center justify-between border-b border-slate-100 dark:border-slate-700/50">
+        <div className="px-6 py-4 flex items-center justify-between border-b border-zinc-100 dark:border-zinc-800">
           <div className="flex items-center gap-3">
-            <div className={cn("p-2 rounded-full", getIconClasses())}>
+            <div className={cn("p-2 rounded-sharp border border-transparent", getIconClasses())}>
               <AlertTriangle className="w-5 h-5" />
             </div>
-            <h2 className="text-xl font-bold text-slate-800 dark:text-white">{title}</h2>
+            <h2 className="text-xl font-black text-zinc-900 dark:text-white uppercase tracking-tight">{title}</h2>
           </div>
           <button 
             onClick={onClose}
             disabled={isLoading}
-            className="p-2 text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700/50 rounded-full transition-colors disabled:opacity-50"
+            className="p-2 text-zinc-400 dark:text-zinc-500 hover:text-zinc-600 dark:hover:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-sharp transition-colors disabled:opacity-50 border border-transparent hover:border-zinc-200 dark:hover:border-zinc-700"
           >
             <X className="w-5 h-5" />
           </button>
@@ -95,8 +95,9 @@ export function ConfirmModal({
               onClick={onConfirm}
               disabled={isLoading}
               className={cn(
-                "flex-1 inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-xl text-sm font-bold transition-all shadow-md active:scale-[0.98] outline-none h-11 px-4 py-2 disabled:pointer-events-none disabled:opacity-50",
-                getConfirmButtonClasses()
+                "flex-1 inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-sharp text-sm font-black transition-all border active:scale-[0.98] outline-none h-11 px-4 py-2 disabled:pointer-events-none disabled:opacity-50 uppercase tracking-widest",
+                getConfirmButtonClasses(),
+                variant === 'danger' ? 'border-red-600' : variant === 'warning' ? 'border-amber-600' : 'border-brand-500'
               )}
             >
               {isLoading ? (

@@ -39,20 +39,20 @@ export function EditProfileModal({ isOpen, onClose }: EditProfileModalProps) {
   return (
     <ModalPortal className="bg-slate-900/40 dark:bg-slate-900/80">
       <div 
-        className="bg-white dark:bg-slate-800 rounded-3xl shadow-2xl w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-200"
+        className="bg-white dark:bg-black rounded-sharp border border-zinc-200 dark:border-zinc-800 shadow-2xl w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-200"
         onClick={e => e.stopPropagation()}
       >
-        <div className="px-6 py-4 flex items-center justify-between border-b border-slate-100 dark:border-slate-700/50">
+        <div className="px-6 py-4 flex items-center justify-between border-b border-zinc-100 dark:border-zinc-800">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-full bg-brand-100 text-brand-600 dark:bg-brand-900/30 dark:text-brand-400">
+            <div className="p-2 rounded-sharp bg-brand-50 text-brand-600 dark:bg-brand-900/30 dark:text-brand-400 border border-brand-500/10">
               <User className="w-5 h-5" />
             </div>
-            <h2 className="text-xl font-bold text-slate-800 dark:text-white">Edit Profile</h2>
+            <h2 className="text-xl font-black text-zinc-900 dark:text-white uppercase tracking-tight">Edit Profile</h2>
           </div>
           <button 
             onClick={onClose}
             disabled={isLoading}
-            className="p-2 text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700/50 rounded-full transition-colors disabled:opacity-50"
+            className="p-2 text-zinc-400 dark:text-zinc-500 hover:text-zinc-600 dark:hover:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-sharp transition-colors disabled:opacity-50 border border-transparent hover:border-zinc-200 dark:hover:border-zinc-700"
           >
             <X className="w-5 h-5" />
           </button>
@@ -60,7 +60,7 @@ export function EditProfileModal({ isOpen, onClose }: EditProfileModalProps) {
         
         <form onSubmit={handleSubmit} className="p-6 space-y-6">
           <div className="space-y-2">
-            <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">
+            <label className="text-sm font-bold text-zinc-700 dark:text-zinc-400 uppercase tracking-wider">
               Display Name
             </label>
             <Input
@@ -77,7 +77,7 @@ export function EditProfileModal({ isOpen, onClose }: EditProfileModalProps) {
           </div>
 
           {error && (
-            <div className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800/50 rounded-xl text-sm text-red-600 dark:text-red-400">
+            <div className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800/50 rounded-sharp text-sm text-red-600 dark:text-red-400">
               {error}
             </div>
           )}

@@ -22,11 +22,11 @@ export function UnsavedChangesModal({
   return (
     <ModalPortal className="z-[110] bg-slate-900/50 dark:bg-slate-900/80">
       <div
-        className="w-full max-w-md rounded-3xl border border-slate-200 bg-white p-6 shadow-2xl dark:border-slate-700 dark:bg-slate-800 animate-in zoom-in-95 duration-200"
+        className="w-full max-w-md rounded-sharp border border-zinc-200 bg-white p-6 shadow-2xl dark:border-zinc-800 dark:bg-black animate-in zoom-in-95 duration-200"
         onClick={(e) => e.stopPropagation()}
       >
-        <h2 className="text-lg font-bold text-slate-900 dark:text-white">Unsaved changes</h2>
-        <p className="mt-2 text-sm text-slate-600 dark:text-slate-400">
+        <h2 className="text-xl font-black text-zinc-900 dark:text-white uppercase tracking-tight">Unsaved changes</h2>
+        <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400 font-medium">
           Your bill edits haven&apos;t been saved yet. Save before leaving, or discard changes.
         </p>
         <div className="mt-6 flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:justify-end">
