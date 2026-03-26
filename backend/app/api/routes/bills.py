@@ -4,6 +4,7 @@ from app import schemas, crud, models
 from app.api.deps import get_current_user, get_db, get_current_bill_access
 from app.services.bill_table_sync import BillTableSyncService
 import app.services.aws as aws_service
+import app.services.gemini_ocr as gemini_ocr_service
 
 router = APIRouter()
 _bill_table_sync_service = BillTableSyncService()
@@ -176,11 +177,11 @@ async def upload_receipt(
 ):
     print(f"DEBUG: Upload route called for bill_id: {bill_id}")
     
-    # Check Textract usage limit
+    # Check OCR usage limit (reusing the textract_usage_count field for compatibility)
     if current_user.textract_usage_count >= 2:
         raise HTTPException(
             status_code=403, 
-            detail="Textract limit reached. Premium features coming soon!"
+            detail="OCR limit reached. Premium features coming soon!"
         )
     # 1. Check if bill exists
     db_bill = crud.bills.get_bill(db, bill_id=bill_id)
@@ -200,13 +201,13 @@ async def upload_receipt(
     if s3_key:
         crud.bills.update_bill(db=db, bill_id=bill_id, receipt_image_url=s3_key)
 
-    # 3. Analyze with Textract
+    # 3. Analyze with Gemini OCR
     try:
-        print(f"DEBUG: Calling Textract service")
-        parsed_data = aws_service.analyze_receipt_with_textract(s3_key)
+        print(f"DEBUG: Calling Gemini OCR service")
+        parsed_data = gemini_ocr_service.analyze_receipt_with_gemini(contents, file.content_type)
         parsed_items = parsed_data.get("items", [])
         extracted_tax = parsed_data.get("tax", 0.0)
-        print(f"DEBUG: Textract returned {len(parsed_items)} items and ${extracted_tax} tax")
+        print(f"DEBUG: Gemini returned {len(parsed_items)} items and ${extracted_tax} tax")
         
         # Update the bill with the extracted tax *before* saving items 
         # so recalculate_bill_totals will use the new tax
@@ -214,8 +215,8 @@ async def upload_receipt(
             crud.bills.update_bill(db=db, bill_id=bill_id, total_tax=extracted_tax)
             
     except Exception as e:
-         print(f"DEBUG ERROR: Textract failed: {e}")
-         raise HTTPException(status_code=500, detail=f"Failed to parse image with Textract: {str(e)}")
+         print(f"DEBUG ERROR: Gemini failed: {e}")
+         raise HTTPException(status_code=500, detail=f"Failed to parse image with Gemini: {str(e)}")
 
     # Increment usage count on success
     current_user.textract_usage_count += 1
