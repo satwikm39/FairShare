@@ -21,3 +21,4 @@ from .bills import (
     DebtDetail,
 )
 from .settlements import Settlement, SettlementCreate, SettlementBase
+from . import bug_reports

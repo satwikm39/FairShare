@@ -15,6 +15,7 @@ export function ModalPortal({
 }) {
   return createPortal(
     <div
+      id="modal-portal-root"
       className={cn(
         'fixed inset-0 z-[100] flex min-h-[100dvh] items-center justify-center p-4',
         'bg-slate-900/50 dark:bg-slate-900/80 backdrop-blur-sm animate-in fade-in duration-200',

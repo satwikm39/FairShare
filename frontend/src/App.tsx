@@ -9,6 +9,7 @@ import { Login } from './views/Login';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { ThemeProvider } from './context/ThemeContext';
 import { ToastProvider } from './context/ToastContext';
+import { BugViewer } from './views/Admin/BugViewer';
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
   const { currentUser, loading } = useAuth();
@@ -46,6 +47,14 @@ const router = createBrowserRouter([
         element: (
           <PrivateRoute>
             <BillOverview />
+          </PrivateRoute>
+        ),
+      },
+      {
+        path: '/admin/bugs',
+        element: (
+          <PrivateRoute>
+            <BugViewer />
           </PrivateRoute>
         ),
       },
