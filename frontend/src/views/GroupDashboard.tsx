@@ -33,10 +33,10 @@ export function GroupDashboard() {
     });
   }, [groups]);
 
-  const handleCreateGroup = async (name: string, currency: string) => {
+  const handleCreateGroup = async (name: string, currency: string, emails: string[]) => {
     setIsCreating(true);
     try {
-      await createGroup(name, currency);
+      await createGroup(name, currency, emails);
       setIsModalOpen(false);
     } catch (e) {
       console.error(e);

@@ -20,11 +20,28 @@ export function useGroups() {
     }
   }, []);
 
-  const createGroup = async (name: string, currency: string) => {
+  const createGroup = async (name: string, currency: string, emails: string[] = []) => {
     setIsLoading(true);
     setError(null);
     try {
-      const newGroup = await groupsService.createGroup(name, currency);
+      let newGroup = await groupsService.createGroup(name, currency);
+      
+      let needsRefetch = false;
+      if (emails.length > 0) {
+        for (const email of emails) {
+          try {
+            await groupsService.addMemberByEmail(newGroup.id, email);
+            needsRefetch = true;
+          } catch (addErr) {
+            console.error(`Failed to add ${email}:`, addErr);
+          }
+        }
+      }
+
+      if (needsRefetch) {
+        newGroup = await groupsService.getGroup(newGroup.id);
+      }
+
       setGroups(prev => [...prev, newGroup]);
       return newGroup;
     } catch (err: any) {

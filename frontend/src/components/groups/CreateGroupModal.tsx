@@ -7,12 +7,14 @@ import { cn, currencies } from '../../lib/utils';
 interface CreateGroupModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (name: string, currency: string) => Promise<void>;
+  onSubmit: (name: string, currency: string, emails: string[]) => Promise<void>;
 }
 
 export function CreateGroupModal({ isOpen, onClose, onSubmit }: CreateGroupModalProps) {
   const [name, setName] = useState('');
   const [currency, setCurrency] = useState('USD');
+  const [emails, setEmails] = useState<string[]>([]);
+  const [emailInput, setEmailInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
   if (!isOpen) return null;
@@ -23,14 +25,50 @@ export function CreateGroupModal({ isOpen, onClose, onSubmit }: CreateGroupModal
     
     setIsLoading(true);
     try {
-      await onSubmit(name.trim(), currency);
+      const finalEmails = [...emails];
+      const trimmedInput = emailInput.trim().replace(/,/g, '');
+      if (trimmedInput && !finalEmails.includes(trimmedInput)) {
+        finalEmails.push(trimmedInput);
+      }
+
+      await onSubmit(name.trim(), currency, finalEmails);
       setName('');
+      setEmails([]);
+      setEmailInput('');
       onClose();
     } catch (error) {
       console.error(error);
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter' || e.key === ',' || e.key === ' ') {
+      e.preventDefault();
+      addEmail();
+    }
+  };
+
+  const handlePaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
+    e.preventDefault();
+    const pasted = e.clipboardData.getData('text');
+    const newEmails = pasted.split(/[\s,]+/).map(em => em.trim()).filter(em => em && !emails.includes(em));
+    if (newEmails.length > 0) {
+      setEmails(prev => [...prev, ...newEmails]);
+    }
+  };
+
+  const addEmail = () => {
+    const trimmed = emailInput.trim().replace(/,/g, '');
+    if (trimmed && !emails.includes(trimmed)) {
+      setEmails(prev => [...prev, trimmed]);
+    }
+    setEmailInput('');
+  };
+
+  const removeEmail = (emailToRemove: string) => {
+    setEmails(prev => prev.filter(e => e !== emailToRemove));
   };
 
   return (
@@ -66,6 +104,44 @@ export function CreateGroupModal({ isOpen, onClose, onSubmit }: CreateGroupModal
                 disabled={isLoading}
               />
             </div>
+            
+            <div>
+              <label htmlFor="emails" className="block text-sm font-bold text-zinc-700 dark:text-zinc-400 mb-1 uppercase tracking-wider">
+                Invite Members (Optional)
+              </label>
+              <div 
+                className="w-full px-4 py-3 rounded-sharp border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 focus-within:border-brand-500 dark:focus-within:border-brand-500 focus-within:ring-1 focus-within:ring-brand-500/20 transition-all flex flex-wrap gap-2 items-center min-h-[50px] cursor-text"
+                onClick={() => document.getElementById('emails')?.focus()}
+              >
+                {emails.map(email => (
+                  <span key={email} className="flex items-center gap-1 bg-brand-50 dark:bg-brand-900/20 text-brand-600 dark:text-brand-400 px-2 py-1 rounded-sharp text-xs font-bold border border-brand-500/20 animate-in zoom-in duration-200">
+                    {email}
+                    <button 
+                      type="button" 
+                      onClick={(e) => { e.stopPropagation(); removeEmail(email); }}
+                      className="hover:text-brand-800 dark:hover:text-brand-200 transition-colors"
+                      disabled={isLoading}
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  </span>
+                ))}
+                <input
+                  id="emails"
+                  type="text"
+                  placeholder={emails.length === 0 ? "friend@example.com, another@example.com" : ""}
+                  value={emailInput}
+                  onChange={e => setEmailInput(e.target.value)}
+                  onKeyDown={handleKeyDown}
+                  onPaste={handlePaste}
+                  onBlur={addEmail}
+                  className="flex-1 min-w-[120px] bg-transparent outline-none text-zinc-900 dark:text-white placeholder:text-zinc-400 dark:placeholder:text-zinc-600 text-sm"
+                  disabled={isLoading}
+                />
+              </div>
+              <p className="text-[10px] text-zinc-500 mt-1 uppercase tracking-widest font-black">Press Space, Comma, or Enter to add</p>
+            </div>
+
             <div>
               <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-3">
                 Currency
