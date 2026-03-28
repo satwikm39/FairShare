@@ -212,7 +212,7 @@ export function SplitterTable({ bill, group, onUpdateShare, onSplitAllEqually, o
         key={item.id} 
         className={cn(
           "border-b border-zinc-100 dark:border-zinc-800 last:border-0 transition-colors relative",
-          isExpanded ? "bg-brand-50/30 dark:bg-brand-900/10" : isZeroShares ? "bg-red-50/10 dark:bg-red-900/10" : "bg-white dark:bg-black"
+          isZeroShares ? "bg-red-50/50 dark:bg-red-900/30" : isExpanded ? "bg-brand-50/30 dark:bg-brand-900/10" : "bg-white dark:bg-black"
         )}
       >
         {isExpanded && <div className="absolute left-0 top-0 bottom-0 w-1 bg-brand-500 z-10" />}
@@ -396,10 +396,10 @@ export function SplitterTable({ bill, group, onUpdateShare, onSplitAllEqually, o
                   {onRemoveUser && user.id !== currentUser?.id && (
                     <button
                       onClick={(e) => { e.stopPropagation(); onRemoveUser(user.id, user.name); }}
-                      className="absolute -top-1 -right-1 w-4 h-4 rounded-sharp bg-red-500 text-white flex items-center justify-center shadow-lg border border-white dark:border-black active:scale-90 transition-transform"
+                      className="absolute -top-1.5 -right-1.5 w-4.5 h-4.5 flex items-center justify-center bg-red-100 dark:bg-red-900/80 rounded-sharp text-zinc-400 hover:text-red-600 dark:text-zinc-400 dark:hover:text-red-400 transition-colors active:scale-90 shadow-sm border border-red-200 dark:border-red-800"
                       title={`Remove ${user.name}`}
                     >
-                      <X className="w-2.5 h-2.5" />
+                      <X className="w-3 h-3" />
                     </button>
                   )}
                 </div>
@@ -572,10 +572,10 @@ export function SplitterTable({ bill, group, onUpdateShare, onSplitAllEqually, o
                     {onRemoveUser && user.id !== currentUser?.id && (
                       <button
                         onClick={() => onRemoveUser(user.id, user.name)}
-                        className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-sharp bg-red-500 text-white flex items-center justify-center opacity-100 transition-opacity shadow-sm hover:bg-red-600"
+                        className="absolute -top-2 -right-2 w-4.5 h-4.5 flex items-center justify-center bg-red-100 dark:bg-red-900/80 rounded-sharp text-zinc-400 hover:text-red-600 dark:text-zinc-400 dark:hover:text-red-400 transition-colors shadow-sm border border-red-200 dark:border-red-800"
                         title={`Remove ${user.name} from this bill`}
                       >
-                        <X className="w-2.5 h-2.5" />
+                        <X className="w-3 h-3" />
                       </button>
                     )}
                   </div>

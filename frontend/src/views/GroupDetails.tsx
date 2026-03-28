@@ -277,10 +277,10 @@ export function GroupDetails() {
                       {!isMe && (
                         <button
                           onClick={() => setMemberToRemove({ user_id: member.user_id, name: member.user?.name || member.user?.email || 'this member' })}
-                          className="ml-0.5 text-zinc-300 hover:text-red-500 dark:text-zinc-700 dark:hover:text-red-400 transition-colors opacity-100"
+                          className="ml-1 p-0.5 bg-red-100 dark:bg-red-900/80 rounded-sharp text-zinc-400 hover:text-red-600 dark:text-zinc-400 dark:hover:text-red-400 transition-colors border border-red-200 dark:border-red-800"
                           title={`Remove ${member.user?.name || 'member'} from group`}
                         >
-                          <X className="w-3 h-3" />
+                          <X className="w-2.5 h-2.5" />
                         </button>
                       )}
                     </div>
@@ -437,17 +437,19 @@ export function GroupDetails() {
               </Link>
               
               {/* Delete Button */}
-              <button
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  setBillToDelete(bill.id);
-                }}
-                className="absolute top-1/2 -translate-y-1/2 right-4 p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/30 rounded transition-colors z-10 opacity-100 md:opacity-0 md:group-hover/bill:opacity-100"
-                aria-label="Delete bill"
-              >
-                <Trash2 className="w-5 h-5" />
-              </button>
+              {editingBillId !== bill.id && (
+                <button
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setBillToDelete(bill.id);
+                  }}
+                  className="absolute top-1/2 -translate-y-1/2 right-4 p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/30 rounded transition-colors z-10 opacity-100 md:opacity-0 md:group-hover/bill:opacity-100"
+                  aria-label="Delete bill"
+                >
+                  <Trash2 className="w-5 h-5" />
+                </button>
+              )}
             </div>
           ))
         )}
