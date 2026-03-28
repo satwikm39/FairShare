@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { logout } from '../../config/firebase';
-import { EditProfileModal } from '../profile/EditProfileModal';
+import { ProfileDropdown } from '../profile/ProfileDropdown';
 import { ConfirmModal } from '../ui/ConfirmModal';
 import { isDemoMode, disableDemoMode } from '../../config/demo';
 
@@ -12,7 +12,7 @@ export function Navbar() {
   const navigate = useNavigate();
   const demoActive = isDemoMode();
   
-  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isLogoutConfirmOpen, setIsLogoutConfirmOpen] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
@@ -66,15 +66,24 @@ export function Navbar() {
               </Link>
               {currentUser ? (
                 <div 
-                  onClick={() => setIsProfileModalOpen(true)}
-                  className="h-9 w-9 rounded-sharp bg-brand-50 dark:bg-brand-900/20 flex items-center justify-center text-brand-700 dark:text-brand-400 font-bold overflow-hidden border-2 border-brand-500/50 cursor-pointer hover:border-brand-500 hover:scale-105 transition-all shadow-sm shadow-brand-500/10"
-                  title="Profile Setting"
+                  className="relative group/profile"
                 >
-                  {currentUser.photoURL ? (
-                    <img src={currentUser.photoURL} alt="Profile" className="w-full h-full object-cover" />
-                  ) : (
-                    (currentUser.name || currentUser.displayName)?.charAt(0).toUpperCase() || "U"
-                  )}
+                  <div 
+                    onClick={() => setIsProfileOpen(!isProfileOpen)}
+                    className="h-9 w-9 rounded-sharp bg-brand-50 dark:bg-brand-900/20 flex items-center justify-center text-brand-700 dark:text-brand-400 font-bold overflow-hidden border-2 border-brand-500/50 cursor-pointer hover:border-brand-500 hover:scale-105 transition-all shadow-sm shadow-brand-500/10"
+                    title="Profile Setting"
+                  >
+                    {currentUser.photoURL ? (
+                      <img src={currentUser.photoURL} alt="Profile" className="w-full h-full object-cover" />
+                    ) : (
+                      (currentUser.name || currentUser.displayName)?.charAt(0).toUpperCase() || "U"
+                    )}
+                  </div>
+                  <ProfileDropdown 
+                    isOpen={isProfileOpen} 
+                    onClose={() => setIsProfileOpen(false)} 
+                    onLogout={openLogoutConfirm}
+                  />
                 </div>
               ) : null}
             </div>
@@ -112,22 +121,33 @@ export function Navbar() {
               </Link>
               {currentUser ? (
                 <>
-                  <button
-                    onClick={() => {
-                      setIsProfileModalOpen(true);
-                      setIsMobileMenuOpen(false);
-                    }}
-                    className="w-full text-left px-3 py-2.5 rounded-sharp text-base font-bold text-zinc-700 dark:text-zinc-200 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors flex items-center gap-3 uppercase tracking-wider"
-                  >
-                    <div className="h-8 w-8 rounded-sharp bg-brand-50 dark:bg-brand-900/40 flex items-center justify-center text-brand-700 dark:text-brand-400 font-bold overflow-hidden border-2 border-brand-500/50">
-                      {currentUser.photoURL ? (
-                        <img src={currentUser.photoURL} alt="Profile" className="w-full h-full object-cover" />
-                      ) : (
-                        (currentUser.name || currentUser.displayName)?.charAt(0).toUpperCase() || "U"
-                      )}
-                    </div>
-                    Profile Setting
-                  </button>
+                  <div className="relative group/profile-mobile">
+                    <button
+                      onClick={() => {
+                        setIsProfileOpen(!isProfileOpen);
+                      }}
+                      className="w-full text-left px-3 py-2.5 rounded-sharp text-base font-bold text-zinc-700 dark:text-zinc-200 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors flex items-center gap-3 uppercase tracking-wider"
+                    >
+                      <div className="h-8 w-8 rounded-sharp bg-brand-50 dark:bg-brand-900/40 flex items-center justify-center text-brand-700 dark:text-brand-400 font-bold overflow-hidden border-2 border-brand-500/50">
+                        {currentUser.photoURL ? (
+                          <img src={currentUser.photoURL} alt="Profile" className="w-full h-full object-cover" />
+                        ) : (
+                          (currentUser.name || currentUser.displayName)?.charAt(0).toUpperCase() || "U"
+                        )}
+                      </div>
+                      Profile Setting
+                    </button>
+                    {isProfileOpen && (
+                      <div className="pl-4 pr-4 mt-2">
+                        <ProfileDropdown 
+                          isOpen={isProfileOpen} 
+                          onClose={() => setIsProfileOpen(false)} 
+                          onLogout={openLogoutConfirm}
+                          isInline={true}
+                        />
+                      </div>
+                    )}
+                  </div>
                 </>
               ) : (
                 <Link 
@@ -142,11 +162,6 @@ export function Navbar() {
           </div>
         )}
       </nav>
-      <EditProfileModal 
-        isOpen={isProfileModalOpen} 
-        onClose={() => setIsProfileModalOpen(false)} 
-        onLogout={openLogoutConfirm}
-      />
       <ConfirmModal
         isOpen={isLogoutConfirmOpen}
         onClose={() => !isLoggingOut && setIsLogoutConfirmOpen(false)}
