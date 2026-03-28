@@ -223,7 +223,12 @@ async def upload_receipt(
     db.add(current_user)
     db.commit()
 
-    # 4. Save items to DB
+    # 4. Clear existing items
+    for item in db_bill.items:
+        db.delete(item)
+    db.commit()
+
+    # 5. Save items to DB
     saved_items = []
     for item_data in parsed_items:
         try:

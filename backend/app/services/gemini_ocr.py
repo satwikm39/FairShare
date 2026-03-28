@@ -27,6 +27,7 @@ def analyze_receipt_with_gemini(file_bytes: bytes, mime_type: str) -> Dict[str, 
     - Output must be exactly in valid JSON format.
     - JSON should have two keys: 'items' and 'tax'.
     - 'items' should be a list of objects with 'item_name' (string) and 'unit_cost' (number).
+    - If there are multiple counts/quantities of the same item, include the quantity in the item_name (e.g., "2 x Coffee" or "3x Burger") and ensure the unit_cost is the total combined cost for those items.
     - 'tax' should be a number (float). If not found, use 0.0.
     - Omit the total amount from standard items, only individual purchased line items.
     """
