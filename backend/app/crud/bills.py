@@ -236,6 +236,10 @@ def sync_bill_table(
                 if share.user_id not in participant_ids:
                     raise ValueError(f"User {share.user_id} is not a bill participant")
 
+        # 4. Clean sync shares: delete existing and re-insert
+        if valid_item_ids:
+            db.query(models.ItemShare).filter(models.ItemShare.item_id.in_(valid_item_ids)).delete(synchronize_session=False)
+
         for share in payload.shares:
             item_id = share.item_id
             if item_id < 0:
@@ -245,20 +249,12 @@ def sync_bill_table(
             if item_id not in valid_item_ids:
                 raise ValueError(f"Share references item {item_id} not on this bill")
 
-            existing_share = db.query(models.ItemShare).filter(
-                models.ItemShare.item_id == item_id,
-                models.ItemShare.user_id == share.user_id,
-            ).first()
-
-            if existing_share:
-                existing_share.share_count = share.share_count
-            else:
-                db_share = models.ItemShare(
-                    item_id=item_id,
-                    user_id=share.user_id,
-                    share_count=share.share_count,
-                )
-                db.add(db_share)
+            db_share = models.ItemShare(
+                item_id=item_id,
+                user_id=share.user_id,
+                share_count=share.share_count,
+            )
+            db.add(db_share)
 
         items = (
             db.query(models.BillItem)

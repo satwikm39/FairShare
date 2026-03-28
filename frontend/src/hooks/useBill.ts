@@ -116,7 +116,7 @@ export function useBill(initialBillId: number, options?: UseBillOptions) {
 
   /** Debounced auto-save when dirty and splits are valid. */
   useEffect(() => {
-    if (!bill || !hasUnsavedChanges || hasInvalidItems || isSavingShares) {
+    if (!bill || !hasUnsavedChanges || isSavingShares) {
       return;
     }
 
@@ -127,7 +127,7 @@ export function useBill(initialBillId: number, options?: UseBillOptions) {
     }, AUTO_SAVE_DEBOUNCE_MS);
 
     return () => window.clearTimeout(timerId);
-  }, [bill, hasUnsavedChanges, hasInvalidItems, isSavingShares, saveShares]);
+  }, [bill, hasUnsavedChanges, isSavingShares, saveShares]);
 
   const uploadReceipt = async (file: File) => {
     const targetBillId = bill?.id || initialBillId;
