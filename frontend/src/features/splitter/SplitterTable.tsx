@@ -240,6 +240,11 @@ export function SplitterTable({ bill, group, onUpdateShare, onSplitAllEqually, o
         ref={headerScrollerRef}
       >
         <table className="text-left border-collapse whitespace-nowrap table-fixed" style={{ width: `${totalTableWidth}px` }}>
+          <colgroup>
+            <col style={{ width: `${itemNameColWidth}px` }} />
+            <col style={{ width: '120px' }} />
+            {users.map(user => <col key={user.id} style={{ width: '120px' }} />)}
+          </colgroup>
           <thead>
           <tr className="text-[13px] text-zinc-800 dark:text-zinc-100 font-extrabold uppercase tracking-widest text-center">
             <th 
@@ -296,6 +301,11 @@ export function SplitterTable({ bill, group, onUpdateShare, onSplitAllEqually, o
         onScroll={handleBodyScroll}
       >
         <table className="text-left border-collapse whitespace-nowrap table-fixed" style={{ width: `${totalTableWidth}px` }}>
+          <colgroup>
+            <col style={{ width: `${itemNameColWidth}px` }} />
+            <col style={{ width: '120px' }} />
+            {users.map(user => <col key={user.id} style={{ width: '120px' }} />)}
+          </colgroup>
         <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
           {bill.items.map(item => {
             const totalItemShares = item.shares.reduce((sum, share) => sum + share.share_count, 0);
