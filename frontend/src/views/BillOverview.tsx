@@ -11,6 +11,7 @@ import { billsService } from '../services/bills';
 import { cn, getCurrencySymbol } from '../lib/utils';
 import { isDemoMode } from '../config/demo';
 import type { GroupMemberResponse } from '../types';
+import { ConfirmModal } from '../components/ui/ConfirmModal';
 
 export function BillOverview() {
   const { id } = useParams<{ id: string }>();
@@ -26,17 +27,27 @@ export function BillOverview() {
   const textractLimitReached = (currentUser?.textract_usage_count ?? 0) >= 2;
   const [payerId, setPayerId] = useState<number | null>(null);
   const [isSavingPayer, setIsSavingPayer] = useState(false);
+  const [userToRemove, setUserToRemove] = useState<{ id: number; name: string } | null>(null);
+  const [isRemovingUser, setIsRemovingUser] = useState(false);
 
-  const handleRemoveUserFromBill = useCallback(async (userId: number, userName: string) => {
-    if (!window.confirm(`Remove ${userName} from this bill? All their shares will be cleared.`)) return;
+  const handleRemoveUserFromBill = useCallback((userId: number, userName: string) => {
+    setUserToRemove({ id: userId, name: userName });
+  }, []);
+
+  const confirmRemoveUser = async () => {
+    if (!userToRemove) return;
+    setIsRemovingUser(true);
     try {
-      await billsService.removeUserFromBill(billId, userId);
+      await billsService.removeUserFromBill(billId, userToRemove.id);
       await fetchBill();
+      setUserToRemove(null);
     } catch (e) {
       console.error(e);
-      alert('Failed to remove user from bill.');
+      showToast('Failed to remove user from bill.', 'error');
+    } finally {
+      setIsRemovingUser(false);
     }
-  }, [billId, fetchBill]);
+  };
 
   const [addingUserId, setAddingUserId] = useState<number | null>(null);
   const handleAddParticipant = useCallback(async (userId: number) => {
@@ -383,6 +394,17 @@ export function BillOverview() {
         )}
       </div>
     </div>
+    
+    <ConfirmModal
+      isOpen={!!userToRemove}
+      onClose={() => !isRemovingUser && setUserToRemove(null)}
+      onConfirm={confirmRemoveUser}
+      title="Remove Participant"
+      description={<>Are you sure you want to remove <strong>{userToRemove?.name}</strong> from this bill? All their shares will be cleared.</>}
+      confirmText="Remove"
+      variant="danger"
+      isLoading={isRemovingUser}
+    />
   </div>
   );
 }

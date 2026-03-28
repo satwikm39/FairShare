@@ -217,22 +217,20 @@ export function SplitterTable({ bill, group, onUpdateShare, onSplitAllEqually, o
       >
         {isExpanded && <div className="absolute left-0 top-0 bottom-0 w-1 bg-brand-500 z-10" />}
         <div 
-          className="p-4 flex items-center justify-between cursor-pointer active:bg-zinc-50 dark:active:bg-zinc-900 gap-3" 
+          className="p-4 grid grid-cols-2 items-center cursor-pointer active:bg-zinc-50 dark:active:bg-zinc-900 gap-3" 
           onClick={() => setExpandedItemId(isExpanded ? null : item.id)}
         >
-          <div className="flex-none max-w-[65%] sm:max-w-[75%]">
+          <div className="min-w-0 pr-2">
             <h4 className={cn("font-bold text-zinc-900 dark:text-zinc-100 uppercase truncate", isExpanded ? "text-brand-700 dark:text-brand-400 text-[13px]" : "text-[13px]")}>
               {item.item_name}
             </h4>
           </div>
 
-          <div className="flex-1 border-b-2 border-dotted border-zinc-200 dark:border-zinc-700 mx-2 mt-1 opacity-60 min-w-[1rem]" />
-
-          <div className="flex-none flex items-center gap-2">
-            <span className={cn("font-black text-sm", isExpanded ? "text-brand-700 dark:text-brand-400" : "text-zinc-900 dark:text-zinc-100")}>
+          <div className="flex items-center justify-end gap-2 pl-2">
+            <span className={cn("font-black text-sm truncate", isExpanded ? "text-brand-700 dark:text-brand-400" : "text-zinc-900 dark:text-zinc-100")}>
               {currencySign}{item.unit_cost.toFixed(2)}
             </span>
-            <div className={cn("transition-transform duration-200", isExpanded ? "rotate-180 text-brand-500" : "text-zinc-400")}>
+            <div className={cn("transition-transform duration-200 shrink-0", isExpanded ? "rotate-180 text-brand-500" : "text-zinc-400")}>
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
               </svg>
@@ -385,9 +383,33 @@ export function SplitterTable({ bill, group, onUpdateShare, onSplitAllEqually, o
     return (
       <div className="space-y-4 animate-in fade-in duration-500 pb-10">
          {/* Mobile Header Actions */}
-         <div className="flex flex-col gap-3 px-1">
-            <div className="flex items-center justify-between">
-              <h3 className="font-black text-zinc-900 dark:text-white uppercase tracking-tight text-sm">Bill Items</h3>
+          {/* Participants Row for Mobile */}
+          <div className="mb-2">
+            <h3 className="font-black text-zinc-500 dark:text-zinc-500 uppercase tracking-widest text-[9px] mb-2 px-1">Participants</h3>
+            <div className="flex items-center gap-3 overflow-x-auto pt-2 pb-2 no-scrollbar px-1">
+              {users.map(user => (
+                <div key={user.id} className="relative shrink-0 flex flex-col items-center gap-1.5 min-w-[50px]">
+                  <div className="w-10 h-10 rounded-sharp bg-brand-50 dark:bg-brand-900/30 text-brand-700 dark:text-brand-300 flex items-center justify-center font-black border border-brand-500/20">
+                    {user.name.charAt(0).toUpperCase()}
+                  </div>
+                  <span className="text-[9px] font-extrabold text-zinc-600 dark:text-zinc-400 uppercase tracking-tighter truncate max-w-[60px]">{user.name.split(' ')[0]}</span>
+                  {onRemoveUser && user.id !== currentUser?.id && (
+                    <button
+                      onClick={(e) => { e.stopPropagation(); onRemoveUser(user.id, user.name); }}
+                      className="absolute -top-1 -right-1 w-4 h-4 rounded-sharp bg-red-500 text-white flex items-center justify-center shadow-lg border border-white dark:border-black active:scale-90 transition-transform"
+                      title={`Remove ${user.name}`}
+                    >
+                      <X className="w-2.5 h-2.5" />
+                    </button>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-3 px-1">
+             <div className="flex items-center justify-between">
+               <h3 className="font-black text-zinc-900 dark:text-white uppercase tracking-tight text-sm">Bill Items</h3>
               {onSplitAllEqually && onResetAll && (
                 <button
                   onClick={() => {
@@ -550,7 +572,7 @@ export function SplitterTable({ bill, group, onUpdateShare, onSplitAllEqually, o
                     {onRemoveUser && user.id !== currentUser?.id && (
                       <button
                         onClick={() => onRemoveUser(user.id, user.name)}
-                        className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-sharp bg-red-500 text-white flex items-center justify-center opacity-0 group-hover/user:opacity-100 transition-opacity shadow-sm hover:bg-red-600"
+                        className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-sharp bg-red-500 text-white flex items-center justify-center opacity-100 transition-opacity shadow-sm hover:bg-red-600"
                         title={`Remove ${user.name} from this bill`}
                       >
                         <X className="w-2.5 h-2.5" />
