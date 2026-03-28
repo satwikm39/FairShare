@@ -15,7 +15,7 @@ export function Footer() {
         </div>
 
         <div className="flex items-center gap-6">
-          <Link to="#" className="text-xs font-semibold text-zinc-500 hover:text-zinc-900 dark:hover:text-white transition-colors">
+           <Link to="/about" className="text-xs font-semibold text-zinc-500 hover:text-zinc-900 dark:hover:text-white transition-colors">
             About Us
           </Link>
           <a href="https://github.com/satwikm39/FairShare" target="_blank" rel="noopener noreferrer" className="text-xs font-semibold text-zinc-500 hover:text-zinc-900 dark:hover:text-white transition-colors">
