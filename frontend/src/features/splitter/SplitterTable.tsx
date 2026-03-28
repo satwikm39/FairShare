@@ -561,7 +561,7 @@ export function SplitterTable({ bill, group, onUpdateShare, onSplitAllEqually, o
                 title="Drag right edge to resize table"
               />
             </th>
-            <th className="w-[120px] min-w-[120px] p-2 text-center border-r border-zinc-200/50 dark:border-zinc-700/50">Unit Cost</th>
+            <th className="w-[120px] min-w-[120px] p-2 text-center border-r border-zinc-200/50 dark:border-zinc-700/50">Cost</th>
             {users.map((user, idx) => (
               <th key={user.id} className={cn("w-[120px] min-w-[120px] p-2 text-center", idx !== users.length - 1 && "border-r border-zinc-200/50 dark:border-zinc-700/50")}>
                 <div className="flex flex-col items-center gap-1.5 group/user py-1">
