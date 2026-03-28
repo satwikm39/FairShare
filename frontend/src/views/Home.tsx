@@ -31,7 +31,7 @@ const features = [
 
 export function Home() {
   return (
-    <div className="h-full flex flex-col items-center justify-center px-4">
+    <div className="flex-1 flex flex-col items-center justify-center px-4">
       {/* Hero */}
       <div className="max-w-3xl text-center space-y-4 mb-12">
         <h1 className="text-5xl sm:text-7xl font-black tracking-tighter text-zinc-900 dark:text-white leading-none uppercase">
