@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Bug, AlertCircle } from 'lucide-react';
+import { useState } from 'react';
+import { Bug } from 'lucide-react';
 import { BugReportModal } from './BugReportModal';
 import { cn } from '../../lib/utils';
 

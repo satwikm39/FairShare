@@ -625,7 +625,6 @@ export function GroupDetails() {
         onClose={() => setIsCreateBillModalOpen(false)}
         onSubmit={handleCreateBill}
         members={group?.members ?? []}
-        currentUserId={currentUser?.id ?? 0}
       />
 
       <SettleUpModal

@@ -9,20 +9,19 @@ interface CreateBillModalProps {
   onClose: () => void;
   onSubmit: (name: string, date: string, participantUserIds: number[]) => Promise<void>;
   members: GroupMemberResponse[];
-  currentUserId: number;
 }
 
-export function CreateBillModal({ isOpen, onClose, onSubmit, members, currentUserId }: CreateBillModalProps) {
+export function CreateBillModal({ isOpen, onClose, onSubmit, members }: CreateBillModalProps) {
   const [name, setName] = useState('');
   const [date, setDate] = useState(() => new Date().toISOString().split('T')[0]);
-  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set([currentUserId]));
+  const [selectedIds, setSelectedIds] = useState<Set<number>>(() => new Set(members.map(m => m.user_id)));
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
-      setSelectedIds(new Set([currentUserId]));
+      setSelectedIds(new Set(members.map(m => m.user_id)));
     }
-  }, [isOpen, currentUserId]);
+  }, [isOpen, members]);
 
   if (!isOpen) return null;
 
