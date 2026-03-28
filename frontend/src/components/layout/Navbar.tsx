@@ -38,7 +38,7 @@ export function Navbar() {
     <>
       {demoActive && (
         <div className="fixed top-0 w-full h-8 bg-brand-500 text-white flex items-center justify-center text-[10px] font-black z-50 shadow-md gap-4 uppercase tracking-widest border-b border-white/10">
-          <span>Viewing interactive demo — data is local</span>
+          <span>Viewing interactive demo: data is local</span>
           <button 
             onClick={() => { disableDemoMode(); window.location.href = '/'; }}
             className="underline hover:text-white transition-colors"

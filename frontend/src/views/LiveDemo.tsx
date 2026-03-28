@@ -6,7 +6,7 @@ import { enableDemoMode } from '../config/demo';
 const bullets = [
   {
     icon: Globe,
-    text: 'Runs entirely in your browser — no servers involved.',
+    text: 'Runs entirely in your browser. No servers involved.',
   },
   {
     icon: Database,

@@ -553,7 +553,7 @@ export function GroupDetails() {
         ) : (
           <Card className="border-slate-200/60 dark:border-slate-700/50 shadow-sm">
             <p className="text-sm text-slate-500 dark:text-slate-400 py-2 text-center">
-              No balances yet — set a payer on each bill to track who owes what.
+              No balances yet. Set a payer on each bill to track who owes what.
             </p>
           </Card>
         )}

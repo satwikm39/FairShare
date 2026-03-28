@@ -18,7 +18,7 @@ const features = [
   {
     step: '03',
     title: 'Assign Shares',
-    description: 'Split each item exactly as consumed — fair and transparent.',
+    description: 'Split each item exactly as consumed. Fair and transparent.',
     icon: SplitSquareVertical,
   },
   {
@@ -35,7 +35,7 @@ export function Home() {
       {/* Hero */}
       <div className="max-w-3xl text-center space-y-4 mb-12">
         <h1 className="text-5xl sm:text-7xl font-black tracking-tighter text-zinc-900 dark:text-white leading-none uppercase">
-          Split bills without the <span className="bg-gradient-to-r from-brand-500 to-brand-400 bg-clip-text text-transparent italic">headache</span>
+          Split bills without the <span className="bg-gradient-to-r from-brand-500 to-brand-400 bg-clip-text text-transparent italic">headache.</span>
         </h1>
         <p className="text-sm text-zinc-500 dark:text-zinc-400 max-w-lg mx-auto leading-relaxed">
           Upload a receipt, tap to split items, and instantly know who owes what. FairShare does the math so you don't have to.
@@ -57,7 +57,7 @@ export function Home() {
       {/* Feature Highlights */}
       <div className="w-full max-w-5xl border-t border-zinc-200 dark:border-zinc-800/60 pt-8">
         <h2 className="text-xs font-bold text-center text-zinc-400 dark:text-zinc-500 mb-8 uppercase tracking-widest">
-          How it works — from receipt to settlement in minutes
+          How it works: from receipt to settlement in minutes
         </h2>
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
           {features.map((feature, idx) => (

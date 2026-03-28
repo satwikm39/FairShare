@@ -80,7 +80,7 @@ export function BillOverview() {
     setIsSavingPayer(true);
     try {
       const updated = await billsService.updateBill(bill.id, { paid_by_user_id: newPayerId });
-      // Patch payer only — do not fetchBill here or unsaved table edits are wiped.
+      // Patch payer only - do not fetchBill here or unsaved table edits are wiped.
       setBill((prev) =>
         prev ? { ...prev, paid_by_user_id: updated.paid_by_user_id } : null
       );
@@ -246,7 +246,7 @@ export function BillOverview() {
                 onChange={(e) => handlePayerChange(e.target.value ? Number(e.target.value) : null)}
                 className="w-full rounded-sharp border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 text-zinc-800 dark:text-zinc-100 font-bold px-3 py-2.5 text-xs focus:outline-none focus:ring-1 focus:ring-brand-500/20 cursor-pointer appearance-none uppercase tracking-wider"
               >
-                <option value="">— Not set —</option>
+                <option value="">(Not set)</option>
                 {(bill?.participant_user_ids?.length
                   ? group.members?.filter((m: GroupMemberResponse) => bill.participant_user_ids!.includes(m.user_id))
                   : group.members

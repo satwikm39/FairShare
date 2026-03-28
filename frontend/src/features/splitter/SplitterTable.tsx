@@ -200,7 +200,7 @@ export function SplitterTable({ bill, group, onUpdateShare, onSplitAllEqually, o
         <div>
           <h3 className="font-black text-zinc-900 dark:text-white uppercase tracking-tight">Bill Items</h3>
           <p className="text-[10px] text-zinc-500 dark:text-zinc-500 mt-0.5 uppercase font-bold tracking-wider">
-            Edit shares or use auto-split <span className="md:hidden text-brand-500">— Scroll right →</span>
+            Edit shares or use auto-split <span className="md:hidden text-brand-500">(Scroll right →)</span>
           </p>
         </div>
         {onSplitAllEqually && onResetAll && (

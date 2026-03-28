@@ -50,7 +50,7 @@ export function useBill(initialBillId: number, options?: UseBillOptions) {
   const hasInvalidItems =
     bill?.items.some((item) => item.shares.reduce((sum, share) => sum + share.share_count, 0) === 0) ?? false;
 
-  /** Single API attempt — no retries. */
+  /** Single API attempt - no retries. */
   const syncBillToServer = useCallback(async () => {
     if (!bill) return;
     setIsSavingShares(true);
