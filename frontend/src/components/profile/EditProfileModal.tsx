@@ -1,21 +1,25 @@
 import React, { useState } from 'react';
-import { X, User, Loader2 } from 'lucide-react';
+import { X, User, Loader2, Edit3, Sun, Moon } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
-import { api } from '../../services/api';
-import { Button } from '../ui/Button';
+import { useTheme } from '../../context/ThemeContext';
+import { userService } from '../../services/userService';
 import { ModalPortal } from '../ui/ModalPortal';
 import { Input } from '../ui/Input';
 
 interface EditProfileModalProps {
   isOpen: boolean;
   onClose: () => void;
+  onLogout?: () => void;
 }
 
-export function EditProfileModal({ isOpen, onClose }: EditProfileModalProps) {
+export function EditProfileModal({ isOpen, onClose, onLogout }: EditProfileModalProps) {
   const { currentUser, refreshUserData } = useAuth();
+  const { theme, setTheme } = useTheme();
   const [name, setName] = useState(currentUser?.name || currentUser?.displayName || '');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const isChanged = name !== (currentUser?.name || currentUser?.displayName);
 
   if (!isOpen) return null;
 
@@ -25,7 +29,7 @@ export function EditProfileModal({ isOpen, onClose }: EditProfileModalProps) {
     setError(null);
 
     try {
-      await api.patch('/users/me', { name });
+      await userService.updateProfile({ name });
       await refreshUserData();
       onClose();
     } catch (err: any) {
@@ -47,7 +51,7 @@ export function EditProfileModal({ isOpen, onClose }: EditProfileModalProps) {
             <div className="p-2 rounded-sharp bg-brand-50 text-brand-600 dark:bg-brand-900/30 dark:text-brand-400 border border-brand-500/10">
               <User className="w-5 h-5" />
             </div>
-            <h2 className="text-xl font-black text-zinc-900 dark:text-white uppercase tracking-tight">Edit Profile</h2>
+            <h2 className="text-xl font-black text-zinc-900 dark:text-white uppercase tracking-tight">Profile Setting</h2>
           </div>
           <button 
             onClick={onClose}
@@ -69,11 +73,46 @@ export function EditProfileModal({ isOpen, onClose }: EditProfileModalProps) {
               placeholder="Enter your display name"
               required
               disabled={isLoading}
-              className="w-full"
+              suffix={
+                isChanged ? (
+                  <button
+                    type="submit"
+                    disabled={isLoading}
+                    className="text-[10px] font-black text-brand-600 hover:text-brand-700 dark:text-brand-400 dark:hover:text-brand-300 transition-all uppercase tracking-widest px-2.5 py-1.5 rounded-sharp border border-brand-500/20 bg-brand-500/5 hover:bg-brand-500/10 flex items-center gap-1.5"
+                  >
+                    {isLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : 'Save'}
+                  </button>
+                ) : (
+                  <Edit3 className="w-4 h-4 text-zinc-400" />
+                )
+              }
+              className="w-full pr-16"
             />
             <p className="text-xs text-slate-500 dark:text-slate-400">
               This name will be visible to everyone in groups and bills.
             </p>
+          </div>
+
+          <div className="pt-2">
+            <label className="text-sm font-bold text-zinc-700 dark:text-zinc-400 uppercase tracking-wider mb-3 block">
+              Appearance
+            </label>
+            <div 
+              onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+              className="flex items-center justify-between p-3.5 bg-zinc-50 dark:bg-black border border-zinc-200 dark:border-zinc-800 rounded-sharp cursor-pointer group hover:border-brand-500 hover:bg-white dark:hover:bg-zinc-900 transition-all duration-200"
+            >
+              <div className="flex items-center gap-3">
+                <div className="text-zinc-500 group-hover:text-brand-500 transition-colors">
+                  {theme === 'dark' ? <Moon className="w-5 h-5" /> : <Sun className="w-5 h-5" />}
+                </div>
+                <span className="text-sm font-bold text-zinc-700 dark:text-zinc-300 uppercase tracking-tight">
+                  {theme === 'dark' ? 'Dark Mode' : 'Light Mode'}
+                </span>
+              </div>
+              <div className="w-10 h-6 bg-zinc-200 dark:bg-zinc-800 rounded-full relative transition-colors group-hover:bg-zinc-300 dark:group-hover:bg-zinc-700">
+                <div className={`absolute top-1 w-4 h-4 bg-white dark:bg-zinc-400 rounded-full shadow-sm transition-all duration-300 ${theme === 'dark' ? 'left-5 bg-brand-500 dark:bg-brand-500' : 'left-1'}`} />
+              </div>
+            </div>
           </div>
 
           {error && (
@@ -82,28 +121,19 @@ export function EditProfileModal({ isOpen, onClose }: EditProfileModalProps) {
             </div>
           )}
           
-          <div className="flex gap-3 pt-2">
-            <Button 
-              type="button" 
-              variant="outline" 
-              className="flex-1" 
-              onClick={onClose}
-              disabled={isLoading}
-            >
-              Cancel
-            </Button>
-            <Button 
-              type="submit"
-              disabled={isLoading || name === (currentUser?.name || currentUser?.displayName)}
-              className="flex-1"
-            >
-              {isLoading ? (
-                <Loader2 className="w-5 h-5 animate-spin" />
-              ) : (
-                'Save Changes'
-              )}
-            </Button>
-          </div>
+
+
+          {onLogout && (
+            <div className="pt-4 border-t border-zinc-100 dark:border-zinc-800 flex justify-center">
+              <button
+                type="button"
+                onClick={onLogout}
+                className="text-xs font-black text-red-500 hover:text-red-600 transition-colors uppercase tracking-widest px-4 py-2 hover:bg-red-50 dark:hover:bg-red-900/10 rounded-sharp"
+              >
+                Sign Out of Account
+              </button>
+            </div>
+          )}
         </form>
       </div>
     </ModalPortal>

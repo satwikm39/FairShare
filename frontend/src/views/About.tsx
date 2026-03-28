@@ -1,4 +1,4 @@
-import { Github, Linkedin, Mail, Heart, Code2, Coffee } from 'lucide-react';
+import { Github, Linkedin, Mail, Heart, Code2, Coffee, Terminal, Globe } from 'lucide-react';
 
 export function About() {
   return (
@@ -51,17 +51,18 @@ export function About() {
 
         <div className="grid sm:grid-cols-2 gap-8 max-w-3xl mx-auto">
           {/* Deep's Profile */}
-          <div className="group relative bg-white dark:bg-zinc-900/50 backdrop-blur-sm p-8 border border-zinc-200 dark:border-zinc-800/60 transition-all duration-300 hover:border-brand-500/50 hover:shadow-2xl hover:shadow-brand-500/5">
-            <div className="aspect-square w-full mb-6 overflow-hidden bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700">
-              <img 
-                src="/assets/team/deep.png" 
-                alt="Deep - Developer" 
-                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110 grayscale group-hover:grayscale-0"
-              />
+          <div className="group relative bg-white dark:bg-zinc-900/50 backdrop-blur-sm p-8 border border-zinc-200 dark:border-zinc-800/60 transition-all duration-300 hover:border-brand-500/50 hover:shadow-2xl hover:shadow-brand-500/5 flex flex-col items-center text-center">
+            <div className="aspect-square w-32 mb-6 overflow-hidden bg-zinc-900 dark:bg-black border border-zinc-200 dark:border-zinc-800 flex items-center justify-center relative group-hover:border-brand-500/50 transition-colors rounded-sharp">
+              <div className="absolute inset-0 opacity-10 flex items-center justify-center">
+                <Terminal className="w-1/2 h-1/2 text-brand-500 group-hover:scale-110 transition-transform duration-500" />
+              </div>
+              <span className="text-5xl font-black text-brand-500/90 dark:text-brand-400/90 tracking-tighter select-none z-10 transition-transform duration-500 group-hover:scale-110 drop-shadow-2xl">
+                D
+              </span>
             </div>
             <h3 className="text-xl font-black text-zinc-900 dark:text-white uppercase mb-1">Deep</h3>
             <p className="text-xs font-bold text-brand-600 dark:text-brand-400 uppercase tracking-wider mb-4">Co-Founder & Developer</p>
-            <div className="flex gap-4">
+            <div className="flex gap-4 justify-center">
               <a href="https://github.com/hadessharma" target="_blank" rel="noopener noreferrer" className="p-2 text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-colors border border-transparent hover:border-zinc-200 dark:hover:border-zinc-800">
                 <Github className="w-4 h-4" />
               </a>
@@ -71,21 +72,25 @@ export function About() {
               <a href="mailto:de.sharma993@gmail.com" className="p-2 text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-colors border border-transparent hover:border-zinc-200 dark:hover:border-zinc-800">
                 <Mail className="w-4 h-4" />
               </a>
+              <a href="https://sharmacodes.com/" target="_blank" rel="noopener noreferrer" className="p-2 text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-colors border border-transparent hover:border-zinc-200 dark:hover:border-zinc-800">
+                <Globe className="w-4 h-4" />
+              </a>
             </div>
           </div>
 
           {/* Satwik's Profile */}
-          <div className="group relative bg-white dark:bg-zinc-900/50 backdrop-blur-sm p-8 border border-zinc-200 dark:border-zinc-800/60 transition-all duration-300 hover:border-brand-500/50 hover:shadow-2xl hover:shadow-brand-500/5">
-            <div className="aspect-square w-full mb-6 overflow-hidden bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700">
-              <img 
-                src="/assets/team/satwik.png" 
-                alt="Satwik - Developer" 
-                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110 grayscale group-hover:grayscale-0"
-              />
+          <div className="group relative bg-white dark:bg-zinc-900/50 backdrop-blur-sm p-8 border border-zinc-200 dark:border-zinc-800/60 transition-all duration-300 hover:border-brand-500/50 hover:shadow-2xl hover:shadow-brand-500/5 flex flex-col items-center text-center">
+            <div className="aspect-square w-32 mb-6 overflow-hidden bg-zinc-900 dark:bg-black border border-zinc-200 dark:border-zinc-800 flex items-center justify-center relative group-hover:border-brand-500/50 transition-colors rounded-sharp">
+              <div className="absolute inset-0 opacity-10 flex items-center justify-center">
+                <Terminal className="w-1/2 h-1/2 text-brand-500 group-hover:scale-110 transition-transform duration-500" />
+              </div>
+              <span className="text-5xl font-black text-brand-500/90 dark:text-brand-400/90 tracking-tighter select-none z-10 transition-transform duration-500 group-hover:scale-110 drop-shadow-2xl">
+                S
+              </span>
             </div>
             <h3 className="text-xl font-black text-zinc-900 dark:text-white uppercase mb-1">Satwik</h3>
             <p className="text-xs font-bold text-brand-600 dark:text-brand-400 uppercase tracking-wider mb-4">Co-Founder & Developer</p>
-            <div className="flex gap-4">
+            <div className="flex gap-4 justify-center">
               <a href="https://github.com/satwikm39" target="_blank" rel="noopener noreferrer" className="p-2 text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-colors border border-transparent hover:border-zinc-200 dark:hover:border-zinc-800">
                 <Github className="w-4 h-4" />
               </a>

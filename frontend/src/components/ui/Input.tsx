@@ -7,10 +7,11 @@ interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
   label?: string;
   error?: string;
   icon?: ReactNode;
+  suffix?: ReactNode;
 }
 
 export const Input = forwardRef<HTMLInputElement, InputProps>(
-  ({ label, error, icon, className, type, ...props }, ref) => {
+  ({ label, error, icon, suffix, className, type, ...props }, ref) => {
     const [showPassword, setShowPassword] = useState(false);
     const isPassword = type === 'password';
 
@@ -37,7 +38,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
             )}
             {...props}
           />
-          {isPassword && (
+          {isPassword ? (
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
@@ -45,7 +46,11 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
             >
               {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
             </button>
-          )}
+          ) : suffix ? (
+            <div className="absolute right-4 text-slate-400">
+              {suffix}
+            </div>
+          ) : null}
         </div>
         {error && <p className="text-sm font-medium text-red-500">{error}</p>}
       </div>
