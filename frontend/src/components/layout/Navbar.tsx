@@ -53,7 +53,7 @@ export function Navbar() {
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <Link to="/" className="flex items-center gap-2.5 transition-transform hover:scale-105">
-              <img src="/fairShareLogo.svg" alt="FairShare Logo" className="w-8 h-8 rounded-sharp border border-brand-500/20 shadow-lg shadow-brand-500/10" />
+              <img src="/fairShareLogo.svg" alt="FairShare Logo" className="w-8 h-8" />
               <span className="font-black text-xl tracking-tighter text-zinc-900 dark:text-white uppercase">
                 FairShare
               </span>

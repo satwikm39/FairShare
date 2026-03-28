@@ -3,6 +3,7 @@ import { Navbar } from './Navbar';
 import { isDemoMode } from '../../config/demo';
 import { Footer } from './Footer';
 import { BugReportButton } from '../bugs/BugReportButton';
+import { ScrollToTop } from '../ui/ScrollToTop';
 
 export function Layout() {
   const demoActive = isDemoMode();
@@ -16,6 +17,7 @@ export function Layout() {
         <Footer />
       </main>
       <BugReportButton />
+      <ScrollToTop />
     </div>
   );
 }
