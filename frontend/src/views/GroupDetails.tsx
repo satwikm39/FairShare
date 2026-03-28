@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { Plus, Receipt, Loader2, ArrowLeft, Trash2, Edit2, Calendar, Check, X, TrendingUp, TrendingDown, ArrowRight, RefreshCw, DollarSign, SortAsc, SortDesc } from 'lucide-react';
+import { Plus, Receipt, Loader2, ArrowLeft, Trash2, Edit2, Calendar, Check, X, TrendingUp, TrendingDown, ArrowRight, RefreshCw, DollarSign, SortAsc, SortDesc, ChevronDown, ChevronUp } from 'lucide-react';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { useGroupDetails } from '../hooks/useGroupDetails';
@@ -34,6 +34,7 @@ export function GroupDetails() {
   const [isSettleUpModalOpen, setIsSettleUpModalOpen] = useState(false);
   const [isTogglingSmartSync, setIsTogglingSmartSync] = useState(false);
   const [sortOrder, setSortOrder] = useState<'desc' | 'asc'>('desc');
+  const [showAllDebts, setShowAllDebts] = useState(false);
 
   const sortedBills = [...bills].sort((a, b) => {
     const dateA = a.date ? new Date(a.date).getTime() : 0;
@@ -309,10 +310,160 @@ export function GroupDetails() {
         </div>
       </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start mt-6">
+      <div className="flex flex-col lg:grid lg:grid-cols-3 gap-8 items-start mt-6">
         
-        {/* ── Main Content (Bills list) ── */}
-        <div className="lg:col-span-2 space-y-4">
+        {/* ── Side Panel (Balances & Settings) - Top on Mobile ── */}
+        <div className="order-first lg:order-last lg:col-span-1 lg:sticky lg:top-24 w-full">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-1 gap-4">
+            
+            {/* Balances Section */}
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <h2 className="text-[10px] font-black text-zinc-900 dark:text-white uppercase tracking-widest">Balances</h2>
+                <button
+                  onClick={() => fetchBalances(true)}
+                  className="flex items-center gap-1.5 text-[10px] font-bold text-slate-500 hover:text-brand-600 dark:text-slate-400 dark:hover:text-brand-400 transition-colors uppercase tracking-wider"
+                  title="Force-recalculate balances"
+                >
+                  <RefreshCw className="w-3 h-3" />
+                  Recalculate
+                </button>
+              </div>
+
+              {isLoadingBalances ? (
+                <Card className="border-zinc-200 dark:border-zinc-800 shadow-sm bg-white dark:bg-black rounded-sharp">
+                  <div className="flex items-center justify-center py-6 text-zinc-400 gap-2">
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                    <span className="text-[10px] font-black uppercase tracking-widest">Loading...</span>
+                  </div>
+                </Card>
+              ) : balances && (balances.debts.length > 0 || balances.balances.length > 0) ? (
+                <div className="space-y-3">
+                  <Card className="border-zinc-200 dark:border-zinc-800 shadow-sm space-y-4 p-4 bg-white dark:bg-black rounded-sharp">
+
+                    {/* Your personal summary */}
+                    {currentUser && (() => {
+                      const myNet = balances.my_net_amount;
+                      const absNet = Math.abs(myNet);
+                      if (absNet < 0.01) return (
+                        <div className="flex items-center gap-3 p-3 rounded-sharp bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800">
+                          <span className="text-[10px] font-black text-zinc-500 uppercase tracking-widest px-4 py-3 bg-zinc-50 dark:bg-zinc-900 rounded-sharp border border-zinc-200 dark:border-zinc-800 w-full text-center">All settled up 🎉</span>
+                        </div>
+                      );
+                      if (myNet > 0) return (
+                        <div className="flex items-center gap-3 p-3 rounded-sharp bg-emerald-50 dark:bg-brand-900/10 border border-emerald-200 dark:border-brand-500/30">
+                          <TrendingUp className="w-5 h-5 text-emerald-600 dark:text-brand-400 shrink-0" />
+                          <span className="text-sm font-bold text-emerald-700 dark:text-brand-400 uppercase tracking-tight">
+                            You are owed <strong><span className="text-base font-black italic">{getCurrencySymbol(group?.currency || '$')}</span><span className="text-lg tracking-tighter">{absNet.toFixed(2)}</span></strong>
+                          </span>
+                        </div>
+                      );
+                      return (
+                        <div className="flex items-center gap-3 p-3 rounded-sharp bg-rose-50 dark:bg-red-900/10 border border-rose-200 dark:border-red-500/30">
+                          <TrendingDown className="w-5 h-5 text-rose-600 dark:text-rose-400 shrink-0" />
+                          <span className="text-sm font-bold text-rose-700 dark:text-rose-400 uppercase tracking-tight">
+                            You owe <strong><span className="text-base font-black italic">{getCurrencySymbol(group?.currency || '$')}</span><span className="text-lg tracking-tighter">{absNet.toFixed(2)}</span></strong>
+                          </span>
+                        </div>
+                      );
+                    })()}
+
+                    {/* Full debt list, collapsible on mobile */}
+                    {balances.debts.length > 0 && (
+                      <div className="space-y-2">
+                        <button 
+                          onClick={() => setShowAllDebts(!showAllDebts)}
+                          className="flex items-center justify-between w-full text-xs font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500 hover:text-brand-600 transition-colors py-1 lg:cursor-default lg:hover:text-slate-400"
+                        >
+                          <span>Group Debts</span>
+                          <span className="lg:hidden">
+                            {showAllDebts ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                          </span>
+                        </button>
+                        
+                        <div className={`${showAllDebts ? 'block' : 'hidden lg:block'} space-y-2 transition-all`}>
+                          {balances.debts.map((debt, i) => {
+                            const isMe = debt.from_user_id === currentUser?.id || debt.to_user_id === currentUser?.id;
+                            const iOwe = debt.from_user_id === currentUser?.id;
+                            return (
+                              <div
+                                key={i}
+                                className={`flex items-center justify-between gap-3 rounded-sharp px-4 py-3 text-[11px] font-black uppercase tracking-tight transition-all border ${
+                                  isMe
+                                    ? iOwe
+                                      ? 'bg-rose-50 dark:bg-red-900/20 border-rose-200 dark:border-red-900/50 text-rose-800 dark:text-red-400'
+                                      : 'bg-emerald-50 dark:bg-brand-900/20 border-emerald-200 dark:border-brand-900/50 text-emerald-800 dark:text-brand-400'
+                                    : 'bg-zinc-50 dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-400'
+                                }`}
+                              >
+                                <div className="flex items-center gap-2 min-w-0">
+                                  <span className="font-semibold truncate">{debt.from_user_name}</span>
+                                  <ArrowRight className="w-4 h-4 shrink-0 text-slate-400" />
+                                  <span className="font-semibold truncate">{debt.to_user_name}</span>
+                                </div>
+                                <span className="font-bold shrink-0"><span className="text-sm font-black">{getCurrencySymbol(group?.currency || '$')}</span>{debt.amount.toFixed(2)}</span>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+                  </Card>
+
+                  {balances.debts.length > 0 && (
+                    <Button 
+                      className="w-full bg-emerald-600 hover:bg-emerald-700 text-white shadow-emerald-500/20 gap-2 h-10"
+                      onClick={() => setIsSettleUpModalOpen(true)}
+                    >
+                      <DollarSign className="w-4 h-4" />
+                      Record a Payment
+                    </Button>
+                  )}
+                </div>
+              ) : (
+                <Card className="border-slate-200/60 dark:border-slate-700/50 shadow-sm">
+                  <p className="text-sm text-slate-500 dark:text-slate-400 py-2 text-center">
+                    No balances yet.
+                  </p>
+                </Card>
+              )}
+            </div>
+
+            {/* Smart Sync Toggle - Compact for Mobile */}
+            <Card className="border-zinc-200 dark:border-zinc-800 shadow-sm p-3 bg-white dark:bg-black rounded-sharp border-dashed">
+              <div className="flex items-center justify-between gap-4">
+                <div className="flex-1">
+                  <h3 className="text-xs font-black text-zinc-900 dark:text-white uppercase tracking-tight flex items-center gap-2">
+                    Smart Sync
+                    {isTogglingSmartSync && <Loader2 className="w-3 h-3 animate-spin text-slate-400" />}
+                  </h3>
+                  <p className="text-[10px] text-zinc-500 dark:text-zinc-500 font-bold uppercase tracking-wider mt-0.5">
+                    Minimize payments.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleToggleSmartSync}
+                  disabled={isTogglingSmartSync}
+                  className={`relative inline-flex h-5 w-10 flex-shrink-0 cursor-pointer rounded-sharp border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-1 focus:ring-brand-500/50 overflow-hidden ${
+                    group.simplify_debts ? 'bg-brand-500' : 'bg-zinc-200 dark:bg-zinc-800'
+                  }`}
+                >
+                  <span className="sr-only">Toggle Smart Sync</span>
+                  <span
+                    aria-hidden="true"
+                    className={`pointer-events-none inline-block h-4 w-4 transform rounded-sharp bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                      group.simplify_debts ? 'translate-x-[20px]' : 'translate-x-0'
+                    }`}
+                  />
+                </button>
+              </div>
+            </Card>
+          </div>
+        </div>
+
+        {/* ── Main Content (Bills list) - Bottom on Mobile ── */}
+        <div className="order-last lg:order-first lg:col-span-2 space-y-4 w-full">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-xs font-black text-zinc-900 dark:text-white uppercase tracking-widest">Group Bills</h2>
             <div className="flex items-center gap-2">
@@ -326,272 +477,135 @@ export function GroupDetails() {
               </button>
             </div>
           </div>
-{/* ── Bills list ── */}
-      <div className="flex flex-col gap-4">
-        {sortedBills.length === 0 ? (
-           <div className="text-center p-16 bg-zinc-50 dark:bg-black rounded-sharp border border-zinc-200 dark:border-zinc-800 shadow-inner">
-            <Receipt className="w-12 h-12 text-zinc-300 dark:text-zinc-800 mx-auto mb-4" />
-            <h3 className="text-xl font-black text-zinc-900 dark:text-white uppercase tracking-tight">No bills yet</h3>
-            <p className="text-xs font-bold text-zinc-500 dark:text-zinc-500 mt-2 uppercase tracking-wide">Create a new bill to start splitting expenses.</p>
-          </div>
-        ) : (
-          sortedBills.map(bill => (
-            <div key={bill.id} className="relative group/bill">
-              <Link to={`/bills/${bill.id}`} className="block">
-                <Card className="border border-zinc-200 dark:border-zinc-800 shadow-sm hover:shadow-lg hover:border-brand-500 dark:hover:border-brand-500 transition-all duration-300 py-4 px-6 bg-white dark:bg-black rounded-sharp">
-                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                    
-                    {/* Bill Info Section */}
-                    <div className="flex-1 min-w-0">
-                      
-                      {/* Name and Date Editing logic */}
-                      {editingBillId === bill.id ? (
-                        <div className="flex flex-col gap-2 mb-2" onClick={(e) => e.preventDefault()}>
-                          <div className="flex items-center gap-2">
-                            <input 
-                              type="text"
-                              value={editNameValue}
-                              onChange={(e) => setEditNameValue(e.target.value)}
-                              className="bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 rounded-sharp px-2 py-1 text-lg font-black text-zinc-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-brand-500/50 w-full max-w-xs uppercase tracking-tight"
-                              placeholder="Bill Name"
-                              autoFocus
-                            />
-                            <button
-                              onClick={(e) => saveBillName(e, bill.id)}
-                              disabled={isSavingName}
-                              className="p-1.5 text-green-600 hover:bg-green-50 dark:hover:bg-green-900/30 rounded shrink-0"
-                              title="Save details"
-                            >
-                              {isSavingName ? <Loader2 className="w-5 h-5 animate-spin" /> : <Check className="w-5 h-5" />}
-                            </button>
-                            <button
-                              onClick={cancelEditingBill}
-                              disabled={isSavingName}
-                              className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800 rounded shrink-0"
-                              title="Cancel"
-                            >
-                              <X className="w-5 h-5" />
-                            </button>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <input
-                              type="date"
-                              value={editDateValue}
-                              onChange={(e) => setEditDateValue(e.target.value)}
-                              onClick={(e) => {
-                                try {
-                                  if ('showPicker' in HTMLInputElement.prototype) {
-                                    (e.target as HTMLInputElement).showPicker();
-                                  }
-                                } catch (err) {}
-                              }}
-                              className="bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded px-2 py-1 text-sm font-medium text-slate-600 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-brand-500/50 w-full max-w-xs cursor-pointer"
-                            />
-                          </div>
-                        </div>
-                      ) : (
-                        <div className="flex items-center gap-2 mb-1">
-                          <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100 group-hover/bill:text-brand-600 dark:group-hover/bill:text-brand-400 transition-colors truncate">
-                            {bill.name || `Bill #${bill.id}`}
-                          </h3>
-                          <button
-                            onClick={(e) => startEditingBill(e, bill.id, bill.name, bill.date)}
-                            className="p-1.5 text-slate-400 hover:text-brand-600 hover:bg-brand-50 dark:hover:bg-brand-900/30 rounded opacity-100 md:opacity-0 md:group-hover/bill:opacity-100 transition-opacity"
-                            title="Edit bill details"
-                          >
-                            <Edit2 className="w-4 h-4" />
-                          </button>
-                        </div>
-                      )}
-
-                      {/* Items and Date metadata */}
-                      <div className="flex items-center gap-4 text-slate-500 dark:text-slate-400 text-sm font-medium">
-                        <span className="flex items-center gap-1.5">
-                          <Receipt className="w-4 h-4" />
-                          {bill.items?.length || 0} items
-                        </span>
+          
+          {/* Bills list */}
+          <div className="flex flex-col gap-4">
+            {sortedBills.length === 0 ? (
+               <div className="text-center p-16 bg-zinc-50 dark:bg-black rounded-sharp border border-zinc-200 dark:border-zinc-800 shadow-inner">
+                <Receipt className="w-12 h-12 text-zinc-300 dark:text-zinc-800 mx-auto mb-4" />
+                <h3 className="text-xl font-black text-zinc-900 dark:text-white uppercase tracking-tight">No bills yet</h3>
+                <p className="text-xs font-bold text-zinc-500 dark:text-zinc-500 mt-2 uppercase tracking-wide">Create a new bill to start splitting expenses.</p>
+              </div>
+            ) : (
+              sortedBills.map(bill => (
+                <div key={bill.id} className="relative group/bill">
+                  <Link to={`/bills/${bill.id}`} className="block">
+                    <Card className="border border-zinc-200 dark:border-zinc-800 shadow-sm hover:shadow-lg hover:border-brand-500 dark:hover:border-brand-500 transition-all duration-300 py-4 px-6 bg-white dark:bg-black rounded-sharp">
+                      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                         
-                        {bill.date && (
-                          <span className="flex items-center gap-1.5">
-                            <Calendar className="w-4 h-4" />
-                            {new Date(bill.date).toLocaleDateString(undefined, {
-                              year: 'numeric',
-                              month: 'short',
-                              day: 'numeric'
-                            })}
-                          </span>
-                        )}
-                      </div>
-                    </div>
+                        {/* Bill Info Section */}
+                        <div className="flex-1 min-w-0">
+                          
+                          {/* Name and Date Editing logic */}
+                          {editingBillId === bill.id ? (
+                            <div className="flex flex-col gap-2 mb-2" onClick={(e) => e.preventDefault()}>
+                              <div className="flex items-center gap-2">
+                                <input 
+                                  type="text"
+                                  value={editNameValue}
+                                  onChange={(e) => setEditNameValue(e.target.value)}
+                                  className="bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 rounded-sharp px-2 py-1 text-lg font-black text-zinc-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-brand-500/50 w-full max-w-xs uppercase tracking-tight"
+                                  placeholder="Bill Name"
+                                  autoFocus
+                                />
+                                <button
+                                  onClick={(e) => saveBillName(e, bill.id)}
+                                  disabled={isSavingName}
+                                  className="p-1.5 text-green-600 hover:bg-green-50 dark:hover:bg-green-900/30 rounded shrink-0"
+                                  title="Save details"
+                                >
+                                  {isSavingName ? <Loader2 className="w-5 h-5 animate-spin" /> : <Check className="w-5 h-5" />}
+                                </button>
+                                <button
+                                  onClick={cancelEditingBill}
+                                  disabled={isSavingName}
+                                  className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800 rounded shrink-0"
+                                  title="Cancel"
+                                >
+                                  <X className="w-5 h-5" />
+                                </button>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <input
+                                  type="date"
+                                  value={editDateValue}
+                                  onChange={(e) => setEditDateValue(e.target.value)}
+                                  onClick={(e) => {
+                                    try {
+                                      if ('showPicker' in HTMLInputElement.prototype) {
+                                        (e.target as HTMLInputElement).showPicker();
+                                      }
+                                    } catch (err) {}
+                                  }}
+                                  className="bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded px-2 py-1 text-sm font-medium text-slate-600 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-brand-500/50 w-full max-w-xs cursor-pointer"
+                                />
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="flex items-center gap-2 mb-1">
+                              <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100 group-hover/bill:text-brand-600 dark:group-hover/bill:text-brand-400 transition-colors truncate">
+                                {bill.name || `Bill #${bill.id}`}
+                              </h3>
+                              <button
+                                onClick={(e) => startEditingBill(e, bill.id, bill.name, bill.date)}
+                                className="p-1.5 text-slate-400 hover:text-brand-600 hover:bg-brand-50 dark:hover:bg-brand-900/30 rounded opacity-100 md:opacity-0 md:group-hover/bill:opacity-100 transition-opacity"
+                                title="Edit bill details"
+                              >
+                                <Edit2 className="w-4 h-4" />
+                              </button>
+                            </div>
+                          )}
 
-                    {/* Grand Total Value */}
-                    <div className="flex items-center gap-6 sm:pr-10">
-                      <div className="text-2xl font-black text-brand-600 dark:text-brand-400 flex items-baseline">
-                        <span className="text-3xl font-black mr-1">{getCurrencySymbol(group.currency)}</span>
-                        <span>{bill.grand_total.toFixed(2)}</span>
-                      </div>
-                    </div>
-
-                  </div>
-                    </Card>
-              </Link>
-              
-              {/* Delete Button */}
-              {editingBillId !== bill.id && (
-                <button
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    setBillToDelete(bill.id);
-                  }}
-                  className="absolute top-1/2 -translate-y-1/2 right-4 p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/30 rounded transition-colors z-10 opacity-100 md:opacity-0 md:group-hover/bill:opacity-100"
-                  aria-label="Delete bill"
-                >
-                  <Trash2 className="w-5 h-5" />
-                </button>
-              )}
-            </div>
-          ))
-        )}
-      </div>
-
-        </div>
-
-        {/* ── Side Panel (Balances & Settings) ── */}
-        <div className="lg:col-span-1 lg:sticky lg:top-24 mt-8 lg:mt-0">
-
-      <div className="space-y-3">
-        <div className="flex items-center justify-between">
-          <h2 className="text-[10px] font-black text-zinc-900 dark:text-white uppercase tracking-widest">Balances</h2>
-          <button
-            onClick={() => fetchBalances(true)}
-            className="flex items-center gap-1.5 text-sm font-medium text-slate-500 hover:text-brand-600 dark:text-slate-400 dark:hover:text-brand-400 transition-colors"
-            title="Force-recalculate balances"
-          >
-            <RefreshCw className="w-3.5 h-3.5" />
-            Recalculate
-          </button>
-        </div>
-
-        {isLoadingBalances ? (
-          <Card className="border-zinc-200 dark:border-zinc-800 shadow-sm bg-white dark:bg-black rounded-sharp">
-            <div className="flex items-center justify-center py-6 text-zinc-400 gap-2">
-              <Loader2 className="w-5 h-5 animate-spin" />
-              <span className="text-[10px] font-black uppercase tracking-widest">Loading...</span>
-            </div>
-          </Card>
-        ) : balances && (balances.debts.length > 0 || balances.balances.length > 0) ? (
-          <>
-            <Card className="border-zinc-200 dark:border-zinc-800 shadow-sm space-y-4 p-4 bg-white dark:bg-black rounded-sharp">
-
-              {/* Your personal summary */}
-              {currentUser && (() => {
-                const myNet = balances.my_net_amount;
-                const absNet = Math.abs(myNet);
-                if (absNet < 0.01) return (
-                  <div className="flex items-center gap-3 p-3 rounded-sharp bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800">
-                    <span className="text-[10px] font-black text-zinc-500 uppercase tracking-widest px-4 py-3 bg-zinc-50 dark:bg-zinc-900 rounded-sharp border border-zinc-200 dark:border-zinc-800 w-full text-center">All settled up 🎉</span>
-                  </div>
-                );
-                if (myNet > 0) return (
-                  <div className="flex items-center gap-3 p-3 rounded-sharp bg-emerald-50 dark:bg-brand-900/10 border border-emerald-200 dark:border-brand-500/30">
-                    <TrendingUp className="w-5 h-5 text-emerald-600 dark:text-brand-400 shrink-0" />
-                    <span className="text-sm font-bold text-emerald-700 dark:text-brand-400 uppercase tracking-tight">
-                      You are owed <strong><span className="text-base font-black italic">{getCurrencySymbol(group?.currency || '$')}</span><span className="text-lg tracking-tighter">{absNet.toFixed(2)}</span></strong>
-                    </span>
-                  </div>
-                );
-                return (
-                  <div className="flex items-center gap-3 p-3 rounded-sharp bg-rose-50 dark:bg-red-900/10 border border-rose-200 dark:border-red-500/30">
-                    <TrendingDown className="w-5 h-5 text-rose-600 dark:text-rose-400 shrink-0" />
-                    <span className="text-sm font-bold text-rose-700 dark:text-rose-400 uppercase tracking-tight">
-                      You owe <strong><span className="text-base font-black italic">{getCurrencySymbol(group?.currency || '$')}</span><span className="text-lg tracking-tighter">{absNet.toFixed(2)}</span></strong>
-                    </span>
-                  </div>
-                );
-              })()}
-
-              {/* Full debt list, highlighting rows involving the current user */}
-              {balances.debts.length > 0 && (
-                <div className="space-y-2">
-                  <p className="text-xs font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">All outstanding debts</p>
-                  {balances.debts.map((debt, i) => {
-                    const isMe = debt.from_user_id === currentUser?.id || debt.to_user_id === currentUser?.id;
-                    const iOwe = debt.from_user_id === currentUser?.id;
-                    return (
-                      <div
-                        key={i}
-                        className={`flex items-center justify-between gap-3 rounded-sharp px-4 py-3 text-[11px] font-black uppercase tracking-tight transition-all border ${
-                          isMe
-                            ? iOwe
-                              ? 'bg-rose-50 dark:bg-red-900/20 border-rose-200 dark:border-red-900/50 text-rose-800 dark:text-red-400'
-                              : 'bg-emerald-50 dark:bg-brand-900/20 border-emerald-200 dark:border-brand-900/50 text-emerald-800 dark:text-brand-400'
-                            : 'bg-zinc-50 dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-400'
-                        }`}
-                      >
-                        <div className="flex items-center gap-2 min-w-0">
-                          <span className="font-semibold truncate">{debt.from_user_name}</span>
-                          <ArrowRight className="w-4 h-4 shrink-0 text-slate-400" />
-                          <span className="font-semibold truncate">{debt.to_user_name}</span>
+                          {/* Items and Date metadata */}
+                          <div className="flex items-center gap-4 text-slate-500 dark:text-slate-400 text-sm font-medium">
+                            <span className="flex items-center gap-1.5">
+                              <Receipt className="w-4 h-4" />
+                              {bill.items?.length || 0} items
+                            </span>
+                            
+                            {bill.date && (
+                              <span className="flex items-center gap-1.5">
+                                <Calendar className="w-4 h-4" />
+                                {new Date(bill.date).toLocaleDateString(undefined, {
+                                  year: 'numeric',
+                                  month: 'short',
+                                  day: 'numeric'
+                                })}
+                              </span>
+                            )}
+                          </div>
                         </div>
-                        <span className="font-bold shrink-0"><span className="text-sm font-black">{getCurrencySymbol(group?.currency || '$')}</span>{debt.amount.toFixed(2)}</span>
+
+                        {/* Grand Total Value */}
+                        <div className="flex items-center gap-6 sm:pr-10">
+                          <div className="text-2xl font-black text-brand-600 dark:text-brand-400 flex items-baseline">
+                            <span className="text-3xl font-black mr-1">{getCurrencySymbol(group.currency)}</span>
+                            <span>{bill.grand_total.toFixed(2)}</span>
+                          </div>
+                        </div>
+
                       </div>
-                    );
-                  })}
+                    </Card>
+                  </Link>
+                  
+                  {/* Delete Button */}
+                  {editingBillId !== bill.id && (
+                    <button
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        setBillToDelete(bill.id);
+                      }}
+                      className="absolute top-1/2 -translate-y-1/2 right-4 p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/30 rounded transition-colors z-10 opacity-100 md:opacity-0 md:group-hover/bill:opacity-100"
+                      aria-label="Delete bill"
+                    >
+                      <Trash2 className="w-5 h-5" />
+                    </button>
+                  )}
                 </div>
-              )}
-            </Card>
-
-            {balances.debts.length > 0 && (
-              <Button 
-                className="w-full bg-emerald-600 hover:bg-emerald-700 text-white shadow-emerald-500/20 gap-2 h-11 mt-4"
-                onClick={() => setIsSettleUpModalOpen(true)}
-              >
-                <DollarSign className="w-4 h-4" />
-                Record a Payment
-              </Button>
+              ))
             )}
-          </>
-        ) : (
-          <Card className="border-slate-200/60 dark:border-slate-700/50 shadow-sm">
-            <p className="text-sm text-slate-500 dark:text-slate-400 py-2 text-center">
-              No balances yet. Set a payer on each bill to track who owes what.
-            </p>
-          </Card>
-        )}
-      </div>
-
-      
-        {/* Smart Sync Toggle */}
-        <Card className="border-slate-200/60 dark:border-slate-700/50 shadow-sm p-4 mt-6">
-          <div className="flex items-center justify-between gap-4">
-            <div className="space-y-1 pr-4">
-              <h3 className="font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                Smart Sync
-                {isTogglingSmartSync && <Loader2 className="w-3 h-3 animate-spin text-slate-400" />}
-              </h3>
-              <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
-                Automatically minimizes the total number of payments needed.
-              </p>
-            </div>
-            <button
-              type="button"
-              onClick={handleToggleSmartSync}
-              disabled={isTogglingSmartSync}
-              className={`relative inline-flex h-5 w-10 flex-shrink-0 cursor-pointer rounded-sharp border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-1 focus:ring-brand-500/50 overflow-hidden ${
-                group.simplify_debts ? 'bg-brand-500' : 'bg-zinc-200 dark:bg-zinc-800'
-              }`}
-            >
-              <span className="sr-only">Toggle Smart Sync</span>
-              <span
-                aria-hidden="true"
-                className={`pointer-events-none inline-block h-4 w-4 transform rounded-sharp bg-white shadow ring-0 transition duration-200 ease-in-out ${
-                  group.simplify_debts ? 'translate-x-[20px]' : 'translate-x-0'
-                }`}
-              />
-            </button>
           </div>
-        </Card>
         </div>
       </div>
       <AddMemberModal 
