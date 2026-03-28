@@ -217,7 +217,7 @@ export function SplitterTable({ bill, group, onUpdateShare, onSplitAllEqually, o
       >
         {isExpanded && <div className="absolute left-0 top-0 bottom-0 w-1 bg-brand-500 z-10" />}
         <div 
-          className="p-4 grid grid-cols-2 items-center cursor-pointer active:bg-zinc-50 dark:active:bg-zinc-900 gap-3" 
+          className="p-4 grid grid-cols-[7fr_3fr] items-center cursor-pointer active:bg-zinc-50 dark:active:bg-zinc-900 gap-3" 
           onClick={() => setExpandedItemId(isExpanded ? null : item.id)}
         >
           <div className="min-w-0 pr-2">
