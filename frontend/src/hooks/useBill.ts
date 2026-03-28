@@ -140,15 +140,11 @@ export function useBill(initialBillId: number, options?: UseBillOptions) {
     setIsLoading(true);
     setError(null);
     try {
-      const newItems = await billsService.uploadReceipt(targetBillId, file);
+      const updatedBill = await billsService.uploadReceipt(targetBillId, file);
 
-      setBill((prev) => (prev ? { ...prev, items: [...prev.items, ...newItems] } : null));
+      setBill(updatedBill);
 
-      if (!bill) {
-        await fetchBill(targetBillId);
-      }
-
-      return newItems;
+      return updatedBill.items;
     } catch (err: any) {
       setError(err.response?.data?.detail || err.message || 'Failed to upload receipt');
       throw err;

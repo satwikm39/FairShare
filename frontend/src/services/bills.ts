@@ -33,12 +33,12 @@ export const billsService = {
   /**
    * Upload a receipt image for OCR processing via AWS Textract
    */
-  uploadReceipt: async (billId: number, file: File): Promise<BillItem[]> => {
+  uploadReceipt: async (billId: number, file: File): Promise<Bill> => {
     if (isDemoMode()) return mockBillsService.uploadReceipt(billId, file);
     const formData = new FormData();
     formData.append('file', file);
 
-    const response = await api.post<BillItem[]>(
+    const response = await api.post<Bill>(
       `/bills/${billId}/upload-receipt`,
       formData,
       {

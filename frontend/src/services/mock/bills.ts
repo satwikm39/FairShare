@@ -46,7 +46,7 @@ export const mockBillsService = {
     return state.bills[idx];
   },
 
-  uploadReceipt: async (billId: number, _file: File): Promise<BillItem[]> => {
+  uploadReceipt: async (billId: number, _file: File): Promise<Bill> => {
     // Artificial 2.5s delay to simulate AWS Textract
     await delay(2500);
     const state = MockDB.getState();
@@ -72,7 +72,7 @@ export const mockBillsService = {
     }
     
     MockDB.setState(state);
-    return mockExtractedItems;
+    return mockBillsService.getBill(billId);
   },
 
   updateItemShare: async (itemId: number, userId: number, shareCount: number): Promise<ItemShare> => {

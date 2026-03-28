@@ -168,7 +168,7 @@ def update_shares_bulk(
 
     return result
 
-@router.post("/{bill_id}/upload-receipt", response_model=list[schemas.BillItem])
+@router.post("/{bill_id}/upload-receipt", response_model=schemas.Bill)
 async def upload_receipt(
     bill_id: int, 
     file: UploadFile = File(...), 
@@ -237,5 +237,6 @@ async def upload_receipt(
         except Exception as e:
             print(f"DEBUG ERROR: Failed to save item to DB: {e}")
 
-    print(f"DEBUG: Returning {len(saved_items)} items to frontend")
-    return saved_items
+    db.refresh(db_bill)
+    print(f"DEBUG: Returning updated bill {bill_id} to frontend")
+    return db_bill
