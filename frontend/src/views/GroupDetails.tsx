@@ -140,14 +140,21 @@ export function GroupDetails() {
     }
   };
 
-  const handleAddMember = async (email: string) => {
-    try {
-      await groupsService.addMemberByEmail(groupId, email);
-      showToast('Friend added to the group successfully!', 'success');
+  const handleAddMember = async (emails: string[]) => {
+    let successCount = 0;
+    for (const email of emails) {
+      try {
+        await groupsService.addMemberByEmail(groupId, email);
+        successCount++;
+      } catch (e: any) {
+        console.error(`Failed to add ${email}:`, e);
+        showToast(`Failed to add ${email}: ${e.response?.data?.detail || 'Unknown error'}`, 'error');
+      }
+    }
+    
+    if (successCount > 0) {
+      showToast(`${successCount} friend${successCount > 1 ? 's' : ''} added to the group successfully!`, 'success');
       await refresh();
-    } catch (e: any) {
-      console.error(e);
-      showToast(e.response?.data?.detail || 'Failed to add friend.', 'error');
     }
   };
 

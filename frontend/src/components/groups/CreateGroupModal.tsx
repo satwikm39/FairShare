@@ -47,6 +47,8 @@ export function CreateGroupModal({ isOpen, onClose, onSubmit }: CreateGroupModal
     if (e.key === 'Enter' || e.key === ',' || e.key === ' ') {
       e.preventDefault();
       addEmail();
+    } else if (e.key === 'Backspace' && !emailInput) {
+      removeLastEmail();
     }
   };
 
@@ -65,6 +67,10 @@ export function CreateGroupModal({ isOpen, onClose, onSubmit }: CreateGroupModal
       setEmails(prev => [...prev, trimmed]);
     }
     setEmailInput('');
+  };
+
+  const removeLastEmail = () => {
+    setEmails(prev => prev.slice(0, -1));
   };
 
   const removeEmail = (emailToRemove: string) => {
