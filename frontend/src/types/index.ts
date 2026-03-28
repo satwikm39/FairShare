@@ -17,6 +17,7 @@ export interface User {
   name: string;
   email: string;
   textract_usage_count: number;
+  is_admin: number; // 0 = False, 1 = True
 }
 
 export interface ItemShare {

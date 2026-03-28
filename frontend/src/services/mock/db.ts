@@ -14,24 +14,25 @@ export const DEMO_USER: User = {
   id: DEMO_USER_ID,
   email: "demo@fairshare.app",
   name: "Demo User",
-  textract_usage_count: 0
+  textract_usage_count: 0,
+  is_admin: 0
 };
 
 const SEED_DATA: MockDBState = {
   users: [
     DEMO_USER,
-    { id: 1001, email: "alice@example.com", name: "Alice Adams", textract_usage_count: 0 },
-    { id: 1002, email: "bob@example.com", name: "Bob Barker", textract_usage_count: 0 },
-    { id: 1003, email: "charlie@example.com", name: "Charlie Chaplin", textract_usage_count: 0 }
+    { id: 1001, email: "alice@example.com", name: "Alice Adams", textract_usage_count: 0, is_admin: 0 },
+    { id: 1002, email: "bob@example.com", name: "Bob Barker", textract_usage_count: 0, is_admin: 0 },
+    { id: 1003, email: "charlie@example.com", name: "Charlie Chaplin", textract_usage_count: 0, is_admin: 0 }
   ],
   groups: [
     { id: 101, name: "Weekend Ski Trip", currency: "$", simplify_debts: true, members: [] }
   ],
   groupMembers: [
     { user_id: DEMO_USER_ID, group_id: 101, user: DEMO_USER },
-    { user_id: 1001, group_id: 101, user: { id: 1001, email: "alice@example.com", name: "Alice Adams", textract_usage_count: 0 } },
-    { user_id: 1002, group_id: 101, user: { id: 1002, email: "bob@example.com", name: "Bob Barker", textract_usage_count: 0 } },
-    { user_id: 1003, group_id: 101, user: { id: 1003, email: "charlie@example.com", name: "Charlie Chaplin", textract_usage_count: 0 } }
+    { user_id: 1001, group_id: 101, user: { id: 1001, email: "alice@example.com", name: "Alice Adams", textract_usage_count: 0, is_admin: 0 } },
+    { user_id: 1002, group_id: 101, user: { id: 1002, email: "bob@example.com", name: "Bob Barker", textract_usage_count: 0, is_admin: 0 } },
+    { user_id: 1003, group_id: 101, user: { id: 1003, email: "charlie@example.com", name: "Charlie Chaplin", textract_usage_count: 0, is_admin: 0 } }
   ],
   bills: [
     {

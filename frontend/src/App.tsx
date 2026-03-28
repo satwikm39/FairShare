@@ -21,6 +21,20 @@ function PrivateRoute({ children }: { children: React.ReactNode }) {
   return currentUser ? <>{children}</> : <Navigate to="/login" replace />;
 }
 
+function AdminRoute({ children }: { children: React.ReactNode }) {
+  const { currentUser, loading } = useAuth();
+
+  if (loading) return null;
+
+  if (!currentUser) return <Navigate to="/login" replace />;
+  
+  if (currentUser.is_admin !== 1) {
+    return <Navigate to="/dashboard" replace />;
+  }
+
+  return <>{children}</>;
+}
+
 const router = createBrowserRouter([
   {
     element: <Layout />,
@@ -55,9 +69,9 @@ const router = createBrowserRouter([
        {
         path: '/admin/bugs',
         element: (
-          <PrivateRoute>
+          <AdminRoute>
             <BugViewer />
-          </PrivateRoute>
+          </AdminRoute>
         ),
       },
       { path: '/about', element: <About /> },
