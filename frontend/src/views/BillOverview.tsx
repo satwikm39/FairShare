@@ -27,13 +27,6 @@ export function BillOverview() {
   const [payerId, setPayerId] = useState<number | null>(null);
   const [isSavingPayer, setIsSavingPayer] = useState(false);
 
-  const [isScrolled, setIsScrolled] = useState(false);
-  useEffect(() => {
-    const onScroll = () => setIsScrolled(window.scrollY > 40);
-    window.addEventListener('scroll', onScroll, { passive: true });
-    return () => window.removeEventListener('scroll', onScroll);
-  }, []);
-
   const handleRemoveUserFromBill = useCallback(async (userId: number, userName: string) => {
     if (!window.confirm(`Remove ${userName} from this bill? All their shares will be cleared.`)) return;
     try {
@@ -167,8 +160,8 @@ export function BillOverview() {
 
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-      <div className={cn("sticky z-30 bg-white/95 dark:bg-black/95 backdrop-blur-md pt-2 border-b border-zinc-200 dark:border-zinc-800 transition-all duration-300", isScrolled ? "pb-2 mb-4" : "pb-4 mb-6")} style={{ top: navbarBottom }}>
-        <div className={cn("flex items-center justify-between transition-all duration-300", isScrolled ? "hidden md:flex mb-1" : "mb-3")}>
+      <div className="sticky z-30 bg-white/95 dark:bg-black/95 backdrop-blur-md pt-2 pb-4 mb-6 border-b border-zinc-200 dark:border-zinc-800" style={{ top: navbarBottom }}>
+        <div className="flex items-center justify-between mb-3">
           <Link to={bill?.group_id ? `/groups/${bill.group_id}` : '/dashboard'} className="inline-flex items-center text-xs font-medium text-brand-600 dark:text-brand-500 hover:text-brand-700 dark:hover:text-brand-400 transition-colors">
             <ArrowLeft className="w-3 h-3 mr-1" /> Back to Group
           </Link>
@@ -182,17 +175,14 @@ export function BillOverview() {
             ) : null}
           </div>
         </div>
-        <div className={cn("flex justify-between items-center transition-all duration-300", isScrolled ? "gap-4" : "flex-col md:flex-row gap-4 items-start md:items-center")}>
-            <div className="flex-1 min-w-0 flex items-center gap-3">
-              {isScrolled && (
-                <Link to={bill?.group_id ? `/groups/${bill.group_id}` : '/dashboard'} className="shrink-0 text-slate-400 hover:text-brand-600 transition-colors md:hidden">
-                  <ArrowLeft className="w-4 h-4" />
-                </Link>
-              )}
-              <h1 className={cn("font-black text-zinc-900 dark:text-white uppercase tracking-tighter truncate transition-all duration-300", isScrolled ? "text-lg" : "text-3xl")}>
-                {isLoading && !bill ? 'Loading Bill...' : (bill?.name || (group?.name ? `${group.name} Bill` : 'Bill Details'))}
-              </h1>
-              <div className={cn("flex-wrap items-center gap-x-4 gap-y-1 transition-all duration-300", isScrolled ? "hidden lg:flex text-xs" : "flex mt-1 text-sm")}>
+        <div className="flex justify-between items-start md:items-center gap-2 md:gap-4 flex-col md:flex-row">
+            <div className="flex-1 min-w-0 flex flex-col md:flex-row md:items-center gap-1.5 md:gap-3">
+              <div className="flex items-center gap-2">
+                <h1 className="font-black text-zinc-900 dark:text-white uppercase tracking-tighter truncate text-2xl md:text-3xl">
+                  {isLoading && !bill ? 'Loading Bill...' : (bill?.name || (group?.name ? `${group.name} Bill` : 'Bill Details'))}
+                </h1>
+              </div>
+              <div className="flex items-center flex-wrap gap-x-3 gap-y-1 text-xs md:text-sm md:mt-1">
                 {bill?.date && (
                   <p className="text-[10px] font-black text-zinc-500 dark:text-zinc-500 uppercase tracking-widest bg-zinc-100 dark:bg-zinc-800/60 px-2 py-0.5 rounded-sharp border border-zinc-200 dark:border-zinc-700/50">
                     {new Date(bill.date).toLocaleDateString(undefined, {
@@ -202,29 +192,18 @@ export function BillOverview() {
                     })}
                   </p>
                 )}
-                {bill && !isScrolled && (
+                {bill && (
                   <div className="flex items-center gap-1.5">
-                    <span className="text-sm font-bold text-slate-500 dark:text-slate-400">Total:</span>
-                    <span className="text-lg font-black text-brand-600 dark:text-brand-400 flex items-baseline">
-                      <span className="text-xl font-black mr-0.5">{getCurrencySymbol(group?.currency || '$')}</span>
+                    <span className="text-xs md:text-sm font-bold text-slate-500 dark:text-slate-400">Total:</span>
+                    <span className="text-base md:text-lg font-black text-brand-600 dark:text-brand-400 flex items-baseline">
+                      <span className="text-lg md:text-xl font-black mr-0.5">{getCurrencySymbol(group?.currency || '$')}</span>
                       <span>{bill.grand_total.toFixed(2)}</span>
                     </span>
                   </div>
                 )}
-                {!isScrolled && <p className="text-xs text-slate-400 dark:text-slate-500 font-medium italic">Split exactly as ordered.</p>}
+                <p className="text-[10px] md:text-xs text-slate-400 dark:text-slate-500 font-medium italic hidden sm:block">Split exactly as ordered.</p>
               </div>
             </div>
-            {bill && isScrolled && (
-              <div className="flex items-center gap-3 ml-auto shrink-0 animate-in fade-in slide-in-from-right-4 duration-300">
-                <div className="flex items-center gap-1.5">
-                  <span className="text-xs font-bold text-slate-500 dark:text-slate-400 hidden sm:inline-block">Total:</span>
-                  <span className="text-base font-black text-brand-600 dark:text-brand-400 flex items-baseline">
-                    <span className="text-lg font-black mr-0.5">{getCurrencySymbol(group?.currency || '$')}</span>
-                    <span>{bill.grand_total.toFixed(2)}</span>
-                  </span>
-                </div>
-              </div>
-            )}
         </div>
       </div>
 

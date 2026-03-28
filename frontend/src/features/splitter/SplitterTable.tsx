@@ -5,6 +5,7 @@ import { Button } from '../../components/ui/Button';
 import { cn, getCurrencySymbol } from '../../lib/utils';
 import type { Bill, Group } from '../../types';
 import { useAuth } from '../../context/AuthContext';
+import { useMediaQuery } from '../../hooks/useMediaQuery';
 
 interface SplitterTableProps {
   bill: Bill;
@@ -34,6 +35,8 @@ export function SplitterTable({ bill, group, onUpdateShare, onSplitAllEqually, o
   const [itemNameColWidth, setItemNameColWidth] = useState(200);
   const [isResetMode, setIsResetMode] = useState(false);
   const [hasHorizontalOverflow, setHasHorizontalOverflow] = useState(false);
+  const [expandedItemId, setExpandedItemId] = useState<number | null>(null);
+  const isMobile = useMediaQuery('(max-width: 768px)');
 
   // Column resizing state (uncontrolled for performance)
   const itemNameColRef = useRef<HTMLTableCellElement>(null);
@@ -167,6 +170,11 @@ export function SplitterTable({ bill, group, onUpdateShare, onSplitAllEqually, o
     return subtotal;
   };
 
+  const getTaxForUser = (userId: number) => {
+    const userSub = getSubtotalForUser(userId);
+    return totalBillSubtotal > 0 ? (userSub / totalBillSubtotal) * totalFees : 0;
+  };
+
   const totalBillSubtotal = bill.items.reduce((sum, item) => sum + item.unit_cost, 0);
   const totalFees = bill.total_tax;
   const billGrandTotal = totalBillSubtotal + totalFees;
@@ -187,12 +195,279 @@ export function SplitterTable({ bill, group, onUpdateShare, onSplitAllEqually, o
       : group.members?.map((m) => m.user) ?? [];
   if (users.length === 0 && currentUser?.id) {
     users = [
-      { id: currentUser.id, name: currentUser.displayName || 'You', email: currentUser.email || '', textract_usage_count: 0 },
+      { id: currentUser.id, name: currentUser.displayName || 'You', email: currentUser.email || '', textract_usage_count: 0, is_admin: 0 },
     ];
   }
 
   const currencySign = getCurrencySymbol(group.currency || '$');
   const totalTableWidth = itemNameColWidth + (users.length + 1) * 120;
+
+  const renderMobileItem = (item: any) => {
+    const isExpanded = expandedItemId === item.id;
+    const totalItemShares = item.shares.reduce((sum: number, share: any) => sum + share.share_count, 0);
+    const isZeroShares = totalItemShares === 0;
+
+    return (
+      <div 
+        key={item.id} 
+        className={cn(
+          "border-b border-zinc-100 dark:border-zinc-800 last:border-0 transition-colors relative",
+          isExpanded ? "bg-brand-50/30 dark:bg-brand-900/10" : isZeroShares ? "bg-red-50/10 dark:bg-red-900/10" : "bg-white dark:bg-black"
+        )}
+      >
+        {isExpanded && <div className="absolute left-0 top-0 bottom-0 w-1 bg-brand-500 z-10" />}
+        <div 
+          className="p-4 flex items-center justify-between cursor-pointer active:bg-zinc-50 dark:active:bg-zinc-900 gap-3" 
+          onClick={() => setExpandedItemId(isExpanded ? null : item.id)}
+        >
+          <div className="flex-none max-w-[65%] sm:max-w-[75%]">
+            <h4 className={cn("font-bold text-zinc-900 dark:text-zinc-100 uppercase truncate", isExpanded ? "text-brand-700 dark:text-brand-400 text-[13px]" : "text-[13px]")}>
+              {item.item_name}
+            </h4>
+          </div>
+
+          <div className="flex-1 border-b-2 border-dotted border-zinc-200 dark:border-zinc-700 mx-2 mt-1 opacity-60 min-w-[1rem]" />
+
+          <div className="flex-none flex items-center gap-2">
+            <span className={cn("font-black text-sm", isExpanded ? "text-brand-700 dark:text-brand-400" : "text-zinc-900 dark:text-zinc-100")}>
+              {currencySign}{item.unit_cost.toFixed(2)}
+            </span>
+            <div className={cn("transition-transform duration-200", isExpanded ? "rotate-180 text-brand-500" : "text-zinc-400")}>
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        {isExpanded && (
+          <div className="px-4 pb-4 space-y-4 animate-in fade-in slide-in-from-top-2 duration-200">
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <label className="text-[9px] font-black uppercase tracking-widest text-zinc-500">Name</label>
+                <input
+                  type="text"
+                  value={item.item_name}
+                  onChange={(e) => onUpdateItemDetails?.(item.id, e.target.value, item.unit_cost)}
+                  className="w-full bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-sharp px-3 py-2 text-xs font-bold focus:ring-1 focus:ring-brand-500/50 outline-none"
+                />
+              </div>
+              <div className="space-y-1">
+                <label className="text-[9px] font-black uppercase tracking-widest text-zinc-500">Cost</label>
+                <div className="relative">
+                  <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-zinc-400 text-xs font-bold">{currencySign}</span>
+                  <input
+                    type="number"
+                    value={item.unit_cost}
+                    onChange={(e) => onUpdateItemDetails?.(item.id, item.item_name, parseFloat(e.target.value) || 0)}
+                    className="w-full bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-sharp pl-6 pr-2 py-2 text-xs font-black focus:ring-1 focus:ring-brand-500/50 outline-none"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-[9px] font-black uppercase tracking-widest text-zinc-500">Split Shares</label>
+              <div className="grid grid-cols-1 gap-1.5">
+                {users.map(user => {
+                  const userShareObj = item.shares.find((s: any) => s.user_id === user.id);
+                  const currentShares = userShareObj ? userShareObj.share_count : 0;
+                  return (
+                    <div key={user.id} className="flex items-center justify-between p-2 rounded-sharp bg-zinc-100/50 dark:bg-zinc-900/50 border border-zinc-200/50 dark:border-zinc-800/50">
+                      <span className="text-[10px] font-bold text-zinc-700 dark:text-zinc-300 uppercase tracking-tight">{user.name}</span>
+                      <div className="flex items-center gap-3">
+                         <button 
+                          onClick={(e) => { e.stopPropagation(); onUpdateShare(item.id, user.id, currentShares - 1); }}
+                          className={cn("p-1.5 rounded-sharp border transition-all", currentShares > 0 ? "bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 border-zinc-200 dark:border-zinc-700" : "text-zinc-300 dark:text-zinc-700 border-transparent opacity-50 cursor-default")}
+                          disabled={currentShares === 0}
+                        >
+                          <Minus className="w-3 h-3" />
+                        </button>
+                        <span className="w-4 text-center font-black text-xs">{currentShares}</span>
+                        <button 
+                          onClick={(e) => { e.stopPropagation(); onUpdateShare(item.id, user.id, currentShares + 1); }}
+                          className="p-1.5 rounded-sharp bg-brand-50 dark:bg-brand-900/20 text-brand-700 dark:text-brand-400 border border-brand-500/20 active:scale-95"
+                        >
+                          <Plus className="w-3 h-3" />
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div className="pt-2">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (window.confirm('Delete this item?')) onDeleteItem?.(item.id);
+                }}
+                className="flex items-center gap-1.5 p-1.5 text-red-500 hover:text-red-600 text-[10px] font-black uppercase tracking-widest bg-red-50/50 dark:bg-red-900/10 rounded-sharp"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                Remove
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  const renderMobileSummary = () => (
+    <div className="mt-8 space-y-4">
+      <div className="flex items-center gap-3 px-2">
+        <div className="h-[2px] flex-1 bg-zinc-200 dark:bg-zinc-800" />
+        <span className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-400">Total Breakdown</span>
+        <div className="h-[2px] flex-1 bg-zinc-200 dark:bg-zinc-800" />
+      </div>
+      <div className="space-y-3">
+        {users.map(user => {
+          const userSub = getSubtotalForUser(user.id);
+          const userTax = getTaxForUser(user.id);
+          const userTotal = userSub + userTax;
+          return (
+            <div key={user.id} className="bg-zinc-50 dark:bg-zinc-900/50 rounded-sharp p-4 border border-zinc-200 dark:border-zinc-800">
+              <div className="flex items-center justify-between mb-3 pb-2 border-b border-zinc-200 dark:border-zinc-800">
+                <span className="text-[11px] font-black text-zinc-900 dark:text-white uppercase tracking-widest">{user.name}</span>
+                <span className="text-xl font-black text-brand-600 dark:text-brand-400">
+                  {currencySign}{userTotal.toFixed(2)}
+                </span>
+              </div>
+              <div className="space-y-1.5">
+                <div className="flex justify-between text-[10px] font-bold text-zinc-500">
+                  <span className="uppercase tracking-wider">Subtotal</span>
+                  <span className="text-zinc-700 dark:text-zinc-300">{currencySign}{userSub.toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between text-[10px] font-bold text-zinc-500">
+                  <span className="uppercase tracking-wider">Tax & Fees</span>
+                  <span className="text-zinc-700 dark:text-zinc-300">+{currencySign}{userTax.toFixed(2)}</span>
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+      
+      {/* Global Tax Input for Mobile */}
+      <div className="bg-zinc-50 dark:bg-zinc-900/50 rounded-sharp p-4 border border-zinc-200 dark:border-zinc-800">
+        <div className="flex justify-between items-center">
+          <label className="text-[10px] font-black uppercase tracking-widest text-zinc-500">Update Total Tax</label>
+          <div className="relative">
+             <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-zinc-400 text-xs font-bold">{currencySign}</span>
+             <input
+                type="number"
+                min="0"
+                step="0.01"
+                value={bill.total_tax}
+                onChange={(e) => onUpdateTax?.(parseFloat(e.target.value) || 0)}
+                className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-sharp pl-6 pr-2 py-1.5 text-xs font-black text-right w-24 outline-none focus:ring-1 focus:ring-brand-500/50"
+              />
+          </div>
+        </div>
+      </div>
+
+      <div className="bg-zinc-950 dark:bg-white rounded-sharp p-5 text-white dark:text-zinc-950 mt-6 shadow-xl border border-zinc-800 dark:border-zinc-200">
+        <div className="flex justify-between items-baseline mb-1">
+          <span className="font-black uppercase tracking-[0.2em] text-[10px] opacity-70">Final Amount</span>
+          <span className="text-[10px] font-black uppercase tracking-widest opacity-50">Incl. Tax</span>
+        </div>
+        <div className="flex justify-between items-center">
+          <span className="font-black uppercase tracking-tighter text-sm">Grand Total</span>
+          <span className="text-3xl font-black tracking-tighter">{currencySign}{billGrandTotal.toFixed(2)}</span>
+        </div>
+      </div>
+    </div>
+  );
+
+  if (isMobile) {
+    return (
+      <div className="space-y-4 animate-in fade-in duration-500 pb-10">
+         {/* Mobile Header Actions */}
+         <div className="flex flex-col gap-3 px-1">
+            <div className="flex items-center justify-between">
+              <h3 className="font-black text-zinc-900 dark:text-white uppercase tracking-tight text-sm">Bill Items</h3>
+              {onSplitAllEqually && onResetAll && (
+                <button
+                  onClick={() => {
+                    if (isResetMode) {
+                      onResetAll();
+                      setIsResetMode(false);
+                    } else {
+                      onSplitAllEqually(users.map(u => u.id));
+                      setIsResetMode(true);
+                    }
+                  }}
+                  className={cn(
+                    "flex items-center gap-1.5 px-3 py-2 rounded-sharp text-[10px] font-black uppercase tracking-widest border transition-all",
+                    isResetMode ? "border-orange-200 text-orange-600 bg-orange-50 dark:border-orange-900/40 dark:text-orange-400 dark:bg-orange-900/10" : "border-zinc-200 text-zinc-600 bg-zinc-50 dark:border-zinc-800 dark:text-zinc-400 dark:bg-zinc-900/50"
+                  )}
+                >
+                  {isResetMode ? <RotateCcw className="w-3 h-3" /> : <Divide className="w-3 h-3" />}
+                  {isResetMode ? "Reset" : "Auto-Split"}
+                </button>
+              )}
+            </div>
+         </div>
+
+         <div className="bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 rounded-sharp overflow-hidden shadow-sm">
+            {bill.items.map(renderMobileItem)}
+            
+            {onBulkAddItems && (
+              <button
+                onClick={openDraft}
+                className="w-full p-4 flex items-center justify-center gap-2 text-xs font-black uppercase tracking-[0.2em] text-brand-600 dark:text-brand-400 hover:bg-brand-50/50 dark:hover:bg-brand-900/10 transition-colors border-t border-dashed border-zinc-200 dark:border-zinc-800"
+              >
+                <PlusCircle className="w-4 h-4" />
+                Add New Item
+              </button>
+            )}
+         </div>
+
+         {/* Draft Rows for Mobile */}
+         {draftOpen && (
+           <div className="bg-brand-50/10 dark:bg-brand-900/10 border border-brand-200 dark:border-brand-800/50 rounded-sharp p-4 space-y-4">
+              {draftRows.map((row) => (
+                <div key={row.key} className="space-y-3 pb-3 border-b border-brand-100 dark:border-brand-800/30 last:border-0 last:pb-0">
+                   <input
+                    type="text"
+                    value={row.name}
+                    onChange={(e) => updateDraftRow(row.key, { name: e.target.value })}
+                    placeholder="Item name"
+                    className="w-full bg-transparent border-0 border-b border-brand-300 dark:border-brand-700 focus:border-brand-500 focus:ring-0 px-1 py-1 font-bold text-sm text-zinc-900 dark:text-zinc-100 uppercase"
+                  />
+                  <div className="flex items-center justify-between">
+                    <div className="relative">
+                      <span className="absolute left-0 top-1/2 -translate-y-1/2 text-zinc-400 text-xs font-bold">{currencySign}</span>
+                      <input
+                        type="number"
+                        value={row.cost}
+                        onChange={(e) => updateDraftRow(row.key, { cost: e.target.value })}
+                        placeholder="0.00"
+                        className="bg-transparent border-0 border-b border-brand-300 dark:border-brand-700 focus:border-brand-500 focus:ring-0 pl-4 py-1 font-black text-sm w-24"
+                      />
+                    </div>
+                    {draftRows.length > 1 && (
+                      <button onClick={(e) => { e.stopPropagation(); removeDraftRow(row.key); }} className="text-red-500 p-1"><Trash2 className="w-4 h-4" /></button>
+                    )}
+                  </div>
+                </div>
+              ))}
+              <div className="flex flex-col gap-2 pt-2">
+                <button onClick={addDraftRow} className="text-[10px] font-black uppercase tracking-widest text-brand-700 dark:text-brand-400 py-2 border border-brand-500/20 rounded-sharp">Add Another Row</button>
+                <div className="flex gap-2">
+                  <Button className="flex-1 h-9 text-xs" onClick={submitAllDrafts}>Save All</Button>
+                  <Button variant="outline" className="flex-1 h-9 text-xs" onClick={cancelDraft}>Cancel</Button>
+                </div>
+              </div>
+           </div>
+         )}
+
+         {renderMobileSummary()}
+      </div>
+    );
+  }
 
   return (
     <Card className="border-zinc-200/60 dark:border-zinc-700/50 shadow-lg overflow-visible w-fit max-w-full" noPadding allowOverflow style={{ width: `${totalTableWidth}px` }}>
