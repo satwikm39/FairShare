@@ -223,24 +223,29 @@ async def upload_receipt(
     db.add(current_user)
     db.commit()
 
-    # 4. Clear existing items
-    for item in db_bill.items:
-        db.delete(item)
-    db.commit()
+    # 4. Clear existing items efficiently
+    db.query(models.BillItem).filter(models.BillItem.bill_id == bill_id).delete(synchronize_session=False)
 
-    # 5. Save items to DB
-    saved_items = []
+    # 5. Save items to DB in bulk
+    new_db_items = []
     for item_data in parsed_items:
         try:
-            item_create = schemas.BillItemCreate(
+            new_item = models.BillItem(
+                bill_id=bill_id,
                 item_name=item_data["item_name"],
                 unit_cost=item_data["unit_cost"]
             )
-            saved_item = crud.bills.create_bill_item(db=db, bill_id=bill_id, item=item_create)
-            saved_items.append(saved_item)
-            print(f"DEBUG: Successfully saved item to DB: {saved_item.id}")
+            new_db_items.append(new_item)
         except Exception as e:
-            print(f"DEBUG ERROR: Failed to save item to DB: {e}")
+            print(f"DEBUG ERROR: Failed to prepare item: {e}")
+            
+    if new_db_items:
+        db.add_all(new_db_items)
+            
+    db.commit()
+    
+    # Recalculate bill totals just once at the end
+    crud.bills.recalculate_bill_totals(db, bill_id)
 
     db.refresh(db_bill)
     print(f"DEBUG: Returning updated bill {bill_id} to frontend")
