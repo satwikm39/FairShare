@@ -47,6 +47,12 @@ def update_group(
     if member.removed_at:
         raise HTTPException(status_code=403, detail="Historical members cannot update group settings")
     updated_group = crud.groups.update_group(db=db, group_id=group_id, group_update=group_update)
+    
+    # If simplify_debts changed, we need to recompute debts
+    if group_update.simplify_debts is not None:
+        from app.services.debts import recompute_group_debts
+        recompute_group_debts(db, group_id)
+        
     return updated_group
 
 @router.delete("/{group_id}", status_code=204)
@@ -220,7 +226,11 @@ def create_bill_for_group(
     db_group = crud.groups.get_group(db, group_id=group_id)
     group_member_ids = [m.user_id for m in db_group.members] if db_group else []
     try:
-        return crud.bills.create_bill(db=db, bill=bill, group_member_ids=group_member_ids)
+        db_bill = crud.bills.create_bill(db=db, bill=bill, group_member_ids=group_member_ids)
+        # Recompute debts for the group
+        from app.services.debts import recompute_group_debts
+        recompute_group_debts(db, group_id)
+        return db_bill
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
 

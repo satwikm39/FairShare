@@ -33,8 +33,8 @@ def update_bill_details(
     group_id = db_bill.group_id
     result = crud.bills.update_bill(db=db, bill_id=bill_id, **update_data)
 
-    # Recompute cached debts if the payer changed
-    if "paid_by_user_id" in update_data:
+    # Recompute cached debts if the payer changed OR if tax changed
+    if "paid_by_user_id" in update_data or "total_tax" in update_data:
         from app.services.debts import recompute_group_debts
         recompute_group_debts(db, group_id)
 
@@ -46,9 +46,14 @@ def delete_bill(
     db: Session = Depends(get_db),
     current_user: models.User = Depends(get_current_bill_access)
 ):
+    group_id = db_bill.group_id
     db_bill = crud.bills.delete_bill(db=db, bill_id=bill_id)
     if db_bill is None:
         raise HTTPException(status_code=404, detail="Bill not found")
+    
+    # Recompute debts after deletion
+    from app.services.debts import recompute_group_debts
+    recompute_group_debts(db, group_id)
     return None
 
 @router.post("/{bill_id}/members/{user_id}", status_code=204)
@@ -66,6 +71,9 @@ def add_user_to_bill(
     group_member_ids = [m.user_id for m in db_group.members] if db_group else []
     try:
         crud.bills.add_participant_to_bill(db, bill_id, user_id, group_member_ids)
+        # Recompute since adding a participant might change shares/balances later
+        from app.services.debts import recompute_group_debts
+        recompute_group_debts(db, db_bill.group_id)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     return None
@@ -95,7 +103,17 @@ def create_item_for_bill(
     db: Session = Depends(get_db),
     current_user: models.User = Depends(get_current_bill_access)
 ):
-    return crud.bills.create_bill_item(db=db, bill_id=bill_id, item=item)
+    db_bill = crud.bills.get_bill(db, bill_id=bill_id)
+    if not db_bill:
+        raise HTTPException(status_code=404, detail="Bill not found")
+    
+    item = crud.bills.create_bill_item(db=db, bill_id=bill_id, item=item)
+    
+    # Recompute debts when item added
+    from app.services.debts import recompute_group_debts
+    recompute_group_debts(db, db_bill.group_id)
+    
+    return item
 
 @router.post("/items/{item_id}/shares/", response_model=schemas.ItemShare)
 def add_share_to_item(
@@ -108,7 +126,19 @@ def add_share_to_item(
     db_user = crud.users.get_user(db, user_id=share.user_id)
     if db_user is None:
          raise HTTPException(status_code=404, detail="User not found")
-    return crud.bills.add_item_share(db=db, item_id=item_id, share=share)
+    
+    # Get group_id from item's bill
+    db_item = db.query(models.BillItem).filter(models.BillItem.id == item_id).first()
+    if not db_item:
+        raise HTTPException(status_code=404, detail="Item not found")
+    
+    result = crud.bills.add_item_share(db=db, item_id=item_id, share=share)
+    
+    # Recompute debts
+    from app.services.debts import recompute_group_debts
+    recompute_group_debts(db, db_item.bill.group_id)
+    
+    return result
 
 @router.put("/items/{item_id}", response_model=schemas.BillItem)
 def update_item_details(
@@ -120,6 +150,11 @@ def update_item_details(
     db_item = crud.bills.update_bill_item(db=db, item_id=item_id, item_update=item_update)
     if db_item is None:
         raise HTTPException(status_code=404, detail="Bill item not found")
+    
+    # Recompute debts
+    from app.services.debts import recompute_group_debts
+    recompute_group_debts(db, db_item.bill.group_id)
+    
     return db_item
 
 @router.delete("/items/{item_id}", status_code=204)
@@ -128,9 +163,17 @@ def delete_item(
     db: Session = Depends(get_db),
     current_user: models.User = Depends(get_current_user)
 ):
-    db_item = crud.bills.delete_bill_item(db=db, item_id=item_id)
+    db_item = db.query(models.BillItem).filter(models.BillItem.id == item_id).first()
     if db_item is None:
         raise HTTPException(status_code=404, detail="Bill item not found")
+    
+    group_id = db_item.bill.group_id
+    crud.bills.delete_bill_item(db=db, item_id=item_id)
+    
+    # Recompute debts
+    from app.services.debts import recompute_group_debts
+    recompute_group_debts(db, group_id)
+    
     return None
 
 @router.put("/{bill_id}/table-sync", response_model=schemas.Bill)
@@ -246,6 +289,10 @@ async def upload_receipt(
     
     # Recalculate bill totals just once at the end
     crud.bills.recalculate_bill_totals(db, bill_id)
+
+    # Recompute group debts after OCR
+    from app.services.debts import recompute_group_debts
+    recompute_group_debts(db, db_bill.group_id)
 
     db.refresh(db_bill)
     print(f"DEBUG: Returning updated bill {bill_id} to frontend")
