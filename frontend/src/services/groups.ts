@@ -1,5 +1,5 @@
 import { api } from './api';
-import type { Group, Bill, GroupBalances } from '../types';
+import type { Group, Bill, GroupBalances, Settlement } from '../types';
 import { mockGroupsService } from './mock/groups';
 import { isDemoMode } from '../config/demo';
 
@@ -51,9 +51,35 @@ export const groupsService = {
   /**
    * Create a new settlement between two users
    */
-  createSettlement: async (groupId: number, data: { from_user_id: number; to_user_id: number; amount: number }): Promise<void> => {
+  createSettlement: async (groupId: number, data: { from_user_id: number; to_user_id: number; amount: number; date?: string }): Promise<void> => {
     if (isDemoMode()) return mockGroupsService.createSettlement(groupId, data);
     await api.post(`/groups/${groupId}/settlements`, { ...data, group_id: groupId });
+  },
+
+  /**
+   * Fetch all settlements for a group
+   */
+  getSettlements: async (groupId: number): Promise<Settlement[]> => {
+    if (isDemoMode()) return mockGroupsService.getSettlements(groupId);
+    const response = await api.get<Settlement[]>(`/groups/${groupId}/settlements`);
+    return response.data;
+  },
+
+  /**
+   * Update a settlement
+   */
+  updateSettlement: async (groupId: number, settlementId: number, data: { amount?: number; from_user_id?: number; to_user_id?: number; date?: string }): Promise<Settlement> => {
+    if (isDemoMode()) return mockGroupsService.updateSettlement(groupId, settlementId, data);
+    const response = await api.patch<Settlement>(`/groups/${groupId}/settlements/${settlementId}`, data);
+    return response.data;
+  },
+
+  /**
+   * Delete a settlement
+   */
+  deleteSettlement: async (groupId: number, settlementId: number): Promise<void> => {
+    if (isDemoMode()) return mockGroupsService.deleteSettlement(groupId, settlementId);
+    await api.delete(`/groups/${groupId}/settlements/${settlementId}`);
   },
 
   /**

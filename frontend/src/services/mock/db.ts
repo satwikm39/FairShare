@@ -1,4 +1,4 @@
-import type { Group, Bill, BillItem, ItemShare, User, GroupMemberResponse } from '../../types';
+import type { Group, Bill, BillItem, ItemShare, User, GroupMemberResponse, Settlement } from '../../types';
 
 export interface MockDBState {
   users: User[];
@@ -7,6 +7,7 @@ export interface MockDBState {
   bills: Bill[];
   billItems: BillItem[];
   itemShares: ItemShare[];
+  settlements: Settlement[];
 }
 
 const DEMO_USER_ID = 999;
@@ -81,7 +82,8 @@ const SEED_DATA: MockDBState = {
     { id: 407, item_id: 302, user_id: 1002, share_count: 1 },
     // Groceries - Wine (Only Alice)
     { id: 408, item_id: 303, user_id: 1001, share_count: 1 }
-  ]
+  ],
+  settlements: []
 };
 
 const DB_KEY = 'fairshare_mock_db';

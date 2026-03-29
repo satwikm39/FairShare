@@ -1,5 +1,5 @@
 import { MockDB, DEMO_USER } from './db';
-import type { Group, Bill, GroupBalances } from '../../types';
+import type { Group, Bill, GroupBalances, Settlement } from '../../types';
 
 function delay(ms: number) {
   return new Promise(resolve => setTimeout(resolve, ms));
@@ -56,10 +56,46 @@ export const mockGroupsService = {
     return state.groups[idx];
   },
 
-  createSettlement: async (_groupId: number, _data: { from_user_id: number; to_user_id: number; amount: number }): Promise<void> => {
-    // This is a complex backend operation, in mock we will just simulate success.
-    // Ideally we would add a settlement bill to reduce the debts.
+  createSettlement: async (groupId: number, data: { from_user_id: number; to_user_id: number; amount: number; date?: string }): Promise<void> => {
     await delay(600);
+    const state = MockDB.getState();
+    const newSettlement: Settlement = {
+      id: MockDB.generateId(),
+      group_id: groupId,
+      from_user_id: data.from_user_id,
+      to_user_id: data.to_user_id,
+      amount: data.amount,
+      date: data.date || new Date().toISOString()
+    };
+    if (!state.settlements) state.settlements = [];
+    state.settlements.push(newSettlement);
+    MockDB.setState(state);
+  },
+
+  getSettlements: async (groupId: number): Promise<Settlement[]> => {
+    await delay(300);
+    const state = MockDB.getState();
+    return (state.settlements || []).filter(s => s.group_id === groupId);
+  },
+
+  updateSettlement: async (_groupId: number, settlementId: number, data: { amount?: number; from_user_id?: number; to_user_id?: number; date?: string }): Promise<Settlement> => {
+    await delay(400);
+    const state = MockDB.getState();
+    const settlements = state.settlements || [];
+    const idx = settlements.findIndex(s => s.id === settlementId);
+    if (idx === -1) throw new Error("Settlement not found");
+    
+    settlements[idx] = { ...settlements[idx], ...data };
+    state.settlements = settlements;
+    MockDB.setState(state);
+    return settlements[idx];
+  },
+
+  deleteSettlement: async (_groupId: number, settlementId: number): Promise<void> => {
+    await delay(300);
+    const state = MockDB.getState();
+    state.settlements = (state.settlements || []).filter(s => s.id !== settlementId);
+    MockDB.setState(state);
   },
 
   addMemberByEmail: async (groupId: number, email: string): Promise<void> => {

@@ -11,6 +11,12 @@ class SettlementBase(BaseModel):
 class SettlementCreate(SettlementBase):
     pass
 
+class SettlementUpdate(BaseModel):
+    amount: Optional[float] = None
+    from_user_id: Optional[int] = None
+    to_user_id: Optional[int] = None
+    date: Optional[datetime] = None
+
 class Settlement(SettlementBase):
     id: int
     date: datetime

@@ -20,5 +20,5 @@ from .bills import (
     UserBalance,
     DebtDetail,
 )
-from .settlements import Settlement, SettlementCreate, SettlementBase
+from .settlements import Settlement, SettlementCreate, SettlementBase, SettlementUpdate
 from . import bug_reports

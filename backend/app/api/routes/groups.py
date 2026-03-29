@@ -234,3 +234,61 @@ def create_settlement(
     recompute_group_debts(db, group_id)
     
     return created
+
+@router.get("/{group_id}/settlements", response_model=List[schemas.Settlement])
+def read_group_settlements(
+    group_id: int,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_group_member)
+):
+    """Fetch all recorded payments for a group."""
+    return crud.settlements.get_settlements_by_group(db, group_id=group_id)
+
+@router.patch("/{group_id}/settlements/{settlement_id}", response_model=schemas.Settlement)
+def update_group_settlement(
+    group_id: int,
+    settlement_id: int,
+    settlement_update: schemas.SettlementUpdate,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_group_member)
+):
+    """Update a recorded payment."""
+    db_settlement = crud.settlements.update_settlement(
+        db, settlement_id=settlement_id, settlement_update=settlement_update
+    )
+    if not db_settlement:
+        raise HTTPException(status_code=404, detail="Settlement not found")
+        
+    if db_settlement.group_id != group_id:
+        raise HTTPException(status_code=400, detail="Settlement does not belong to this group")
+        
+    # Recompute debts
+    from app.services.debts import recompute_group_debts
+    recompute_group_debts(db, group_id)
+    
+    return db_settlement
+
+@router.delete("/{group_id}/settlements/{settlement_id}", status_code=204)
+def delete_group_settlement(
+    group_id: int,
+    settlement_id: int,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_group_member)
+):
+    """Delete a recorded payment."""
+    # Check existence and group ownership first
+    db_settlement = db.query(models.Settlement).filter(models.Settlement.id == settlement_id).first()
+    if not db_settlement:
+        raise HTTPException(status_code=404, detail="Settlement not found")
+    if db_settlement.group_id != group_id:
+        raise HTTPException(status_code=400, detail="Settlement does not belong to this group")
+        
+    success = crud.settlements.delete_settlement(db, settlement_id=settlement_id)
+    if not success:
+        raise HTTPException(status_code=404, detail="Settlement not found")
+        
+    # Recompute debts
+    from app.services.debts import recompute_group_debts
+    recompute_group_debts(db, group_id)
+    
+    return None

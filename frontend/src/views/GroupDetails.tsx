@@ -11,8 +11,9 @@ import { AddMemberModal } from '../components/groups/AddMemberModal';
 import { CreateBillModal } from '../components/groups/CreateBillModal';
 import { EditGroupModal } from '../components/groups/EditGroupModal';
 import { SettleUpModal } from '../components/groups/SettleUpModal';
+import { EditSettlementModal } from '../components/groups/EditSettlementModal';
 import { ConfirmModal } from '../components/ui/ConfirmModal';
-import type { GroupBalances } from '../types';
+import type { GroupBalances, Settlement } from '../types';
 import { getCurrencySymbol, getCurrencyCode } from '../lib/utils';
 
 export function GroupDetails() {
@@ -30,11 +31,15 @@ export function GroupDetails() {
   const [isRemovingMember, setIsRemovingMember] = useState(false);
   const [balances, setBalances] = useState<GroupBalances | null>(null);
   const [isLoadingBalances, setIsLoadingBalances] = useState(false);
+  const [settlements, setSettlements] = useState<Settlement[]>([]);
+  const [isLoadingSettlements, setIsLoadingSettlements] = useState(false);
 
   const [isSettleUpModalOpen, setIsSettleUpModalOpen] = useState(false);
   const [isTogglingSmartSync, setIsTogglingSmartSync] = useState(false);
+  const [activeTab, setActiveTab] = useState<'balances' | 'activity'>('balances');
   const [sortOrder, setSortOrder] = useState<'desc' | 'asc'>('desc');
   const [showAllDebts, setShowAllDebts] = useState(false);
+  const [settlementToEdit, setSettlementToEdit] = useState<Settlement | null>(null);
 
   const sortedBills = [...bills].sort((a, b) => {
     const dateA = a.date ? new Date(a.date).getTime() : 0;
@@ -55,8 +60,23 @@ export function GroupDetails() {
     }
   };
 
+  const fetchSettlements = async () => {
+    setIsLoadingSettlements(true);
+    try {
+      const data = await groupsService.getSettlements(groupId);
+      setSettlements(data);
+    } catch (e) {
+      console.error('Failed to fetch settlements', e);
+    } finally {
+      setIsLoadingSettlements(false);
+    }
+  };
+
   useEffect(() => {
-    if (groupId) fetchBalances();
+    if (groupId) {
+      fetchBalances();
+      fetchSettlements();
+    }
   }, [groupId]);
 
   const [billToDelete, setBillToDelete] = useState<number | null>(null);
@@ -171,12 +191,42 @@ export function GroupDetails() {
 
   const handleCreateSettlement = async (fromUserId: number, toUserId: number, amount: number) => {
     try {
-      await groupsService.createSettlement(groupId, { from_user_id: fromUserId, to_user_id: toUserId, amount });
-      showToast('Payment recorded successfully!', 'success');
+      await groupsService.createSettlement(groupId, {
+        from_user_id: fromUserId,
+        to_user_id: toUserId,
+        amount,
+        date: new Date().toISOString()
+      });
+      showToast('Payment recorded successfully', 'success');
       fetchBalances(true);
+      fetchSettlements();
+    } catch (e) {
+      console.error(e);
+      showToast('Failed to record payment', 'error');
+    }
+  };
+
+  const handleUpdateSettlement = async (id: number, data: { from_user_id?: number; to_user_id?: number; amount?: number; date?: string }) => {
+    try {
+      await groupsService.updateSettlement(groupId, id, data);
+      showToast('Payment updated successfully', 'success');
+      fetchBalances(true);
+      fetchSettlements();
+    } catch (e) {
+      console.error(e);
+      showToast('Failed to update payment', 'error');
+    }
+  };
+
+  const handleDeleteSettlement = async (settlementId: number) => {
+    try {
+      await groupsService.deleteSettlement(groupId, settlementId);
+      showToast('Payment deleted successfully!', 'success');
+      fetchBalances(true);
+      fetchSettlements();
     } catch (e: any) {
       console.error(e);
-      showToast(e.response?.data?.detail || 'Failed to record payment.', 'error');
+      showToast(e.response?.data?.detail || 'Failed to delete payment.', 'error');
     }
   };
 
@@ -277,7 +327,7 @@ export function GroupDetails() {
                 {group.members.map(member => {
                   const isMe = member.user_id === currentUser?.id;
                   return (
-                    <div key={member.user_id} className="group/member flex items-center gap-1.5 bg-zinc-50 dark:bg-zinc-900 rounded-sharp px-2 py-0.5 text-[10px] font-bold text-zinc-600 dark:text-zinc-400 border border-zinc-200 dark:border-zinc-800 uppercase tracking-tight">
+                    <div key={member.user_id} className="group/member flex items-center gap-1.5 bg-zinc-50 dark:bg-zinc-900 rounded-sharp px-2 py-0.5 text-xs font-bold text-zinc-600 dark:text-zinc-400 border border-zinc-200 dark:border-zinc-800 uppercase tracking-tight">
                       <div className="w-4 h-4 rounded-sharp bg-brand-50 dark:bg-brand-900/30 flex items-center justify-center text-brand-600 dark:text-brand-400 text-[10px] font-black shrink-0 border border-brand-500/10">
                         {member.user?.name?.charAt(0)?.toUpperCase() || 'U'}
                       </div>
@@ -300,13 +350,13 @@ export function GroupDetails() {
           <div className="flex flex-col sm:flex-row sm:items-stretch gap-3 w-full sm:w-auto">
             <Button 
               variant="outline"
-              className="w-full sm:w-auto text-xs"
+              className="w-full sm:w-auto h-9 text-xs rounded-sharp"
               onClick={() => setIsAddMemberModalOpen(true)}
             >
               Add Friend
             </Button>
             <Button 
-              className="gap-1.5 px-4 shadow-brand-500/20 w-full sm:w-auto text-xs" 
+              className="gap-1.5 px-4 shadow-brand-500/20 w-full sm:w-auto h-9 text-xs rounded-sharp" 
               onClick={() => setIsCreateBillModalOpen(true)}
               isLoading={isCreatingBill}
             >
@@ -318,155 +368,237 @@ export function GroupDetails() {
       </div>
 
       <div className="flex flex-col lg:grid lg:grid-cols-3 gap-8 items-start mt-6">
-        
-        {/* ── Side Panel (Balances & Settings) - Top on Mobile ── */}
+        {/* ── Side Panel (Balances & Activity) - Top on Mobile ── */}
         <div className="order-first lg:order-last lg:col-span-1 lg:sticky lg:top-24 w-full">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-1 gap-4">
+          <Card className="border-zinc-200 dark:border-zinc-800 shadow-sm bg-white dark:bg-black rounded-sharp overflow-hidden flex flex-col">
             
-            {/* Balances Section */}
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <h2 className="text-[10px] font-black text-zinc-900 dark:text-white uppercase tracking-widest">Balances</h2>
-                <button
-                  onClick={() => fetchBalances(true)}
-                  className="flex items-center gap-1.5 text-[10px] font-bold text-slate-500 hover:text-brand-600 dark:text-slate-400 dark:hover:text-brand-400 transition-colors uppercase tracking-wider"
-                  title="Force-recalculate balances"
-                >
-                  <RefreshCw className="w-3 h-3" />
-                  Recalculate
-                </button>
-              </div>
+            {/* Tab Container */}
+            <div className="flex border-b border-zinc-100 dark:divide-zinc-900 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/50">
+              <button 
+                onClick={() => setActiveTab('balances')}
+                className={`flex-1 py-3 text-xs font-black uppercase tracking-widest transition-all ${
+                  activeTab === 'balances' 
+                    ? 'text-brand-600 dark:text-brand-400 bg-white dark:bg-black border-b-2 border-brand-500' 
+                    : 'text-zinc-500 hover:text-zinc-900 dark:text-zinc-500 dark:hover:text-zinc-300'
+                }`}
+              >
+                Balances
+              </button>
+              <button 
+                onClick={() => setActiveTab('activity')}
+                className={`flex-1 py-3 text-xs font-black uppercase tracking-widest transition-all ${
+                  activeTab === 'activity' 
+                    ? 'text-brand-600 dark:text-brand-400 bg-white dark:bg-black border-b-2 border-brand-500' 
+                    : 'text-zinc-500 hover:text-zinc-900 dark:text-zinc-500 dark:hover:text-zinc-300'
+                }`}
+              >
+                Activity
+              </button>
+            </div>
 
-              {isLoadingBalances ? (
-                <Card className="border-zinc-200 dark:border-zinc-800 shadow-sm bg-white dark:bg-black rounded-sharp">
-                  <div className="flex items-center justify-center py-6 text-zinc-400 gap-2">
-                    <Loader2 className="w-5 h-5 animate-spin" />
-                    <span className="text-[10px] font-black uppercase tracking-widest">Loading...</span>
+            <div className="p-3 space-y-4">
+              {activeTab === 'balances' ? (
+                <div className="space-y-4">
+                  {/* Balances Section Header (Compact) */}
+                  <div className="flex items-center justify-between">
+                    <button
+                      onClick={() => fetchBalances(true)}
+                      className="flex items-center gap-1.5 text-[10px] font-bold text-slate-500 hover:text-brand-600 dark:text-slate-400 dark:hover:text-brand-400 transition-colors uppercase tracking-wider"
+                      title="Force-recalculate balances"
+                    >
+                      <RefreshCw className={`w-2.5 h-2.5 ${isLoadingBalances ? 'animate-spin' : ''}`} />
+                      Recalculate
+                    </button>
                   </div>
-                </Card>
-              ) : balances && (balances.debts.length > 0 || balances.balances.length > 0) ? (
-                <div className="space-y-3">
-                  <Card className="border-zinc-200 dark:border-zinc-800 shadow-sm space-y-4 p-4 bg-white dark:bg-black rounded-sharp">
 
-                    {/* Your personal summary */}
-                    {currentUser && (() => {
-                      const myNet = balances.my_net_amount;
-                      const absNet = Math.abs(myNet);
-                      if (absNet < 0.01) return (
-                        <div className="flex items-center gap-3 p-3 rounded-sharp bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800">
-                          <span className="text-[10px] font-black text-zinc-500 uppercase tracking-widest px-4 py-3 bg-zinc-50 dark:bg-zinc-900 rounded-sharp border border-zinc-200 dark:border-zinc-800 w-full text-center">All settled up 🎉</span>
-                        </div>
-                      );
-                      if (myNet > 0) return (
-                        <div className="flex items-center gap-3 p-3 rounded-sharp bg-emerald-50 dark:bg-brand-900/10 border border-emerald-200 dark:border-brand-500/30">
-                          <TrendingUp className="w-5 h-5 text-emerald-600 dark:text-brand-400 shrink-0" />
-                          <span className="text-sm font-bold text-emerald-700 dark:text-brand-400 uppercase tracking-tight">
-                            You are owed <strong><span className="text-base font-black italic">{getCurrencySymbol(group?.currency || '$')}</span><span className="text-lg tracking-tighter">{absNet.toFixed(2)}</span></strong>
-                          </span>
-                        </div>
-                      );
-                      return (
-                        <div className="flex items-center gap-3 p-3 rounded-sharp bg-rose-50 dark:bg-red-900/10 border border-rose-200 dark:border-red-500/30">
-                          <TrendingDown className="w-5 h-5 text-rose-600 dark:text-rose-400 shrink-0" />
-                          <span className="text-sm font-bold text-rose-700 dark:text-rose-400 uppercase tracking-tight">
-                            You owe <strong><span className="text-base font-black italic">{getCurrencySymbol(group?.currency || '$')}</span><span className="text-lg tracking-tighter">{absNet.toFixed(2)}</span></strong>
-                          </span>
-                        </div>
-                      );
-                    })()}
+                  {isLoadingBalances ? (
+                    <div className="flex items-center justify-center py-6 text-zinc-400 gap-2">
+                      <Loader2 className="w-5 h-5 animate-spin" />
+                      <span className="text-xs font-black uppercase tracking-widest">Loading...</span>
+                    </div>
+                  ) : balances && (balances.debts.length > 0 || balances.balances.length > 0) ? (
+                    <div className="space-y-4">
+                      {/* Your personal summary */}
+                      {currentUser && (() => {
+                        const myNet = balances.my_net_amount;
+                        const absNet = Math.abs(myNet);
+                        if (absNet < 0.01) return (
+                          <div className="text-xs font-black text-zinc-500 uppercase tracking-widest py-3 bg-zinc-50 dark:bg-zinc-900 rounded-sharp border border-zinc-200 dark:border-zinc-800 w-full text-center">
+                            All settled up 🎉
+                          </div>
+                        );
+                        if (myNet > 0) return (
+                          <div className="flex items-center gap-3 p-3 rounded-sharp bg-emerald-50 dark:bg-brand-900/10 border border-emerald-200 dark:border-brand-500/30">
+                            <TrendingUp className="w-4 h-4 text-emerald-600 dark:text-brand-400 shrink-0" />
+                            <span className="text-xs font-bold text-emerald-700 dark:text-brand-400 uppercase tracking-tight">
+                              You're owed <strong><span className="italic mr-0.5">{getCurrencySymbol(group?.currency || '$')}</span>{absNet.toFixed(2)}</strong>
+                            </span>
+                          </div>
+                        );
+                        return (
+                          <div className="flex items-center gap-3 p-3 rounded-sharp bg-rose-50 dark:bg-red-900/10 border border-rose-200 dark:border-red-500/30">
+                            <TrendingDown className="w-4 h-4 text-rose-600 dark:text-rose-400 shrink-0" />
+                            <span className="text-xs font-bold text-rose-700 dark:text-rose-400 uppercase tracking-tight">
+                              You owe <strong><span className="italic mr-0.5">{getCurrencySymbol(group?.currency || '$')}</span>{absNet.toFixed(2)}</strong>
+                            </span>
+                          </div>
+                        );
+                      })()}
 
-                    {/* Full debt list, collapsible on mobile */}
-                    {balances.debts.length > 0 && (
-                      <div className="space-y-2">
-                        <button 
-                          onClick={() => setShowAllDebts(!showAllDebts)}
-                          className="flex items-center justify-between w-full text-xs font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500 hover:text-brand-600 transition-colors py-1 lg:cursor-default lg:hover:text-slate-400"
-                        >
-                          <span>Group Debts</span>
-                          <span className="lg:hidden">
-                            {showAllDebts ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-                          </span>
-                        </button>
-                        
-                        <div className={`${showAllDebts ? 'block' : 'hidden lg:block'} space-y-2 transition-all`}>
-                          {balances.debts.map((debt, i) => {
-                            const isMe = debt.from_user_id === currentUser?.id || debt.to_user_id === currentUser?.id;
-                            const iOwe = debt.from_user_id === currentUser?.id;
-                            return (
-                              <div
-                                key={i}
-                                className={`flex items-center justify-between gap-3 rounded-sharp px-4 py-3 text-[11px] font-black uppercase tracking-tight transition-all border ${
-                                  isMe
-                                    ? iOwe
-                                      ? 'bg-rose-50 dark:bg-red-900/20 border-rose-200 dark:border-red-900/50 text-rose-800 dark:text-red-400'
-                                      : 'bg-emerald-50 dark:bg-brand-900/20 border-emerald-200 dark:border-brand-900/50 text-emerald-800 dark:text-brand-400'
-                                    : 'bg-zinc-50 dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-400'
-                                }`}
-                              >
-                                <div className="flex items-center gap-2 min-w-0">
-                                  <span className="font-semibold truncate">{debt.from_user_name}</span>
-                                  <ArrowRight className="w-4 h-4 shrink-0 text-slate-400" />
-                                  <span className="font-semibold truncate">{debt.to_user_name}</span>
+                      {/* Full debt list */}
+                      {balances.debts.length > 0 && (
+                        <div className="space-y-2">
+                          <button 
+                            onClick={() => setShowAllDebts(!showAllDebts)}
+                            className="flex items-center justify-between w-full text-xs font-black uppercase tracking-wider text-slate-400 dark:text-slate-500 hover:text-brand-600 transition-colors py-1 lg:cursor-default lg:hover:text-slate-400"
+                          >
+                            <span>Group Debts</span>
+                            <span className="lg:hidden">
+                              {showAllDebts ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+                            </span>
+                          </button>
+                          
+                          <div className={`${showAllDebts ? 'block' : 'hidden lg:block'} space-y-2 transition-all`}>
+                            {balances.debts.map((debt, i) => {
+                              const isMe = debt.from_user_id === currentUser?.id || debt.to_user_id === currentUser?.id;
+                              const iOwe = debt.from_user_id === currentUser?.id;
+                              return (
+                                <div
+                                  key={i}
+                                  className={`flex items-center justify-between gap-3 rounded-sharp px-3 py-2 text-xs font-black uppercase tracking-tight transition-all border ${
+                                    isMe
+                                      ? iOwe
+                                        ? 'bg-rose-50 dark:bg-red-900/20 border-rose-200 dark:border-red-900/50 text-rose-800 dark:text-red-400'
+                                        : 'bg-emerald-50 dark:bg-brand-900/20 border-emerald-200 dark:border-brand-900/50 text-emerald-800 dark:text-brand-400'
+                                      : 'bg-zinc-50 dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-400'
+                                  }`}
+                                >
+                                  <div className="flex items-center gap-1.5 min-w-0">
+                                    <span className="truncate">{debt.from_user_name?.split(' ')[0]}</span>
+                                    <ArrowRight className="w-3 h-3 shrink-0 text-slate-400" />
+                                    <span className="truncate">{debt.to_user_name?.split(' ')[0]}</span>
+                                  </div>
+                                  <span className="font-bold shrink-0"><span className="italic mr-0.5">{getCurrencySymbol(group?.currency || '$')}</span>{debt.amount.toFixed(2)}</span>
                                 </div>
-                                <span className="font-bold shrink-0"><span className="text-sm font-black">{getCurrencySymbol(group?.currency || '$')}</span>{debt.amount.toFixed(2)}</span>
-                              </div>
-                            );
-                          })}
+                              );
+                            })}
+                          </div>
                         </div>
-                      </div>
-                    )}
-                  </Card>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="text-center py-6 text-zinc-400">
+                      <p className="text-xs font-black uppercase tracking-widest">No balances yet.</p>
+                    </div>
+                  )}
 
-                  {balances.debts.length > 0 && (
+                  {balances && balances.debts.length > 0 && (
                     <Button 
-                      className="w-full bg-emerald-600 hover:bg-emerald-700 text-white shadow-emerald-500/20 gap-2 h-10"
+                      className="w-full bg-emerald-600 hover:bg-emerald-700 text-white shadow-emerald-500/20 gap-2 h-9 text-xs font-black uppercase tracking-widest rounded-sharp"
                       onClick={() => setIsSettleUpModalOpen(true)}
                     >
-                      <DollarSign className="w-4 h-4" />
-                      Record a Payment
+                      <DollarSign className="w-3.5 h-3.5" />
+                      Settle Up
                     </Button>
                   )}
                 </div>
               ) : (
-                <Card className="border-slate-200/60 dark:border-slate-700/50 shadow-sm">
-                  <p className="text-sm text-slate-500 dark:text-slate-400 py-2 text-center">
-                    No balances yet.
-                  </p>
-                </Card>
+                <div className="space-y-4">
+                  {isLoadingSettlements ? (
+                    <div className="flex items-center justify-center py-6 text-zinc-400 gap-2">
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <span className="text-xs font-black uppercase tracking-widest">Loading...</span>
+                    </div>
+                  ) : settlements.length === 0 ? (
+                    <div className="py-8 text-center bg-zinc-50/50 dark:bg-zinc-900/30 rounded-sharp border border-dashed border-zinc-200 dark:border-zinc-800">
+                      <p className="text-xs text-zinc-500 font-bold uppercase tracking-wider">No activity yet.</p>
+                    </div>
+                  ) : (
+                    <div className="divide-y divide-zinc-100 dark:divide-zinc-900 max-h-[450px] overflow-y-auto custom-scrollbar -mx-4 px-4">
+                      {[...settlements].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).map(settlement => {
+                        const fromUser = group?.members?.find(m => m.user_id === settlement.from_user_id)?.user;
+                        const toUser = group?.members?.find(m => m.user_id === settlement.to_user_id)?.user;
+                        
+                        return (
+                          <div key={settlement.id} className="py-3 group/settlement hover:bg-zinc-50 dark:hover:bg-zinc-900/50 transition-colors">
+                            <div className="flex items-center justify-between gap-2">
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-1.5 flex-wrap">
+                                  <span className="text-xs font-black text-zinc-900 dark:text-white uppercase truncate">
+                                    {settlement.from_user_id === currentUser?.id ? 'You' : (fromUser?.name?.split(' ')[0] || 'Unknown')}
+                                  </span>
+                                  <ArrowRight className="w-2.5 h-2.5 text-zinc-400 shrink-0" />
+                                  <span className="text-xs font-black text-zinc-900 dark:text-white uppercase truncate">
+                                    {settlement.to_user_id === currentUser?.id ? 'You' : (toUser?.name?.split(' ')[0] || 'Unknown')}
+                                  </span>
+                                </div>
+                                <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest mt-0.5">
+                                  {new Date(settlement.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+                                </p>
+                              </div>
+                              <div className="flex items-center gap-3 shrink-0">
+                                <span className="text-xs font-black text-emerald-600 dark:text-brand-400 min-w-[60px] text-right">
+                                  <span className="italic mr-0.5">{getCurrencySymbol(group?.currency || '$')}</span>
+                                  {settlement.amount.toFixed(2)}
+                                </span>
+                                <div className="flex items-center gap-1 opacity-10 sm:opacity-0 group-hover/settlement:opacity-100 transition-all">
+                                  <button
+                                    onClick={() => setSettlementToEdit(settlement)}
+                                    className="p-1 text-zinc-300 hover:text-brand-500 transition-colors"
+                                    title="Edit payment record"
+                                  >
+                                    <Edit2 className="w-3 h-3" />
+                                  </button>
+                                  <button
+                                    onClick={() => {
+                                      if (confirm('Delete this payment record? This will revert balances.')) {
+                                        handleDeleteSettlement(settlement.id);
+                                      }
+                                    }}
+                                    className="p-1 text-zinc-300 hover:text-red-500 transition-colors"
+                                    title="Delete payment record"
+                                  >
+                                    <Trash2 className="w-3 h-3" />
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
               )}
             </div>
 
-            {/* Smart Sync Toggle - Compact for Mobile */}
-            <Card className="border-zinc-200 dark:border-zinc-800 shadow-sm p-3 bg-white dark:bg-black rounded-sharp border-dashed">
+            {/* Smart Sync Section (Always visible or in Balances?) - I'll put it at the bottom as a footer */}
+            <div className="p-3 bg-zinc-50/50 dark:bg-zinc-900/50 border-t border-zinc-100 dark:border-zinc-800">
               <div className="flex items-center justify-between gap-4">
                 <div className="flex-1">
-                  <h3 className="text-xs font-black text-zinc-900 dark:text-white uppercase tracking-tight flex items-center gap-2">
+                  <h3 className="text-[10px] font-black text-zinc-900 dark:text-white uppercase tracking-wider flex items-center gap-2">
                     Smart Sync
-                    {isTogglingSmartSync && <Loader2 className="w-3 h-3 animate-spin text-slate-400" />}
+                    {isTogglingSmartSync && <Loader2 className="w-2.5 h-2.5 animate-spin text-slate-400" />}
                   </h3>
-                  <p className="text-[10px] text-zinc-500 dark:text-zinc-500 font-bold uppercase tracking-wider mt-0.5">
-                    Minimize payments.
-                  </p>
                 </div>
                 <button
                   type="button"
                   onClick={handleToggleSmartSync}
                   disabled={isTogglingSmartSync}
-                  className={`relative inline-flex h-5 w-10 flex-shrink-0 cursor-pointer rounded-sharp border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-1 focus:ring-brand-500/50 overflow-hidden ${
-                    group.simplify_debts ? 'bg-brand-500' : 'bg-zinc-200 dark:bg-zinc-800'
+                  className={`relative inline-flex h-4 w-8 flex-shrink-0 cursor-pointer rounded-sharp border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none overflow-hidden ${
+                    group?.simplify_debts ? 'bg-brand-500' : 'bg-zinc-300 dark:bg-zinc-800'
                   }`}
                 >
-                  <span className="sr-only">Toggle Smart Sync</span>
                   <span
                     aria-hidden="true"
-                    className={`pointer-events-none inline-block h-4 w-4 transform rounded-sharp bg-white shadow ring-0 transition duration-200 ease-in-out ${
-                      group.simplify_debts ? 'translate-x-[20px]' : 'translate-x-0'
+                    className={`pointer-events-none inline-block h-3 w-3 transform rounded-sharp bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                      group?.simplify_debts ? 'translate-x-[16px]' : 'translate-x-0'
                     }`}
                   />
                 </button>
               </div>
-            </Card>
-          </div>
+            </div>
+          </Card>
         </div>
 
         {/* ── Main Content (Bills list) - Bottom on Mobile ── */}
@@ -656,15 +788,24 @@ export function GroupDetails() {
         onSubmit={handleCreateSettlement}
         members={group?.members ?? []}
         currentUserId={currentUser?.id ?? 0}
-        currencySymbol={getCurrencySymbol(group.currency)}
+        currencySymbol={getCurrencySymbol(group?.currency || '$')}
+      />
+
+      <EditSettlementModal
+        isOpen={settlementToEdit !== null}
+        onClose={() => setSettlementToEdit(null)}
+        onSubmit={handleUpdateSettlement}
+        settlement={settlementToEdit}
+        members={group?.members ?? []}
+        currencySymbol={getCurrencySymbol(group?.currency || '$')}
       />
 
       <EditGroupModal
         isOpen={isEditGroupModalOpen}
         onClose={() => setIsEditGroupModalOpen(false)}
         onSubmit={handleUpdateGroup}
-        initialName={group.name}
-        initialCurrency={group.currency}
+        initialName={group?.name || ''}
+        initialCurrency={group?.currency || 'USD'}
       />
     </div>
   );
