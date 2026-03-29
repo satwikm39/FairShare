@@ -3,7 +3,6 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '../components/ui/Button';
 import { Users, Receipt, SplitSquareVertical, CheckCircle2, type LucideIcon } from 'lucide-react';
 import { ConfirmModal } from '../components/ui/ConfirmModal';
-import { MockDB } from '../services/mock/db';
 import { enableDemoMode } from '../config/demo';
 import { useAuth } from '../context/AuthContext';
 
@@ -62,10 +61,8 @@ export function Home() {
   };
 
   const handleStartFresh = () => {
-    MockDB.reset();
-    enableDemoMode();
-    setDemoModeActive(true);
-    navigate('/dashboard');
+    localStorage.removeItem('fairshare_mock_db');
+    navigate('/demo');
   };
 
   return (

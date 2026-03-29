@@ -5,7 +5,6 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { enableDemoMode } from '../config/demo';
 import { ConfirmModal } from '../components/ui/ConfirmModal';
-import { MockDB } from '../services/mock/db';
 
 const bullets = [
   {
@@ -45,10 +44,8 @@ export function LiveDemo() {
   };
 
   const handleStartFresh = () => {
-    MockDB.reset();
-    enableDemoMode();
-    setDemoModeActive(true);
-    navigate('/dashboard');
+    localStorage.removeItem('fairshare_mock_db');
+    setShowDemoPrompt(false);
   };
 
   return (
