@@ -1,11 +1,11 @@
 import { Menu, X as CloseIcon, Zap } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { logout } from '../../config/firebase';
 import { ProfileDropdown } from '../profile/ProfileDropdown';
 import { ConfirmModal } from '../ui/ConfirmModal';
-import { isDemoMode, disableDemoMode } from '../../config/demo';
+import { disableDemoMode } from '../../config/demo';
 
 export function Navbar() {
   const { currentUser, isDemoActive, setDemoModeActive } = useAuth();
@@ -17,6 +17,28 @@ export function Navbar() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isLogoutConfirmOpen, setIsLogoutConfirmOpen] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const mobileMenuRef = useRef<HTMLDivElement>(null);
+  const mobileMenuButtonRef = useRef<HTMLButtonElement>(null);
+
+  // Click outside listener for mobile menu
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (
+        isMobileMenuOpen &&
+        mobileMenuRef.current &&
+        !mobileMenuRef.current.contains(event.target as Node) &&
+        mobileMenuButtonRef.current &&
+        !mobileMenuButtonRef.current.contains(event.target as Node)
+      ) {
+        setIsMobileMenuOpen(false);
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isMobileMenuOpen]);
 
   const openLogoutConfirm = () => {
     setIsMobileMenuOpen(false);
@@ -102,6 +124,7 @@ export function Navbar() {
             <div className="flex md:hidden items-center gap-2">
 
               <button
+                ref={mobileMenuButtonRef}
                 onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
                 className="p-2 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-sharp border border-transparent hover:border-zinc-200 dark:hover:border-zinc-700 transition-colors"
               >
@@ -113,7 +136,10 @@ export function Navbar() {
 
         {/* Mobile menu overlay */}
         {isMobileMenuOpen && (
-          <div className="md:hidden border-t border-zinc-200 dark:border-zinc-800 bg-white dark:bg-black animate-in slide-in-from-top-2 duration-200">
+          <div 
+            ref={mobileMenuRef}
+            className="md:hidden border-t border-zinc-200 dark:border-zinc-800 bg-white dark:bg-black animate-in slide-in-from-top-2 duration-200"
+          >
             <div className="px-4 pt-2 pb-6 space-y-5">
                <Link 
                 to="/dashboard" 
