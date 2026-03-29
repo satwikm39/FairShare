@@ -31,7 +31,7 @@ def read_groups(
 def read_group(
     group_id: int, 
     db: Session = Depends(get_db),
-    current_user: models.User = Depends(get_current_group_member)
+    member: models.GroupMember = Depends(get_current_group_member)
 ):
     db_group = crud.groups.get_group(db, group_id=group_id)
     # The dependency already checked existence and membership
@@ -42,8 +42,10 @@ def update_group(
     group_id: int,
     group_update: schemas.GroupUpdate,
     db: Session = Depends(get_db),
-    current_user: models.User = Depends(get_current_group_member)
+    member: models.GroupMember = Depends(get_current_group_member)
 ):
+    if member.removed_at:
+        raise HTTPException(status_code=403, detail="Historical members cannot update group settings")
     updated_group = crud.groups.update_group(db=db, group_id=group_id, group_update=group_update)
     return updated_group
 
@@ -51,18 +53,22 @@ def update_group(
 def delete_group(
     group_id: int, 
     db: Session = Depends(get_db),
-    current_user: models.User = Depends(get_current_group_member)
+    member: models.GroupMember = Depends(get_current_group_member)
 ):
+    if member.removed_at:
+        raise HTTPException(status_code=403, detail="Historical members cannot delete groups")
     db_group = crud.groups.delete_group(db=db, group_id=group_id)
     return None
 
 @router.post("/{group_id}/members/")
 def add_group_member(
     group_id: int, 
-    member: schemas.GroupMemberCreate, 
+    member_data: schemas.GroupMemberCreate, 
     db: Session = Depends(get_db),
-    current_user: models.User = Depends(get_current_group_member)
+    member: models.GroupMember = Depends(get_current_group_member)
 ):
+    if member.removed_at:
+        raise HTTPException(status_code=403, detail="Historical members cannot add new members")
     db_group = crud.groups.get_group(db, group_id=group_id)
     if db_group is None:
         raise HTTPException(status_code=404, detail="Group not found")
@@ -84,9 +90,9 @@ def add_group_member(
         # Trigger invitation email
         try:
             send_invite_email(
-                to_email=member.email, 
+                to_email=member_data.email, 
                 group_name=db_group.name, 
-                invited_by_name=current_user.name
+                invited_by_name=member.user.name
             )
         except Exception as email_err:
             print(f"WARNING: Email invitation failed but user was added: {email_err}")
@@ -142,16 +148,19 @@ def remove_group_member(
 def read_group_bills(
     group_id: int, 
     db: Session = Depends(get_db),
-    current_user: models.User = Depends(get_current_group_member)
+    member: models.GroupMember = Depends(get_current_group_member)
 ):
-    return crud.bills.get_bills_by_group(db=db, group_id=group_id)
+    bills = crud.bills.get_bills_by_group(db=db, group_id=group_id)
+    if member.removed_at:
+        bills = [b for b in bills if b.date <= member.removed_at]
+    return bills
 
 
 @router.get("/{group_id}/balances", response_model=schemas.GroupBalances)
 def get_group_balances(
     group_id: int,
     db: Session = Depends(get_db),
-    current_user: models.User = Depends(get_current_group_member),
+    member: models.GroupMember = Depends(get_current_group_member),
     refresh: bool = False,
 ):
     """Serve cached pairwise debts for a group. Set ?refresh=true to force recompute."""
@@ -195,7 +204,7 @@ def get_group_balances(
     return schemas.GroupBalances(
         balances=balances,
         debts=simplified_debts,
-        my_net_amount=user_net.get(current_user.id, 0.0)
+        my_net_amount=user_net.get(member.user_id, 0.0)
     )
 
 @router.post("/{group_id}/bills/", response_model=schemas.Bill)
@@ -203,8 +212,10 @@ def create_bill_for_group(
     group_id: int, 
     bill: schemas.BillCreate, 
     db: Session = Depends(get_db),
-    current_user: models.User = Depends(get_current_group_member)
+    member: models.GroupMember = Depends(get_current_group_member)
 ):
+    if member.removed_at:
+        raise HTTPException(status_code=403, detail="Historical members cannot create new bills")
     bill.group_id = group_id
     db_group = crud.groups.get_group(db, group_id=group_id)
     group_member_ids = [m.user_id for m in db_group.members] if db_group else []
@@ -218,13 +229,15 @@ def create_settlement(
     group_id: int,
     settlement: schemas.SettlementCreate,
     db: Session = Depends(get_db),
-    current_user: models.User = Depends(get_current_group_member)
+    member: models.GroupMember = Depends(get_current_group_member)
 ):
+    if member.removed_at:
+        raise HTTPException(status_code=403, detail="Historical members cannot record payments")
     if settlement.group_id != group_id:
         raise HTTPException(status_code=400, detail="Path group_id must match body group_id")
     
     # Must be recording a payment involving themselves
-    if current_user.id not in [settlement.from_user_id, settlement.to_user_id]:
+    if member.user_id not in [settlement.from_user_id, settlement.to_user_id]:
         raise HTTPException(status_code=403, detail="You can only record settlements you are involved in")
         
     created = crud.settlements.create_settlement(db=db, settlement=settlement)
@@ -239,10 +252,13 @@ def create_settlement(
 def read_group_settlements(
     group_id: int,
     db: Session = Depends(get_db),
-    current_user: models.User = Depends(get_current_group_member)
+    member: models.GroupMember = Depends(get_current_group_member)
 ):
     """Fetch all recorded payments for a group."""
-    return crud.settlements.get_settlements_by_group(db, group_id=group_id)
+    settlements = crud.settlements.get_settlements_by_group(db, group_id=group_id)
+    if member.removed_at:
+        settlements = [s for s in settlements if s.date <= member.removed_at]
+    return settlements
 
 @router.patch("/{group_id}/settlements/{settlement_id}", response_model=schemas.Settlement)
 def update_group_settlement(
@@ -250,8 +266,10 @@ def update_group_settlement(
     settlement_id: int,
     settlement_update: schemas.SettlementUpdate,
     db: Session = Depends(get_db),
-    current_user: models.User = Depends(get_current_group_member)
+    member: models.GroupMember = Depends(get_current_group_member)
 ):
+    if member.removed_at:
+        raise HTTPException(status_code=403, detail="Historical members cannot update payments")
     """Update a recorded payment."""
     db_settlement = crud.settlements.update_settlement(
         db, settlement_id=settlement_id, settlement_update=settlement_update
@@ -273,8 +291,10 @@ def delete_group_settlement(
     group_id: int,
     settlement_id: int,
     db: Session = Depends(get_db),
-    current_user: models.User = Depends(get_current_group_member)
+    member: models.GroupMember = Depends(get_current_group_member)
 ):
+    if member.removed_at:
+        raise HTTPException(status_code=403, detail="Historical members cannot delete payments")
     """Delete a recorded payment."""
     # Check existence and group ownership first
     db_settlement = db.query(models.Settlement).filter(models.Settlement.id == settlement_id).first()

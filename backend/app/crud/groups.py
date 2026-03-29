@@ -1,4 +1,5 @@
 from sqlalchemy.orm import Session, joinedload
+from datetime import datetime
 from app import models, schemas
 
 def get_group(db: Session, group_id: int):
@@ -34,19 +35,31 @@ def create_group(db: Session, group: schemas.GroupCreate, user_id: int):
     return db_group
 
 def add_user_to_group(db: Session, group_id: int, user_id: int):
-    db_group_member = models.GroupMember(group_id=group_id, user_id=user_id)
-    db.add(db_group_member)
-    db.commit()
-    return db_group_member
-
-def remove_user_from_group(db: Session, group_id: int, user_id: int) -> bool:
+    # Check if a removed member already exists
     member = db.query(models.GroupMember).filter(
         models.GroupMember.group_id == group_id,
         models.GroupMember.user_id == user_id
     ).first()
+    
+    if member:
+        member.removed_at = None
+    else:
+        member = models.GroupMember(group_id=group_id, user_id=user_id)
+        db.add(member)
+        
+    db.commit()
+    db.refresh(member)
+    return member
+
+def remove_user_from_group(db: Session, group_id: int, user_id: int) -> bool:
+    member = db.query(models.GroupMember).filter(
+        models.GroupMember.group_id == group_id,
+        models.GroupMember.user_id == user_id,
+        models.GroupMember.removed_at == None
+    ).first()
     if not member:
         return False
-    db.delete(member)
+    member.removed_at = datetime.now()
     db.commit()
     return True
 

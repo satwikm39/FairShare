@@ -1,4 +1,6 @@
 from pydantic import BaseModel
+from datetime import datetime
+from typing import Optional
 
 class GroupBase(BaseModel):
     name: str
@@ -14,6 +16,7 @@ class GroupMemberResponse(BaseModel):
     user_id: int
     group_id: int
     user: 'User'
+    removed_at: Optional[datetime] = None
 
     class Config:
         from_attributes = True

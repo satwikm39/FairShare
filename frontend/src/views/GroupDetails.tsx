@@ -41,6 +41,9 @@ export function GroupDetails() {
   const [showAllDebts, setShowAllDebts] = useState(false);
   const [settlementToEdit, setSettlementToEdit] = useState<Settlement | null>(null);
 
+  const isRemovedMember = group?.members?.find(m => m.user_id === currentUser?.id)?.removed_at !== undefined && 
+                          group?.members?.find(m => m.user_id === currentUser?.id)?.removed_at !== null;
+
   const sortedBills = [...bills].sort((a, b) => {
     const dateA = a.date ? new Date(a.date).getTime() : 0;
     const dateB = b.date ? new Date(b.date).getTime() : 0;
@@ -299,6 +302,19 @@ export function GroupDetails() {
 
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+      {isRemovedMember && (
+        <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800/50 rounded-sharp p-3 flex items-start gap-3 animate-in slide-in-from-top-2 duration-300">
+          <div className="p-1.5 bg-amber-100 dark:bg-amber-900/30 rounded-sharp text-amber-600 dark:text-amber-400">
+            <Calendar className="w-4 h-4" />
+          </div>
+          <div>
+            <h3 className="text-xs font-black text-amber-900 dark:text-amber-200 uppercase tracking-tight">Historical View</h3>
+            <p className="text-[10px] text-amber-700 dark:text-amber-400 font-bold uppercase tracking-wider mt-0.5 leading-relaxed">
+              You are no longer a member of this group. You have read-only access to the history until you were removed.
+            </p>
+          </div>
+        </div>
+      )}
       <div>
         <Link to="/dashboard" className="inline-flex items-center text-xs font-medium text-brand-600 dark:text-brand-500 hover:text-brand-700 dark:hover:text-brand-400 mb-3 transition-colors">
           <ArrowLeft className="w-3 h-3 mr-1" /> Back to Groups
@@ -313,15 +329,19 @@ export function GroupDetails() {
                   <span className="text-sm font-black">{getCurrencyCode(group.currency)}</span>
                 </span>
               </div>
-              <button
-                onClick={() => setIsEditGroupModalOpen(true)}
-                className="p-1 text-slate-400 hover:text-brand-600 hover:bg-brand-50 dark:hover:bg-brand-900/30 rounded-full transition-colors"
-                title="Edit group"
-              >
-                <Edit2 className="w-3.5 h-3.5" />
-              </button>
+              {!isRemovedMember && (
+                <button
+                  onClick={() => setIsEditGroupModalOpen(true)}
+                  className="p-1 text-slate-400 hover:text-brand-600 hover:bg-brand-50 dark:hover:bg-brand-900/30 rounded-full transition-colors"
+                  title="Edit group"
+                >
+                  <Edit2 className="w-3.5 h-3.5" />
+                </button>
+              )}
             </div>
-            <p className="text-xs text-zinc-500 dark:text-zinc-500 font-bold mt-1 uppercase tracking-wider">Manage bills and expenses.</p>
+            <p className="text-xs text-zinc-500 dark:text-zinc-500 font-bold mt-1 uppercase tracking-wider">
+              {isRemovedMember ? "Historical archives of bills and expenses." : "Manage bills and expenses."}
+            </p>
             {group.members && group.members.length > 0 && (
               <div className="flex flex-wrap items-center gap-1.5 mt-3">
                 {group.members.map(member => {
@@ -332,7 +352,10 @@ export function GroupDetails() {
                         {member.user?.name?.charAt(0)?.toUpperCase() || 'U'}
                       </div>
                       <span>{member.user?.name?.split(' ')[0] || member.user?.email || 'User'}</span>
-                      {!isMe && (
+                      {member.removed_at && (
+                        <span className="ml-1 text-[9px] font-black text-zinc-400 lowercase italic">(removed)</span>
+                      )}
+                      {!isMe && !isRemovedMember && !member.removed_at && (
                         <button
                           onClick={() => setMemberToRemove({ user_id: member.user_id, name: member.user?.name || member.user?.email || 'this member' })}
                           className="ml-1 p-0.5 bg-zinc-100 dark:bg-zinc-800 rounded-sharp text-zinc-400 hover:text-red-600 dark:text-zinc-500 dark:hover:text-red-500 transition-colors border border-zinc-200 dark:border-zinc-700"
@@ -348,21 +371,23 @@ export function GroupDetails() {
             )}
           </div>
           <div className="flex flex-col sm:flex-row sm:items-stretch gap-3 w-full sm:w-auto">
-            <Button 
-              variant="outline"
-              className="w-full sm:w-auto h-9 text-xs rounded-sharp"
-              onClick={() => setIsAddMemberModalOpen(true)}
-            >
-              Add Friend
-            </Button>
-            <Button 
-              className="gap-1.5 px-4 shadow-brand-500/20 w-full sm:w-auto h-9 text-xs rounded-sharp" 
-              onClick={() => setIsCreateBillModalOpen(true)}
-              isLoading={isCreatingBill}
-            >
-              <Plus className="w-4 h-4" />
-              New Bill
-            </Button>
+            {!isRemovedMember && (
+              <>
+                <Button 
+                  variant="outline"
+                  className="w-full sm:w-auto h-9 text-xs rounded-sharp"
+                  onClick={() => setIsAddMemberModalOpen(true)}
+                >
+                  <Plus className="w-3.5 h-3.5 mr-1" /> Add Friend
+                </Button>
+                <Button 
+                  className="w-full sm:w-auto h-9 text-xs rounded-sharp bg-zinc-950 dark:bg-white text-white dark:text-zinc-950 hover:bg-zinc-800 dark:hover:bg-zinc-100"
+                  onClick={() => setIsCreateBillModalOpen(true)}
+                >
+                  <Receipt className="w-3.5 h-3.5 mr-1" /> New Bill
+                </Button>
+              </>
+            )}
           </div>
         </div>
       </div>
@@ -492,7 +517,7 @@ export function GroupDetails() {
                     </div>
                   )}
 
-                  {balances && balances.debts.length > 0 && (
+                  {balances && balances.debts.length > 0 && !isRemovedMember && (
                     <Button 
                       className="w-full bg-emerald-600 hover:bg-emerald-700 text-white shadow-emerald-500/20 gap-2 h-9 text-xs font-black uppercase tracking-widest rounded-sharp"
                       onClick={() => setIsSettleUpModalOpen(true)}
@@ -541,25 +566,29 @@ export function GroupDetails() {
                                   <span className="italic mr-0.5">{getCurrencySymbol(group?.currency || '$')}</span>
                                   {settlement.amount.toFixed(2)}
                                 </span>
-                                <div className="flex items-center gap-1 opacity-10 sm:opacity-0 group-hover/settlement:opacity-100 transition-all">
-                                  <button
-                                    onClick={() => setSettlementToEdit(settlement)}
-                                    className="p-1 text-zinc-300 hover:text-brand-500 transition-colors"
-                                    title="Edit payment record"
-                                  >
-                                    <Edit2 className="w-3 h-3" />
-                                  </button>
-                                  <button
-                                    onClick={() => {
-                                      if (confirm('Delete this payment record? This will revert balances.')) {
-                                        handleDeleteSettlement(settlement.id);
-                                      }
-                                    }}
-                                    className="p-1 text-zinc-300 hover:text-red-500 transition-colors"
-                                    title="Delete payment record"
-                                  >
-                                    <Trash2 className="w-3 h-3" />
-                                  </button>
+                                <div className={`flex items-center gap-1 transition-all ${isRemovedMember ? 'opacity-0' : 'opacity-10 sm:opacity-0 group-hover/settlement:opacity-100'}`}>
+                                  {!isRemovedMember && (
+                                    <>
+                                      <button
+                                        onClick={() => setSettlementToEdit(settlement)}
+                                        className="p-1 text-zinc-300 hover:text-brand-500 transition-colors"
+                                        title="Edit payment record"
+                                      >
+                                        <Edit2 className="w-3 h-3" />
+                                      </button>
+                                      <button
+                                        onClick={() => {
+                                          if (confirm('Delete this payment record? This will revert balances.')) {
+                                            handleDeleteSettlement(settlement.id);
+                                          }
+                                        }}
+                                        className="p-1 text-zinc-300 hover:text-red-500 transition-colors"
+                                        title="Delete payment record"
+                                      >
+                                        <Trash2 className="w-3 h-3" />
+                                      </button>
+                                    </>
+                                  )}
                                 </div>
                               </div>
                             </div>
@@ -573,31 +602,33 @@ export function GroupDetails() {
             </div>
 
             {/* Smart Sync Section (Always visible or in Balances?) - I'll put it at the bottom as a footer */}
-            <div className="p-3 bg-zinc-50/50 dark:bg-zinc-900/50 border-t border-zinc-100 dark:border-zinc-800">
-              <div className="flex items-center justify-between gap-4">
-                <div className="flex-1">
-                  <h3 className="text-[10px] font-black text-zinc-900 dark:text-white uppercase tracking-wider flex items-center gap-2">
-                    Smart Sync
-                    {isTogglingSmartSync && <Loader2 className="w-2.5 h-2.5 animate-spin text-slate-400" />}
-                  </h3>
-                </div>
-                <button
-                  type="button"
-                  onClick={handleToggleSmartSync}
-                  disabled={isTogglingSmartSync}
-                  className={`relative inline-flex h-4 w-8 flex-shrink-0 cursor-pointer rounded-sharp border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none overflow-hidden ${
-                    group?.simplify_debts ? 'bg-brand-500' : 'bg-zinc-300 dark:bg-zinc-800'
-                  }`}
-                >
-                  <span
-                    aria-hidden="true"
-                    className={`pointer-events-none inline-block h-3 w-3 transform rounded-sharp bg-white shadow ring-0 transition duration-200 ease-in-out ${
-                      group?.simplify_debts ? 'translate-x-[16px]' : 'translate-x-0'
+            {!isRemovedMember && (
+              <div className="p-3 bg-zinc-50/50 dark:bg-zinc-900/50 border-t border-zinc-100 dark:border-zinc-800">
+                <div className="flex items-center justify-between gap-4">
+                  <div className="flex-1">
+                    <h3 className="text-[10px] font-black text-zinc-900 dark:text-white uppercase tracking-wider flex items-center gap-2">
+                      Smart Sync
+                      {isTogglingSmartSync && <Loader2 className="w-2.5 h-2.5 animate-spin text-slate-400" />}
+                    </h3>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleToggleSmartSync}
+                    disabled={isTogglingSmartSync}
+                    className={`relative inline-flex h-4 w-8 flex-shrink-0 cursor-pointer rounded-sharp border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none overflow-hidden ${
+                      group?.simplify_debts ? 'bg-brand-500' : 'bg-zinc-300 dark:bg-zinc-800'
                     }`}
-                  />
-                </button>
+                  >
+                    <span
+                      aria-hidden="true"
+                      className={`pointer-events-none inline-block h-3 w-3 transform rounded-sharp bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                        group?.simplify_debts ? 'translate-x-[16px]' : 'translate-x-0'
+                      }`}
+                    />
+                  </button>
+                </div>
               </div>
-            </div>
+            )}
           </Card>
         </div>
 

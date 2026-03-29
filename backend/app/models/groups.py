@@ -1,5 +1,6 @@
-from sqlalchemy import Column, Integer, String, ForeignKey, Float, Boolean
+from sqlalchemy import Column, Integer, String, ForeignKey, Float, Boolean, DateTime
 from sqlalchemy.orm import relationship
+from datetime import datetime
 from app.core.database import Base
 
 class Group(Base):
@@ -21,6 +22,7 @@ class GroupMember(Base):
 
     user_id = Column(Integer, ForeignKey("users.id"), primary_key=True)
     group_id = Column(Integer, ForeignKey("groups.id"), primary_key=True)
+    removed_at = Column(DateTime, nullable=True)
 
     # Relationships
     user = relationship("User", back_populates="group_memberships")

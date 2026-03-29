@@ -69,35 +69,35 @@ def get_current_group_member(
     group_id: int,
     current_user: models.User = Depends(get_current_user),
     db: Session = Depends(get_db)
-) -> models.User:
+) -> models.GroupMember:
     # Use crud to check membership
     db_group = crud.groups.get_group(db, group_id=group_id)
     if not db_group:
         raise HTTPException(status_code=404, detail="Group not found")
         
-    user_is_member = any(m.user_id == current_user.id for m in db_group.members)
-    if not user_is_member:
+    member = next((m for m in db_group.members if m.user_id == current_user.id), None)
+    if not member:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="You are not a member of this group"
         )
-    return current_user
+    return member
 
 def get_current_bill_access(
     bill_id: int,
     current_user: models.User = Depends(get_current_user),
     db: Session = Depends(get_db)
-) -> models.User:
+) -> models.GroupMember:
     db_bill = crud.bills.get_bill(db, bill_id=bill_id)
     if not db_bill:
         raise HTTPException(status_code=404, detail="Bill not found")
         
     # Check if user is member of the bill's group
     db_group = crud.groups.get_group(db, group_id=db_bill.group_id)
-    user_is_member = any(m.user_id == current_user.id for m in db_group.members)
-    if not user_is_member:
+    member = next((m for m in db_group.members if m.user_id == current_user.id), None)
+    if not member:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="You do not have access to this bill"
         )
-    return current_user
+    return member

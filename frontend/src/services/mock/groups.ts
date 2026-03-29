@@ -75,7 +75,16 @@ export const mockGroupsService = {
   getSettlements: async (groupId: number): Promise<Settlement[]> => {
     await delay(300);
     const state = MockDB.getState();
-    return (state.settlements || []).filter(s => s.group_id === groupId);
+    const settlements = (state.settlements || []).filter(s => s.group_id === groupId);
+    
+    // Filter for historical members
+    const member = state.groupMembers.find(m => m.group_id === groupId && m.user_id === DEMO_USER.id);
+    if (member?.removed_at) {
+      const removedDate = new Date(member.removed_at).getTime();
+      return settlements.filter(s => new Date(s.date).getTime() <= removedDate);
+    }
+    
+    return settlements;
   },
 
   updateSettlement: async (_groupId: number, settlementId: number, data: { amount?: number; from_user_id?: number; to_user_id?: number; date?: string }): Promise<Settlement> => {
@@ -117,14 +126,24 @@ export const mockGroupsService = {
   removeGroupMember: async (groupId: number, userId: number): Promise<void> => {
     await delay(300);
     const state = MockDB.getState();
-    state.groupMembers = state.groupMembers.filter(m => !(m.group_id === groupId && m.user_id === userId));
-    MockDB.setState(state);
+    const member = state.groupMembers.find(m => m.group_id === groupId && m.user_id === userId);
+    if (member) {
+      member.removed_at = new Date().toISOString();
+      MockDB.setState(state);
+    }
   },
 
   getGroupBills: async (groupId: number): Promise<Bill[]> => {
     await delay(300);
     const state = MockDB.getState();
-    const bills = state.bills.filter(b => b.group_id === groupId);
+    let bills = state.bills.filter(b => b.group_id === groupId);
+    
+    // Filter for historical members
+    const member = state.groupMembers.find(m => m.group_id === groupId && m.user_id === DEMO_USER.id);
+    if (member?.removed_at) {
+      const removedDate = new Date(member.removed_at).getTime();
+      bills = bills.filter(b => new Date(b.date).getTime() <= removedDate);
+    }
     
     // Attach items and shares so the UI can compute balances
     return bills.map(bill => {

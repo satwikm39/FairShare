@@ -2,6 +2,7 @@ export interface GroupMemberResponse {
   user_id: number;
   group_id: number;
   user: User;
+  removed_at?: string | null;
 }
 
 export interface Group {
