@@ -245,10 +245,6 @@ def create_settlement(
         raise HTTPException(status_code=403, detail="Historical members cannot record payments")
     if settlement.group_id != group_id:
         raise HTTPException(status_code=400, detail="Path group_id must match body group_id")
-    
-    # Must be recording a payment involving themselves
-    if member.user_id not in [settlement.from_user_id, settlement.to_user_id]:
-        raise HTTPException(status_code=403, detail="You can only record settlements you are involved in")
         
     created = crud.settlements.create_settlement(db=db, settlement=settlement)
     
