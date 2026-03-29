@@ -169,7 +169,7 @@ export function ProfileDropdown({ isOpen, onClose, onLogout, isInline = false }:
               className={cn(
                 "w-full flex items-center justify-center gap-2 text-[10px] font-black transition-colors uppercase tracking-widest py-2.5 border rounded-sharp",
                 demoActive 
-                  ? "text-brand-600 hover:text-brand-700 border-brand-500/10 hover:bg-brand-50 dark:hover:bg-brand-900/10"
+                  ? "text-amber-600 hover:text-amber-700 border-amber-500/10 hover:bg-amber-50 dark:hover:bg-amber-900/10"
                   : "text-red-500 hover:text-red-600 border-red-500/10 hover:bg-red-50 dark:hover:bg-red-900/10"
               )}
             >

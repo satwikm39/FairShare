@@ -43,7 +43,7 @@ export function Navbar() {
   return (
     <>
       {demoActive && (
-        <div className="fixed top-0 w-full h-8 bg-brand-500 text-zinc-950 flex items-center justify-center text-[10px] sm:text-[11px] font-black z-50 shadow-lg gap-3 sm:gap-4 uppercase tracking-widest border-b border-black/5 px-4">
+        <div className="fixed top-0 w-full h-8 bg-amber-400 text-zinc-950 flex items-center justify-center text-[10px] sm:text-[11px] font-black z-50 shadow-lg gap-3 sm:gap-4 uppercase tracking-widest border-b border-black/5 px-4">
           <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
             <Zap className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-zinc-950 fill-zinc-950/10 animate-pulse shrink-0" />
             <span className="truncate text-center">Demo: Local Data</span>
