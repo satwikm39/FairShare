@@ -12,7 +12,8 @@ export function Navbar() {
   const navigate = useNavigate();
   const demoActive = isDemoMode();
   
-  const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [isDesktopProfileOpen, setIsDesktopProfileOpen] = useState(false);
+  const [isMobileProfileOpen, setIsMobileProfileOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isLogoutConfirmOpen, setIsLogoutConfirmOpen] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
@@ -69,7 +70,7 @@ export function Navbar() {
                   className="relative group/profile"
                 >
                   <div 
-                    onClick={() => setIsProfileOpen(!isProfileOpen)}
+                    onClick={() => setIsDesktopProfileOpen(!isDesktopProfileOpen)}
                     className="h-9 w-9 rounded-sharp bg-brand-50 dark:bg-brand-900/20 flex items-center justify-center text-brand-700 dark:text-brand-400 font-bold overflow-hidden border-2 border-brand-500/50 cursor-pointer hover:border-brand-500 hover:scale-105 transition-all shadow-sm shadow-brand-500/10"
                     title="Profile Setting"
                   >
@@ -80,8 +81,8 @@ export function Navbar() {
                     )}
                   </div>
                   <ProfileDropdown 
-                    isOpen={isProfileOpen} 
-                    onClose={() => setIsProfileOpen(false)} 
+                    isOpen={isDesktopProfileOpen} 
+                    onClose={() => setIsDesktopProfileOpen(false)} 
                     onLogout={openLogoutConfirm}
                   />
                 </div>
@@ -124,7 +125,7 @@ export function Navbar() {
                   <div className="relative group/profile-mobile">
                     <button
                       onClick={() => {
-                        setIsProfileOpen(!isProfileOpen);
+                        setIsMobileProfileOpen(!isMobileProfileOpen);
                       }}
                       className="w-full text-left px-3 py-2.5 rounded-sharp text-base font-bold text-zinc-700 dark:text-zinc-200 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors flex items-center gap-3 uppercase tracking-wider"
                     >
@@ -137,11 +138,11 @@ export function Navbar() {
                       </div>
                       Profile Setting
                     </button>
-                    {isProfileOpen && (
+                    {isMobileProfileOpen && (
                       <div className="pl-4 pr-4 mt-2">
                         <ProfileDropdown 
-                          isOpen={isProfileOpen} 
-                          onClose={() => setIsProfileOpen(false)} 
+                          isOpen={isMobileProfileOpen} 
+                          onClose={() => setIsMobileProfileOpen(false)} 
                           onLogout={openLogoutConfirm}
                           isInline={true}
                         />
