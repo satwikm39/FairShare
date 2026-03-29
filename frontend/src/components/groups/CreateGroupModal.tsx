@@ -55,7 +55,10 @@ export function CreateGroupModal({ isOpen, onClose, onSubmit }: CreateGroupModal
   const handlePaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
     e.preventDefault();
     const pasted = e.clipboardData.getData('text');
-    const newEmails = pasted.split(/[\s,]+/).map(em => em.trim()).filter(em => em && !emails.includes(em));
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const newEmails = pasted.split(/[\s,]+/)
+      .map(em => em.trim())
+      .filter(em => em && emailRegex.test(em) && !emails.includes(em));
     if (newEmails.length > 0) {
       setEmails(prev => [...prev, ...newEmails]);
     }
@@ -63,10 +66,16 @@ export function CreateGroupModal({ isOpen, onClose, onSubmit }: CreateGroupModal
 
   const addEmail = () => {
     const trimmed = emailInput.trim().replace(/,/g, '');
-    if (trimmed && !emails.includes(trimmed)) {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+    if (trimmed && emailRegex.test(trimmed) && !emails.includes(trimmed)) {
       setEmails(prev => [...prev, trimmed]);
+      setEmailInput('');
+    } else {
+      // If invalid or duplicate, just clear it or let them edit.
+      // Cleaning it makes it obvious it wasn't accepted.
+      setEmailInput('');
     }
-    setEmailInput('');
   };
 
   const removeLastEmail = () => {

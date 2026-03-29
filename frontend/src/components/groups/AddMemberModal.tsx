@@ -51,10 +51,19 @@ export function AddMemberModal({ isOpen, onClose, onSubmit }: AddMemberModalProp
 
   const addEmail = () => {
     const trimmed = emailInput.trim().replace(/,/g, '');
-    if (trimmed && !emails.includes(trimmed)) {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    
+    if (trimmed && emailRegex.test(trimmed) && !emails.includes(trimmed)) {
       setEmails(prev => [...prev, trimmed]);
+      setEmailInput('');
+    } else if (trimmed && !emailRegex.test(trimmed)) {
+      // Don't add if invalid, but maybe keep input or clear? 
+      // User said "check and allow only emails", so we block it.
+      // I'll keep the text but maybe a small visual hint is better.
+      // For now just don't add.
+    } else {
+      setEmailInput('');
     }
-    setEmailInput('');
   };
 
   const removeLastEmail = () => {
@@ -68,7 +77,10 @@ export function AddMemberModal({ isOpen, onClose, onSubmit }: AddMemberModalProp
   const handlePaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
     e.preventDefault();
     const pasted = e.clipboardData.getData('text');
-    const newEmails = pasted.split(/[\s,]+/).map(em => em.trim()).filter(em => em && !emails.includes(em));
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const newEmails = pasted.split(/[\s,]+/)
+      .map(em => em.trim())
+      .filter(em => em && emailRegex.test(em) && !emails.includes(em));
     if (newEmails.length > 0) {
       setEmails(prev => [...prev, ...newEmails]);
     }
