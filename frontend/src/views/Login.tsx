@@ -6,6 +6,7 @@ import { Input } from '../components/ui/Input';
 import { signInWithGoogle, signInWithEmail, signUpWithEmail } from '../config/firebase';
 import { useAuth } from '../context/AuthContext';
 import { useState } from 'react';
+import { isDemoMode } from '../config/demo';
 
 export function Login() {
   const { currentUser } = useAuth();
@@ -15,7 +16,7 @@ export function Login() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
 
-  if (currentUser) {
+  if (isDemoMode() || currentUser) {
     return <Navigate to="/dashboard" replace />;
   }
 

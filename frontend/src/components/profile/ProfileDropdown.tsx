@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { User, Loader2, Edit3, Sun, Moon, LogOut, Mail } from 'lucide-react';
+import { User, Loader2, Edit3, Sun, Moon, LogOut, Mail, Zap } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
 import { userService } from '../../services/userService';
 import { Input } from '../ui/Input';
 import { cn } from '../../lib/utils';
+import { isDemoMode } from '../../config/demo';
 
 interface ProfileDropdownProps {
   isOpen: boolean;
@@ -20,6 +21,7 @@ export function ProfileDropdown({ isOpen, onClose, onLogout, isInline = false }:
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const demoActive = isDemoMode();
 
   const isChanged = name !== (currentUser?.name || currentUser?.displayName);
 
@@ -77,7 +79,7 @@ export function ProfileDropdown({ isOpen, onClose, onLogout, isInline = false }:
             )}
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-black text-zinc-900 dark:text-white truncate uppercase tracking-tight">
+            <p className="text-sm font-black text- zinc-900 dark:text-white truncate uppercase tracking-tight">
               {currentUser?.name || currentUser?.displayName || 'User'}
             </p>
             <p className="text-[10px] font-bold text-zinc-500 dark:text-zinc-500 truncate uppercase tracking-widest flex items-center gap-1">
@@ -164,10 +166,15 @@ export function ProfileDropdown({ isOpen, onClose, onLogout, isInline = false }:
             <button
               type="button"
               onClick={onLogout}
-              className="w-full flex items-center justify-center gap-2 text-[10px] font-black text-red-500 hover:text-red-600 transition-colors uppercase tracking-widest py-2.5 border border-red-500/10 hover:bg-red-50 dark:hover:bg-red-900/10 rounded-sharp"
+              className={cn(
+                "w-full flex items-center justify-center gap-2 text-[10px] font-black transition-colors uppercase tracking-widest py-2.5 border rounded-sharp",
+                demoActive 
+                  ? "text-brand-600 hover:text-brand-700 border-brand-500/10 hover:bg-brand-50 dark:hover:bg-brand-900/10"
+                  : "text-red-500 hover:text-red-600 border-red-500/10 hover:bg-red-50 dark:hover:bg-red-900/10"
+              )}
             >
-              <LogOut className="w-3 h-3" />
-              Sign Out
+              {demoActive ? <Zap className="w-3 h-3 fill-current" /> : <LogOut className="w-3 h-3" />}
+              {demoActive ? 'Exit Demo' : 'Sign Out'}
             </button>
           </div>
         )}

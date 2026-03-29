@@ -26,6 +26,11 @@ export function Navbar() {
   const handleConfirmLogout = async () => {
     setIsLoggingOut(true);
     try {
+      if (demoActive) {
+        disableDemoMode();
+        window.location.href = '/';
+        return;
+      }
       await logout();
       navigate('/login');
       setIsLogoutConfirmOpen(false);

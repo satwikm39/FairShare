@@ -1,8 +1,19 @@
-import { Link } from 'react-router-dom';
+import { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '../components/ui/Button';
-import { Users, Receipt, SplitSquareVertical, CheckCircle2 } from 'lucide-react';
+import { Users, Receipt, SplitSquareVertical, CheckCircle2, type LucideIcon } from 'lucide-react';
+import { ConfirmModal } from '../components/ui/ConfirmModal';
+import { MockDB } from '../services/mock/db';
+import { enableDemoMode } from '../config/demo';
 
-const features = [
+interface Feature {
+  step: string;
+  title: string;
+  description: string;
+  icon: LucideIcon;
+}
+
+const features: Feature[] = [
   {
     step: '01',
     title: 'Create Groups',
@@ -30,6 +41,29 @@ const features = [
 ];
 
 export function Home() {
+  const navigate = useNavigate();
+  const [showDemoPrompt, setShowDemoPrompt] = useState(false);
+
+  const handleTryItYourself = () => {
+    const existingData = localStorage.getItem('fairshare_mock_db');
+    if (existingData) {
+      setShowDemoPrompt(true);
+    } else {
+      navigate('/demo');
+    }
+  };
+
+  const handleContinue = () => {
+    enableDemoMode();
+    navigate('/dashboard');
+  };
+
+  const handleStartFresh = () => {
+    MockDB.reset();
+    enableDemoMode();
+    navigate('/dashboard');
+  };
+
   return (
     <div className="flex-1 flex flex-col items-center justify-center px-4">
       {/* Hero */}
@@ -46,13 +80,26 @@ export function Home() {
               Go to Dashboard
             </Button>
           </Link>
-          <Link to="/demo" className="w-full sm:w-auto">
-            <Button variant="secondary" className="w-full text-sm px-8 py-3.5 font-bold tracking-wide">
-              Try It Yourself
-            </Button>
-          </Link>
+          <Button 
+            variant="secondary" 
+            className="w-full sm:w-auto text-sm px-8 py-3.5 font-bold tracking-wide"
+            onClick={handleTryItYourself}
+          >
+            Try It Yourself
+          </Button>
         </div>
       </div>
+
+      <ConfirmModal
+        isOpen={showDemoPrompt}
+        onClose={handleContinue}
+        onConfirm={handleStartFresh}
+        title="Continue Demo?"
+        description="We found existing demo data on your system. Would you like to continue where you left off or start fresh with default data?"
+        confirmText="Start Fresh"
+        cancelText="Continue with existing data"
+        variant="warning"
+      />
 
       {/* Feature Highlights */}
       <div className="w-full max-w-5xl border-t border-zinc-200 dark:border-zinc-800/60 pt-8">

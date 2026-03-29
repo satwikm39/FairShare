@@ -9,14 +9,17 @@ import { Login } from './views/Login';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { ThemeProvider } from './context/ThemeContext';
 import { ToastProvider } from './context/ToastContext';
- import { BugViewer } from './views/Admin/BugViewer';
+import { BugViewer } from './views/Admin/BugViewer';
 import { About } from './views/About';
+import { isDemoMode } from './config/demo';
 
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
   const { currentUser, loading } = useAuth();
 
   if (loading) return null;
+
+  if (isDemoMode()) return <>{children}</>;
 
   return currentUser ? <>{children}</> : <Navigate to="/login" replace />;
 }
@@ -78,14 +81,19 @@ const router = createBrowserRouter([
 
     ],
   },
-]);
+], {
+  future: {
+    v7_startTransition: true,
+    v7_relativeSplatPath: true,
+  } as any,
+});
 
 function App() {
   return (
     <ThemeProvider defaultTheme="dark" storageKey="fairshare-theme">
       <AuthProvider>
         <ToastProvider>
-          <RouterProvider router={router} />
+          <RouterProvider router={router} future={{ v7_startTransition: true } as any} />
         </ToastProvider>
       </AuthProvider>
     </ThemeProvider>
