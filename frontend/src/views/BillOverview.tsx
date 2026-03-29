@@ -316,7 +316,13 @@ export function BillOverview() {
               <p className={cn("text-sm font-semibold", selectedFile ? "text-brand-700 dark:text-brand-400" : "text-slate-700 dark:text-slate-300 group-hover:text-brand-700 dark:group-hover:text-brand-400")}>
                 {selectedFile ? selectedFile.name : "Select Receipt"}
               </p>
-              {!selectedFile && <p className="text-xs text-slate-500 dark:text-slate-500 mt-1">JPEG, PNG, or PDF</p>}
+              {!selectedFile && (
+                <div className="flex items-center justify-center gap-1.5 mt-2">
+                  <span className="text-[9px] font-black px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-500 border border-zinc-200 dark:border-zinc-700 uppercase tracking-widest">PDF</span>
+                  <span className="text-[9px] font-black px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-500 border border-zinc-200 dark:border-zinc-700 uppercase tracking-widest">PNG</span>
+                  <span className="text-[9px] font-black px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-500 border border-zinc-200 dark:border-zinc-700 uppercase tracking-widest">JPG</span>
+                </div>
+              )}
             </div>
           </div>
 
