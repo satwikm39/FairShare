@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from app import schemas, crud, models
 from app.api.deps import get_current_user, get_db, get_current_group_member
+from app.services.email import send_invite_email
 from typing import List
 
 router = APIRouter()
@@ -78,7 +79,19 @@ def add_group_member(
     # Check if already a member (could add to CRUD)
     # For now, just add them
     try:
-        return crud.groups.add_user_to_group(db=db, group_id=group_id, user_id=db_user.id)
+        new_membership = crud.groups.add_user_to_group(db=db, group_id=group_id, user_id=db_user.id)
+        
+        # Trigger invitation email
+        try:
+            send_invite_email(
+                to_email=member.email, 
+                group_name=db_group.name, 
+                invited_by_name=current_user.name
+            )
+        except Exception as email_err:
+            print(f"WARNING: Email invitation failed but user was added: {email_err}")
+            
+        return new_membership
     except Exception as e:
         # Catch potential UniqueViolation if already in group
         raise HTTPException(status_code=400, detail="User is already a member of this group")
