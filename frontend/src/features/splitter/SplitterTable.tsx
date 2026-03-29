@@ -513,9 +513,9 @@ export function SplitterTable({ bill, group, onUpdateShare, onSplitAllEqually, o
               ))}
               <div className="flex flex-col gap-2 pt-2">
                 <button onClick={addDraftRow} className="text-[10px] font-black uppercase tracking-widest text-brand-700 dark:text-brand-400 py-2 border border-brand-500/20 rounded-sharp">Add Another Row</button>
-                <div className="flex gap-2">
-                  <Button className="flex-1 h-9 text-xs" onClick={submitAllDrafts}>Save All</Button>
-                  <Button variant="outline" className="flex-1 h-9 text-xs" onClick={cancelDraft}>Cancel</Button>
+                <div className="flex items-stretch gap-2">
+                  <Button className="flex-1 text-xs" onClick={submitAllDrafts}>Save All</Button>
+                  <Button variant="outline" className="flex-1 text-xs" onClick={cancelDraft}>Cancel</Button>
                 </div>
               </div>
            </div>
@@ -834,11 +834,11 @@ export function SplitterTable({ bill, group, onUpdateShare, onSplitAllEqually, o
                 {draftError && (
                   <p className="mb-2 text-sm font-medium text-red-600 dark:text-red-400">{draftError}</p>
                 )}
-                <div className="flex flex-wrap items-center gap-2">
-                  <Button type="button" variant="primary" className="h-9 text-sm" onClick={submitAllDrafts}>
+                <div className="flex flex-wrap items-stretch gap-2">
+                  <Button type="button" variant="primary" className="text-sm" onClick={submitAllDrafts}>
                     Add all to bill
                   </Button>
-                  <Button type="button" variant="outline" className="h-9 text-sm" onClick={cancelDraft}>
+                  <Button type="button" variant="outline" className="text-sm" onClick={cancelDraft}>
                     Cancel
                   </Button>
                 </div>

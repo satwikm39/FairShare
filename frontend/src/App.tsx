@@ -11,15 +11,14 @@ import { ThemeProvider } from './context/ThemeContext';
 import { ToastProvider } from './context/ToastContext';
 import { BugViewer } from './views/Admin/BugViewer';
 import { About } from './views/About';
-import { isDemoMode } from './config/demo';
 
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
-  const { currentUser, loading } = useAuth();
+  const { currentUser, isDemoActive, loading } = useAuth();
 
   if (loading) return null;
 
-  if (isDemoMode()) return <>{children}</>;
+  if (isDemoActive) return <>{children}</>;
 
   return currentUser ? <>{children}</> : <Navigate to="/login" replace />;
 }

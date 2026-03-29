@@ -136,7 +136,7 @@ export function SettleUpModal({ isOpen, onClose, onSubmit, members, currentUserI
 
           </div>
 
-          <div className="mt-8 flex gap-3">
+          <div className="mt-8 flex items-stretch gap-3">
             <Button
               type="button"
               variant="outline"

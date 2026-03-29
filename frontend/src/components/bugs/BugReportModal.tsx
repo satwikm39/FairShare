@@ -201,7 +201,7 @@ export function BugReportModal({ isOpen, onClose }: BugReportModalProps) {
                 </div>
               )}
 
-              <div className="pt-2 flex gap-3">
+              <div className="flex items-stretch gap-3">
                 <Button
                   type="button"
                   variant="outline"

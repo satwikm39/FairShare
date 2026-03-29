@@ -297,16 +297,16 @@ export function GroupDetails() {
               </div>
             )}
           </div>
-          <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+          <div className="flex flex-col sm:flex-row sm:items-stretch gap-3 w-full sm:w-auto">
             <Button 
               variant="outline"
-              className="w-full sm:w-auto h-9 text-xs"
+              className="w-full sm:w-auto text-xs"
               onClick={() => setIsAddMemberModalOpen(true)}
             >
               Add Friend
             </Button>
             <Button 
-              className="gap-1.5 px-4 shadow-brand-500/20 w-full sm:w-auto h-9 text-xs" 
+              className="gap-1.5 px-4 shadow-brand-500/20 w-full sm:w-auto text-xs" 
               onClick={() => setIsCreateBillModalOpen(true)}
               isLoading={isCreatingBill}
             >

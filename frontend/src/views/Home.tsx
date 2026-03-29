@@ -5,6 +5,7 @@ import { Users, Receipt, SplitSquareVertical, CheckCircle2, type LucideIcon } fr
 import { ConfirmModal } from '../components/ui/ConfirmModal';
 import { MockDB } from '../services/mock/db';
 import { enableDemoMode } from '../config/demo';
+import { useAuth } from '../context/AuthContext';
 
 interface Feature {
   step: string;
@@ -42,6 +43,7 @@ const features: Feature[] = [
 
 export function Home() {
   const navigate = useNavigate();
+  const { setDemoModeActive } = useAuth();
   const [showDemoPrompt, setShowDemoPrompt] = useState(false);
 
   const handleTryItYourself = () => {
@@ -55,12 +57,14 @@ export function Home() {
 
   const handleContinue = () => {
     enableDemoMode();
+    setDemoModeActive(true);
     navigate('/dashboard');
   };
 
   const handleStartFresh = () => {
     MockDB.reset();
     enableDemoMode();
+    setDemoModeActive(true);
     navigate('/dashboard');
   };
 
@@ -74,7 +78,7 @@ export function Home() {
         <p className="text-sm text-zinc-500 dark:text-zinc-400 max-w-lg mx-auto leading-relaxed">
           Upload a receipt, tap to split items, and instantly know who owes what. FairShare does the math so you don't have to.
         </p>
-        <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
+        <div className="flex flex-col sm:flex-row items-stretch justify-center gap-4 pt-4">
           <Link to="/dashboard" className="w-full sm:w-auto">
             <Button className="w-full text-sm px-8 py-3.5 font-bold tracking-wide">
               Go to Dashboard

@@ -80,11 +80,11 @@ export function ConfirmModal({
             {description}
           </p>
           
-          <div className="mt-8 flex gap-3">
+          <div className="mt-8 flex items-stretch gap-3">
             <Button 
               type="button" 
               variant="outline" 
-              className="flex-1" 
+              className="flex-1 rounded-sharp" 
               onClick={onClose}
               disabled={isLoading}
             >
@@ -95,7 +95,7 @@ export function ConfirmModal({
               onClick={onConfirm}
               disabled={isLoading}
               className={cn(
-                "flex-1 inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-sharp text-sm font-black transition-all border active:scale-[0.98] outline-none h-11 px-4 py-2 disabled:pointer-events-none disabled:opacity-50 uppercase tracking-widest",
+                "flex-1 inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-sharp text-sm font-black transition-all border active:scale-[0.98] outline-none px-4 py-2 disabled:pointer-events-none disabled:opacity-50 uppercase tracking-widest min-h-[44px]",
                 getConfirmButtonClasses(),
                 variant === 'danger' ? 'border-red-600' : variant === 'warning' ? 'border-amber-600' : 'border-brand-500'
               )}

@@ -29,7 +29,7 @@ export function UnsavedChangesModal({
         <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400 font-medium">
           Your bill edits haven&apos;t been saved yet. Save before leaving, or discard changes.
         </p>
-        <div className="mt-6 flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:justify-end">
+        <div className="mt-6 flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:justify-end sm:items-stretch">
           <Button type="button" variant="outline" className="sm:min-w-[7rem]" onClick={onStay} disabled={isSaving}>
             Stay
           </Button>
