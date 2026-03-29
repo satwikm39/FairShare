@@ -395,7 +395,7 @@ export function GroupDetails() {
       <div className="flex flex-col lg:grid lg:grid-cols-3 gap-8 items-start mt-6">
         {/* ── Side Panel (Balances & Activity) - Top on Mobile ── */}
         <div className="order-first lg:order-last lg:col-span-1 lg:sticky lg:top-24 w-full">
-          <Card className="border-zinc-200 dark:border-zinc-800 shadow-sm bg-white dark:bg-black rounded-sharp overflow-hidden flex flex-col">
+          <Card noPadding className="border-zinc-200 dark:border-zinc-800 shadow-sm bg-white dark:bg-black rounded-sharp overflow-hidden flex flex-col">
             
             {/* Tab Container */}
             <div className="flex border-b border-zinc-100 dark:divide-zinc-900 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/50">
@@ -421,7 +421,7 @@ export function GroupDetails() {
               </button>
             </div>
 
-            <div className="p-3 space-y-4">
+            <div className="p-4 space-y-4">
               {activeTab === 'balances' ? (
                 <div className="space-y-4">
                   {/* Balances Section Header (Compact) */}
@@ -545,7 +545,7 @@ export function GroupDetails() {
                         const toUser = group?.members?.find(m => m.user_id === settlement.to_user_id)?.user;
                         
                         return (
-                          <div key={settlement.id} className="py-3 group/settlement hover:bg-zinc-50 dark:hover:bg-zinc-900/50 transition-colors">
+                          <div key={settlement.id} className="py-2 group/settlement hover:bg-zinc-50 dark:hover:bg-zinc-900/50 transition-colors">
                             <div className="flex items-center justify-between gap-2">
                               <div className="flex-1 min-w-0">
                                 <div className="flex items-center gap-1.5 flex-wrap">
