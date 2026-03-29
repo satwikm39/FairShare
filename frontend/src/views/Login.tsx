@@ -63,16 +63,16 @@ export function Login() {
   };
 
   return (
-    <div className="min-h-[80vh] flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 animate-in fade-in zoom-in-95 duration-500">
-      <Card className="max-w-md w-full space-y-8 p-10 text-center shadow-2xl border-zinc-200 dark:border-zinc-800 bg-white dark:bg-black rounded-sharp">
+    <div className="min-h-[80vh] flex items-center justify-center py-6 md:py-12 px-4 sm:px-6 lg:px-8 animate-in fade-in zoom-in-95 duration-500">
+      <Card className="max-w-md w-full space-y-6 md:space-y-8 p-6 md:p-10 text-center shadow-2xl border-zinc-200 dark:border-zinc-800 bg-white dark:bg-black rounded-sharp">
         <div>
-          <div className="mx-auto flex items-center justify-center h-20 w-20 rounded-sharp bg-brand-50 dark:bg-brand-900/20 mb-8 border border-brand-500/10">
-            <LogIn className="h-10 w-10 text-brand-600 dark:text-brand-400" />
+          <div className="mx-auto flex items-center justify-center h-14 w-14 md:h-20 md:w-20 rounded-sharp bg-brand-50 dark:bg-brand-900/20 mb-4 md:mb-8 border border-brand-500/10">
+            <LogIn className="h-7 w-7 md:h-10 md:w-10 text-brand-600 dark:text-brand-400" />
           </div>
-          <h2 className="text-4xl font-black text-zinc-900 dark:text-white tracking-tighter uppercase mb-4">
+          <h2 className="text-2xl md:text-4xl font-black text-zinc-900 dark:text-white tracking-tighter uppercase mb-2 md:mb-4">
             FairShare
           </h2>
-          <p className="text-xs text-zinc-500 dark:text-zinc-500 font-bold uppercase tracking-widest leading-relaxed mb-6">
+          <p className="text-[10px] md:text-xs text-zinc-500 dark:text-zinc-500 font-bold uppercase tracking-widest leading-relaxed mb-4 md:mb-6">
             Professional bill splitting <br /> for modern groups.
           </p>
         </div>
@@ -105,7 +105,7 @@ export function Login() {
           
           <Button 
             type="submit"
-            className="w-full h-14 text-sm font-black uppercase tracking-widest shadow-brand-500/10 border-brand-500/20"
+            className="w-full h-12 md:h-14 text-sm font-black uppercase tracking-widest shadow-brand-500/10 border-brand-500/20"
             isLoading={isLoading}
           >
             {isSignUp ? 'Create Account' : 'Sign In'}
@@ -123,12 +123,12 @@ export function Login() {
           </button>
         </div>
 
-        <div className="mt-8 pt-6 border-t border-zinc-200 dark:border-zinc-800">
+        <div className="mt-6 pt-4 md:mt-8 md:pt-6 border-t border-zinc-200 dark:border-zinc-800">
           <p className="text-xs text-zinc-500 font-bold uppercase tracking-widest mb-4">Or continue with</p>
           <Button 
             type="button"
             variant="outline"
-            className="w-full h-14 text-sm font-bold shadow-sm flex items-center justify-center gap-3"
+            className="w-full h-12 md:h-14 text-sm font-bold shadow-sm flex items-center justify-center gap-3"
             onClick={handleGoogleLogin}
             disabled={isLoading}
             isLoading={isLoading}
