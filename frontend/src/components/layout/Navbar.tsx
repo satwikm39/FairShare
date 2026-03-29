@@ -8,9 +8,9 @@ import { ConfirmModal } from '../ui/ConfirmModal';
 import { isDemoMode, disableDemoMode } from '../../config/demo';
 
 export function Navbar() {
-  const { currentUser } = useAuth();
+  const { currentUser, isDemoActive, setDemoModeActive } = useAuth();
   const navigate = useNavigate();
-  const demoActive = isDemoMode();
+  const demoActive = isDemoActive;
   
   const [isDesktopProfileOpen, setIsDesktopProfileOpen] = useState(false);
   const [isMobileProfileOpen, setIsMobileProfileOpen] = useState(false);
@@ -28,6 +28,7 @@ export function Navbar() {
     try {
       if (demoActive) {
         disableDemoMode();
+        setDemoModeActive(false);
         window.location.href = '/';
         return;
       }
@@ -49,7 +50,7 @@ export function Navbar() {
             <span className="truncate text-center">Demo: Local Data</span>
           </div>
           <button 
-            onClick={() => { disableDemoMode(); window.location.href = '/'; }}
+            onClick={() => { disableDemoMode(); setDemoModeActive(false); window.location.href = '/'; }}
             className="underline underline-offset-2 hover:opacity-75 transition-opacity shrink-0"
           >
             Exit Demo

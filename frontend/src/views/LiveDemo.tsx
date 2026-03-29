@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Rocket, Globe, Database, UserX, Clock } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import { enableDemoMode } from '../config/demo';
 import { ConfirmModal } from '../components/ui/ConfirmModal';
 import { MockDB } from '../services/mock/db';
@@ -23,6 +24,7 @@ const bullets = [
 
 export function LiveDemo() {
   const navigate = useNavigate();
+  const { setDemoModeActive } = useAuth();
   const [showDemoPrompt, setShowDemoPrompt] = useState(false);
 
   const handleLaunchDemo = () => {
@@ -31,18 +33,21 @@ export function LiveDemo() {
       setShowDemoPrompt(true);
     } else {
       enableDemoMode();
+      setDemoModeActive(true);
       navigate('/dashboard');
     }
   };
 
   const handleContinue = () => {
     enableDemoMode();
+    setDemoModeActive(true);
     navigate('/dashboard');
   };
 
   const handleStartFresh = () => {
     MockDB.reset();
     enableDemoMode();
+    setDemoModeActive(true);
     navigate('/dashboard');
   };
 

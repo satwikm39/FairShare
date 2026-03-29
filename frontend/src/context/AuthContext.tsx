@@ -10,21 +10,30 @@ import { isDemoMode } from '../config/demo';
 
 interface AuthContextType {
   currentUser: (FirebaseUser & Partial<BackendUser>) | null;
+  isDemoActive: boolean;
   loading: boolean;
   refreshUserData: () => Promise<void>;
+  setDemoModeActive: (active: boolean) => void;
 }
 
 const AuthContext = createContext<AuthContextType>({
   currentUser: null,
+  isDemoActive: false,
   loading: true,
-  refreshUserData: async () => {}
+  refreshUserData: async () => {},
+  setDemoModeActive: () => {}
 });
 
 export const useAuth = () => useContext(AuthContext);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [currentUser, setCurrentUser] = useState<(FirebaseUser & Partial<BackendUser>) | null>(null);
+  const [isDemoActive, setIsDemoActive] = useState(isDemoMode());
   const [loading, setLoading] = useState(true);
+
+  const setDemoModeActive = (active: boolean) => {
+    setIsDemoActive(active);
+  };
 
   const fetchBackendUser = async (firebaseUser: FirebaseUser) => {
     try {
@@ -37,7 +46,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const refreshUserData = async () => {
-    if (isDemoMode()) {
+    if (isDemoActive) {
       setCurrentUser(DEMO_USER as any);
       return;
     }
@@ -47,7 +56,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   useEffect(() => {
-    if (isDemoMode()) {
+    if (isDemoActive) {
       setCurrentUser(DEMO_USER as any);
       setLoading(false);
       return () => {};
@@ -74,7 +83,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }
 
   return (
-    <AuthContext.Provider value={{ currentUser, loading, refreshUserData }}>
+    <AuthContext.Provider value={{ currentUser, isDemoActive, loading, refreshUserData, setDemoModeActive }}>
       {children}
     </AuthContext.Provider>
   );
