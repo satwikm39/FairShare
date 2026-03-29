@@ -279,7 +279,7 @@ export function SplitterTable({ bill, group, onUpdateShare, onSplitAllEqually, o
                     <div 
                       key={user.id} 
                       className={cn(
-                        "flex flex-col gap-1 p-2 rounded-sharp transition-all duration-300",
+                        "flex flex-col gap-1 p-2 rounded-sharp transition-all duration-300 group",
                         currentShares > 0 
                           ? "bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800" 
                           : "bg-zinc-100/50 dark:bg-zinc-900/50 border border-transparent"
@@ -701,7 +701,6 @@ export function SplitterTable({ bill, group, onUpdateShare, onSplitAllEqually, o
                 {users.map((user, idx) => {
                   const userShareObj = item.shares.find(s => s.user_id === user.id);
                   const currentShares = userShareObj ? userShareObj.share_count : 0;
-                  const isCurrentUser = user.id === currentUser?.id;
                   
                   // Calculate cost for this specific user for this specific item
                   const itemCostPerShare = totalItemShares > 0 ? item.unit_cost / totalItemShares : 0;
@@ -711,7 +710,7 @@ export function SplitterTable({ bill, group, onUpdateShare, onSplitAllEqually, o
                     <td 
                       key={user.id} 
                       className={cn(
-                        "p-5 text-center w-[120px] min-w-[120px] transition-all duration-300",
+                        "p-5 text-center w-[120px] min-w-[120px] transition-all duration-300 group",
                         idx !== users.length - 1 && "border-r border-zinc-200/50 dark:border-zinc-700/50",
                         currentShares > 0 && "bg-zinc-100/50 dark:bg-zinc-800/30"
                       )}
@@ -745,10 +744,7 @@ export function SplitterTable({ bill, group, onUpdateShare, onSplitAllEqually, o
                       </div>
                       
                       {currentShares > 0 && (
-                        <div className={cn(
-                          "text-[9px] font-black uppercase tracking-widest animate-in fade-in zoom-in-95 duration-200",
-                          isCurrentUser ? "text-brand-600 dark:text-brand-400" : "text-zinc-500 dark:text-zinc-500"
-                        )}>
+                        <div className="text-xs font-black uppercase tracking-widest text-zinc-500 dark:text-zinc-500 opacity-0 group-hover:opacity-100 transition-opacity">
                           {currencySign}{userCostForItem.toFixed(2)}
                         </div>
                       )}
