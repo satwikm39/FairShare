@@ -19,14 +19,13 @@ export function BugReportButton() {
           className={cn(
             "p-3 rounded-full shadow-lg transition-all duration-300 transform",
             "bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 hover:scale-110",
-            "flex items-center gap-2 px-4 group-hover:pr-4"
+            "flex items-center justify-center group-hover:px-4 group-hover:gap-2"
           )}
         >
-          <Bug className="w-5 h-5 animate-pulse" />
+          <Bug className="w-5 h-5" />
           <span className="max-w-0 overflow-hidden whitespace-nowrap group-hover:max-w-xs transition-all duration-500 font-medium text-sm">
             Report Bug
           </span>
-          <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full border-2 border-white dark:border-zinc-900" />
         </button>
       </div>
 

@@ -431,7 +431,7 @@ export function SplitterTable({ bill, group, onUpdateShare, onSplitAllEqually, o
                   {onRemoveUser && user.id !== currentUser?.id && (
                     <button
                       onClick={(e) => { e.stopPropagation(); onRemoveUser(user.id, user.name); }}
-                      className="absolute -top-1.5 -right-1.5 w-4.5 h-4.5 flex items-center justify-center bg-red-100 dark:bg-red-900/80 rounded-sharp text-zinc-400 hover:text-red-600 dark:text-zinc-400 dark:hover:text-red-400 transition-colors active:scale-90 shadow-sm border border-red-200 dark:border-red-800"
+                      className="absolute -top-1.5 -right-1.5 w-4.5 h-4.5 flex items-center justify-center bg-zinc-100 dark:bg-zinc-800 rounded-sharp text-zinc-400 hover:text-red-600 dark:text-zinc-500 dark:hover:text-red-500 transition-colors active:scale-90 shadow-sm border border-zinc-200 dark:border-zinc-700"
                       title={`Remove ${user.name}`}
                     >
                       <X className="w-3 h-3" />
@@ -612,7 +612,7 @@ export function SplitterTable({ bill, group, onUpdateShare, onSplitAllEqually, o
                     {onRemoveUser && user.id !== currentUser?.id && (
                       <button
                         onClick={() => onRemoveUser(user.id, user.name)}
-                        className="absolute -top-2 -right-2 w-4.5 h-4.5 flex items-center justify-center bg-red-100 dark:bg-red-900/80 rounded-sharp text-zinc-400 hover:text-red-600 dark:text-zinc-400 dark:hover:text-red-400 transition-colors shadow-sm border border-red-200 dark:border-red-800"
+                        className="absolute -top-2 -right-2 w-4.5 h-4.5 flex items-center justify-center bg-zinc-100 dark:bg-zinc-800 rounded-sharp text-zinc-400 hover:text-red-600 dark:text-zinc-500 dark:hover:text-red-500 transition-colors shadow-sm border border-zinc-200 dark:border-zinc-700"
                         title={`Remove ${user.name} from this bill`}
                       >
                         <X className="w-3 h-3" />

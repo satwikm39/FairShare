@@ -285,7 +285,7 @@ export function GroupDetails() {
                       {!isMe && (
                         <button
                           onClick={() => setMemberToRemove({ user_id: member.user_id, name: member.user?.name || member.user?.email || 'this member' })}
-                          className="ml-1 p-0.5 bg-red-100 dark:bg-red-900/80 rounded-sharp text-zinc-400 hover:text-red-600 dark:text-zinc-400 dark:hover:text-red-400 transition-colors border border-red-200 dark:border-red-800"
+                          className="ml-1 p-0.5 bg-zinc-100 dark:bg-zinc-800 rounded-sharp text-zinc-400 hover:text-red-600 dark:text-zinc-500 dark:hover:text-red-500 transition-colors border border-zinc-200 dark:border-zinc-700"
                           title={`Remove ${member.user?.name || 'member'} from group`}
                         >
                           <X className="w-2.5 h-2.5" />
