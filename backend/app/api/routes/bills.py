@@ -13,9 +13,8 @@ _bill_table_sync_service = BillTableSyncService()
 def read_bill(
     bill_id: int, 
     db: Session = Depends(get_db),
-    current_user: models.User = Depends(get_current_bill_access)
+    db_bill: models.Bill = Depends(get_current_bill_access)
 ):
-    db_bill = crud.bills.get_bill(db, bill_id=bill_id)
     return db_bill
 
 @router.put("/{bill_id}", response_model=schemas.Bill)
@@ -23,12 +22,8 @@ def update_bill_details(
     bill_id: int, 
     bill_update: schemas.BillUpdate, 
     db: Session = Depends(get_db),
-    current_user: models.User = Depends(get_current_bill_access)
+    db_bill: models.Bill = Depends(get_current_bill_access)
 ):
-    db_bill = crud.bills.get_bill(db, bill_id=bill_id)
-    if db_bill is None:
-        raise HTTPException(status_code=404, detail="Bill not found")
-    
     update_data = bill_update.model_dump(exclude_unset=True)
     group_id = db_bill.group_id
     result = crud.bills.update_bill(db=db, bill_id=bill_id, **update_data)
@@ -44,12 +39,10 @@ def update_bill_details(
 def delete_bill(
     bill_id: int, 
     db: Session = Depends(get_db),
-    current_user: models.User = Depends(get_current_bill_access)
+    db_bill: models.Bill = Depends(get_current_bill_access)
 ):
     group_id = db_bill.group_id
-    db_bill = crud.bills.delete_bill(db=db, bill_id=bill_id)
-    if db_bill is None:
-        raise HTTPException(status_code=404, detail="Bill not found")
+    crud.bills.delete_bill(db=db, bill_id=bill_id)
     
     # Recompute debts after deletion
     from app.services.debts import recompute_group_debts
@@ -61,12 +54,9 @@ def add_user_to_bill(
     bill_id: int,
     user_id: int,
     db: Session = Depends(get_db),
-    current_user: models.User = Depends(get_current_bill_access)
+    db_bill: models.Bill = Depends(get_current_bill_access)
 ):
     """Add a group member as a participant on this bill."""
-    db_bill = crud.bills.get_bill(db, bill_id=bill_id)
-    if db_bill is None:
-        raise HTTPException(status_code=404, detail="Bill not found")
     db_group = crud.groups.get_group(db, db_bill.group_id)
     group_member_ids = [m.user_id for m in db_group.members] if db_group else []
     try:
@@ -83,13 +73,9 @@ def remove_user_from_bill(
     bill_id: int,
     user_id: int,
     db: Session = Depends(get_db),
-    current_user: models.User = Depends(get_current_bill_access)
+    db_bill: models.Bill = Depends(get_current_bill_access)
 ):
     """Remove user from bill (shares and participant status)."""
-    db_bill = crud.bills.get_bill(db, bill_id=bill_id)
-    if db_bill is None:
-        raise HTTPException(status_code=404, detail="Bill not found")
-
     crud.bills.remove_user_from_bill(db=db, bill_id=bill_id, user_id=user_id)
 
     from app.services.debts import recompute_group_debts
@@ -101,12 +87,8 @@ def create_item_for_bill(
     bill_id: int, 
     item: schemas.BillItemCreate, 
     db: Session = Depends(get_db),
-    current_user: models.User = Depends(get_current_bill_access)
+    db_bill: models.Bill = Depends(get_current_bill_access)
 ):
-    db_bill = crud.bills.get_bill(db, bill_id=bill_id)
-    if not db_bill:
-        raise HTTPException(status_code=404, detail="Bill not found")
-    
     item = crud.bills.create_bill_item(db=db, bill_id=bill_id, item=item)
     
     # Recompute debts when item added
@@ -181,7 +163,7 @@ def sync_bill_table(
     bill_id: int,
     body: schemas.BillTableSyncRequest,
     db: Session = Depends(get_db),
-    current_user: models.User = Depends(get_current_bill_access),
+    db_bill: models.Bill = Depends(get_current_bill_access),
 ):
     """
     Persist line items (including staged rows), tax, and all shares in one request.
@@ -197,12 +179,8 @@ def update_shares_bulk(
     bill_id: int, 
     shares: list[schemas.ItemShareUpdateBulk], 
     db: Session = Depends(get_db),
-    current_user: models.User = Depends(get_current_bill_access)
+    db_bill: models.Bill = Depends(get_current_bill_access)
 ):
-    db_bill = crud.bills.get_bill(db, bill_id=bill_id)
-    if db_bill is None:
-        raise HTTPException(status_code=404, detail="Bill not found")
-        
     result = crud.bills.add_item_shares_bulk(db=db, bill_id=bill_id, shares=shares)
 
     # Recompute cached debts when shares change
@@ -216,20 +194,17 @@ async def upload_receipt(
     bill_id: int, 
     file: UploadFile = File(...), 
     db: Session = Depends(get_db),
-    current_user: models.User = Depends(get_current_bill_access)
+    db_bill: models.Bill = Depends(get_current_bill_access),
+    current_user: models.User = Depends(get_current_user)
 ):
     print(f"DEBUG: Upload route called for bill_id: {bill_id}")
     
-    # Check OCR usage limit (reusing the textract_usage_count field for compatibility)
+    # Check OCR usage limit
     if current_user.textract_usage_count >= 2:
         raise HTTPException(
             status_code=403, 
             detail="OCR limit reached. Premium features coming soon!"
         )
-    # 1. Check if bill exists
-    db_bill = crud.bills.get_bill(db, bill_id=bill_id)
-    if db_bill is None:
-        raise HTTPException(status_code=404, detail="Bill not found")
 
     # 2. Upload file to S3
     try:
@@ -253,7 +228,6 @@ async def upload_receipt(
         print(f"DEBUG: Gemini returned {len(parsed_items)} items and ${extracted_tax} tax")
         
         # Update the bill with the extracted tax *before* saving items 
-        # so recalculate_bill_totals will use the new tax
         if extracted_tax > 0:
             crud.bills.update_bill(db=db, bill_id=bill_id, total_tax=extracted_tax)
             

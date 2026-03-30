@@ -87,7 +87,7 @@ def get_current_bill_access(
     bill_id: int,
     current_user: models.User = Depends(get_current_user),
     db: Session = Depends(get_db)
-) -> models.GroupMember:
+) -> models.Bill:
     db_bill = crud.bills.get_bill(db, bill_id=bill_id)
     if not db_bill:
         raise HTTPException(status_code=404, detail="Bill not found")
@@ -100,4 +100,4 @@ def get_current_bill_access(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="You do not have access to this bill"
         )
-    return member
+    return db_bill
