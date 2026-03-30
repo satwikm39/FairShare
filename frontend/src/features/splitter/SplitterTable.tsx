@@ -655,7 +655,7 @@ export function SplitterTable({ bill, group, onUpdateShare, onSplitAllEqually, o
                   className="p-3 border-r border-zinc-200/50 dark:border-zinc-700/50 item-name-col sticky left-0 z-20 bg-white dark:bg-black"
                   style={{ width: `${itemNameColWidth}px`, minWidth: `${itemNameColWidth}px`, maxWidth: `${itemNameColWidth}px` }}
                 >
-                  <div className="flex items-center gap-2 group/item">
+                  <div className="flex items-center gap-2 group/item min-w-0 overflow-hidden">
                     {onDeleteItem && (
                       <button
                         onClick={() => {
@@ -663,7 +663,7 @@ export function SplitterTable({ bill, group, onUpdateShare, onSplitAllEqually, o
                             onDeleteItem(item.id);
                           }
                         }}
-                        className="p-1.5 text-zinc-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 rounded transition-colors"
+                        className="shrink-0 p-1.5 text-zinc-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 rounded transition-colors"
                         title="Delete item"
                       >
                         <Trash2 className="w-4 h-4" />
@@ -674,10 +674,11 @@ export function SplitterTable({ bill, group, onUpdateShare, onSplitAllEqually, o
                       value={item.item_name}
                       onChange={(e) => onUpdateItemDetails?.(item.id, e.target.value, item.unit_cost)}
                       className={cn(
-                        "w-full min-w-0 bg-transparent border-0 border-b border-transparent hover:border-zinc-300 dark:hover:border-zinc-700 focus:border-brand-500 focus:ring-0 px-2 py-1.5 font-bold text-zinc-900 dark:text-zinc-100 transition-colors uppercase tracking-tight text-sm",
+                        "w-full min-w-0 bg-transparent border-0 border-b border-transparent hover:border-zinc-300 dark:hover:border-zinc-700 focus:border-brand-500 focus:ring-0 px-2 py-1.5 font-bold text-zinc-900 dark:text-zinc-100 transition-colors uppercase tracking-tight text-sm truncate",
                         !onUpdateItemDetails && "pointer-events-none"
                       )}
                       placeholder="Item Name"
+                      title={item.item_name}
                     />
                   </div>
                 </td>
@@ -811,7 +812,7 @@ export function SplitterTable({ bill, group, onUpdateShare, onSplitAllEqually, o
                         className="flex items-center gap-1 rounded-sharp bg-brand-50 px-3 py-1.5 text-[10px] font-black uppercase tracking-widest text-brand-700 border border-brand-500/20 hover:border-brand-500 dark:bg-brand-900/20 dark:text-brand-400 transition-all"
                       >
                         <Plus className="h-3.5 w-3.5" />
-                        Another row
+                        Item
                       </button>
                     )}
                     {draftRows.length > 1 && (
