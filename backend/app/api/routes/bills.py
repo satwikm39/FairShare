@@ -240,7 +240,10 @@ async def upload_receipt(
     db.add(current_user)
     db.commit()
 
-    # 4. Clear existing items efficiently
+    # 4. Clear existing items (delete shares first to satisfy FK constraint)
+    existing_item_ids = [item.id for item in db.query(models.BillItem.id).filter(models.BillItem.bill_id == bill_id).all()]
+    if existing_item_ids:
+        db.query(models.ItemShare).filter(models.ItemShare.item_id.in_(existing_item_ids)).delete(synchronize_session=False)
     db.query(models.BillItem).filter(models.BillItem.bill_id == bill_id).delete(synchronize_session=False)
 
     # 5. Save items to DB in bulk
