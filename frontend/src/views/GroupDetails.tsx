@@ -381,7 +381,8 @@ export function GroupDetails() {
                   <Plus className="w-3.5 h-3.5 mr-1" /> Add Friend
                 </Button>
                 <Button 
-                  className="w-full sm:w-auto h-9 text-xs rounded-sharp bg-zinc-950 dark:bg-white text-white dark:text-zinc-950 hover:bg-zinc-800 dark:hover:bg-zinc-100"
+                  variant="primary"
+                  className="w-full sm:w-auto h-9 text-xs rounded-sharp"
                   onClick={() => setIsCreateBillModalOpen(true)}
                 >
                   <Receipt className="w-3.5 h-3.5 mr-1" /> New Bill
@@ -398,23 +399,23 @@ export function GroupDetails() {
           <Card noPadding className="border-zinc-200 dark:border-zinc-800 shadow-sm bg-white dark:bg-black rounded-sharp overflow-hidden flex flex-col">
             
             {/* Tab Container */}
-            <div className="flex border-b border-zinc-100 dark:divide-zinc-900 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/50">
+            <div className="flex border-b border-zinc-100 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/50">
               <button 
                 onClick={() => setActiveTab('balances')}
-                className={`flex-1 py-3 text-xs font-black uppercase tracking-widest transition-all ${
+                className={`flex-1 py-3 text-xs font-black uppercase tracking-widest transition-all -mb-px ${
                   activeTab === 'balances' 
-                    ? 'text-brand-600 dark:text-brand-400 bg-white dark:bg-black border-b-2 border-brand-500' 
-                    : 'text-zinc-500 hover:text-zinc-900 dark:text-zinc-500 dark:hover:text-zinc-300'
+                    ? 'text-brand-600 dark:text-brand-500 bg-white dark:bg-black border-b-2 border-brand-500 z-10' 
+                    : 'text-zinc-500 hover:text-zinc-900 dark:text-zinc-500 dark:hover:text-zinc-300 border-b-2 border-transparent'
                 }`}
               >
                 Balances
               </button>
               <button 
                 onClick={() => setActiveTab('activity')}
-                className={`flex-1 py-3 text-xs font-black uppercase tracking-widest transition-all ${
+                className={`flex-1 py-3 text-xs font-black uppercase tracking-widest transition-all -mb-px ${
                   activeTab === 'activity' 
-                    ? 'text-brand-600 dark:text-brand-400 bg-white dark:bg-black border-b-2 border-brand-500' 
-                    : 'text-zinc-500 hover:text-zinc-900 dark:text-zinc-500 dark:hover:text-zinc-300'
+                    ? 'text-brand-600 dark:text-brand-500 bg-white dark:bg-black border-b-2 border-brand-500 z-10' 
+                    : 'text-zinc-500 hover:text-zinc-900 dark:text-zinc-500 dark:hover:text-zinc-300 border-b-2 border-transparent'
                 }`}
               >
                 Activity
@@ -660,7 +661,7 @@ export function GroupDetails() {
               sortedBills.map(bill => (
                 <div key={bill.id} className="relative group/bill">
                   <Link to={`/bills/${bill.id}`} className="block">
-                    <Card className="border border-zinc-200 dark:border-zinc-800 shadow-sm hover:shadow-lg hover:border-brand-500 dark:hover:border-brand-500 transition-all duration-300 py-4 px-6 bg-white dark:bg-black rounded-sharp">
+                    <Card className="border border-zinc-200 dark:border-zinc-800 shadow-sm hover:shadow-lg hover:border-brand-500 dark:hover:border-brand-500 hover:bg-brand-50 dark:hover:bg-brand-500/10 transition-all duration-300 py-4 px-6 bg-white dark:bg-black rounded-sharp">
                       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                         
                         {/* Bill Info Section */}

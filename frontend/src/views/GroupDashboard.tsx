@@ -136,7 +136,7 @@ export function GroupDashboard() {
           {groups.map(group => (
             <div key={group.id} className="relative group">
               <Link to={`/groups/${group.id}`} className="block h-full">
-                <Card className="h-full border border-zinc-200 dark:border-zinc-800 shadow-sm hover:shadow-xl hover:border-brand-500 transition-all duration-300 bg-white dark:bg-black rounded-sharp">
+                <Card className="h-full border border-zinc-200 dark:border-zinc-800 shadow-sm hover:shadow-xl hover:border-brand-500 dark:hover:border-brand-500 hover:bg-brand-50 dark:hover:bg-brand-500/10 transition-all duration-300 bg-white dark:bg-black rounded-sharp">
                   <div className="flex flex-col h-full justify-between gap-4">
                     <div>
                       <h3 className="text-2xl font-black text-zinc-900 dark:text-white group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors pr-8 uppercase tracking-tighter">
@@ -186,7 +186,7 @@ export function GroupDashboard() {
             <button 
             onClick={() => setIsModalOpen(true)}
             disabled={isCreating}
-            className="h-full min-h-[220px] rounded-sharp border border-dashed border-zinc-200 dark:border-zinc-800 hover:border-brand-500 hover:bg-zinc-50 dark:hover:bg-zinc-900/50 transition-all flex flex-col justify-center items-center text-zinc-500 dark:text-zinc-500 hover:text-brand-600 dark:hover:text-brand-400 gap-4 group disabled:opacity-50"
+            className="h-full min-h-[220px] rounded-sharp border border-dashed border-zinc-200 dark:border-zinc-800 hover:border-brand-500 dark:hover:border-brand-500 hover:bg-brand-50 dark:hover:bg-brand-500/10 transition-all flex flex-col justify-center items-center text-zinc-500 dark:text-zinc-500 hover:text-brand-600 dark:hover:text-brand-400 gap-4 group disabled:opacity-50"
           >
             <div className="w-16 h-16 rounded-sharp bg-zinc-50 dark:bg-zinc-900 group-hover:bg-brand-50 dark:group-hover:bg-brand-900/30 flex items-center justify-center transition-colors border border-zinc-200 dark:border-zinc-800">
               {isCreating ? <Loader2 className="w-7 h-7 animate-spin" /> : <Plus className="w-7 h-7" />}
