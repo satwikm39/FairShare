@@ -79,14 +79,14 @@ def add_group_member(
     if db_group is None:
         raise HTTPException(status_code=404, detail="Group not found")
         
-    db_user = crud.users.get_user_by_email(db, email=member.email)
+    db_user = crud.users.get_user_by_email(db, email=member_data.email)
     if db_user is None:
         # Create a placeholder user for invitations
-        db_user = models.User(email=member.email, name=None)
+        db_user = models.User(email=member_data.email, name=None)
         db.add(db_user)
         db.commit()
         db.refresh(db_user)
-        print(f"DEBUG: Created placeholder user for email {member.email}")
+        print(f"DEBUG: Created placeholder user for email {member_data.email}")
         
     # Check if already a member (could add to CRUD)
     # For now, just add them
