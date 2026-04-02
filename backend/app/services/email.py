@@ -28,7 +28,7 @@ def send_invite_email(to_email: str, group_name: str, invited_by_name: Optional[
         <p style="color: #4b5563; font-size: 16px; line-height: 1.5; margin-bottom: 32px;">
             FairShare makes it easy to split bills, track debts, and settle up with friends.
         </p>
-        <a href="https://fairshare.app/dashboard" style="display: inline-block; background-color: #10b981; color: white; padding: 12px 24px; border-radius: 8px; font-weight: 700; text-decoration: none; text-transform: uppercase; font-size: 14px; letter-spacing: 0.05em;">Join the Group</a>
+        <a href="https://fair-share.online/dashboard" style="display: inline-block; background-color: #10b981; color: white; padding: 12px 24px; border-radius: 8px; font-weight: 700; text-decoration: none; text-transform: uppercase; font-size: 14px; letter-spacing: 0.05em;">Join the Group</a>
         <hr style="margin-top: 40px; border: 0; border-top: 1px solid #e5e7eb;" />
         <p style="color: #9ca3af; font-size: 12px; margin-top: 16px;">
             If you didn't expect this invitation, you can safely ignore this email.
