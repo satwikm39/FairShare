@@ -50,9 +50,23 @@ export function useBill(initialBillId: number, options?: UseBillOptions) {
   const hasInvalidItems =
     bill?.items.some((item) => item.shares.reduce((sum, share) => sum + share.share_count, 0) === 0) ?? false;
 
+  // Refs to snapshot state at save-start for optimistic merging.
+  const billRef = useRef(bill);
+  billRef.current = bill;
+  const modifiedItemsRef = useRef(modifiedItems);
+  modifiedItemsRef.current = modifiedItems;
+  const modifiedTaxRef = useRef(modifiedTax);
+  modifiedTaxRef.current = modifiedTax;
+
   /** Single API attempt - no retries. */
   const syncBillToServer = useCallback(async () => {
     if (!bill) return;
+
+    // Snapshot the state we're about to send so we can diff against it later.
+    const snapshotBill = bill;
+    const snapshotModifiedItems = { ...modifiedItems };
+    const snapshotModifiedTax = modifiedTax;
+
     setIsSavingShares(true);
     setError(null);
     try {
@@ -84,10 +98,156 @@ export function useBill(initialBillId: number, options?: UseBillOptions) {
         new_items: newItems,
       });
 
-      setBill(updated);
-      setModifiedItems({});
-      setModifiedTax(null);
-      setHasUnsavedChanges(false);
+      // --- Optimistic merge: preserve edits made while save was in-flight ---
+      const currentBill = billRef.current;
+      const currentModifiedItems = modifiedItemsRef.current;
+      const currentModifiedTax = modifiedTaxRef.current;
+
+      // Build a map from temp_id → server-assigned id for items created in this save.
+      const tempIdToServerId = new Map<number, number>();
+      if (updated.items && snapshotBill.items) {
+        for (const snapItem of snapshotBill.items) {
+          if (snapItem.id < 0) {
+            // Find matching server item by name + cost (server won't have the temp id)
+            const match = updated.items.find(
+              (si) => si.item_name === snapItem.item_name && si.unit_cost === snapItem.unit_cost && si.id > 0
+            );
+            if (match) tempIdToServerId.set(snapItem.id, match.id);
+          }
+        }
+      }
+
+      // Detect whether the user made any changes while the save was in-flight
+      // by comparing current refs against the snapshot we sent.
+      let hasInflightEdits = false;
+
+      // Check for in-flight item detail edits (new keys or changed values vs snapshot)
+      const inflightItemEdits: Record<number, { item_name?: string; unit_cost?: number }> = {};
+      for (const [idStr, data] of Object.entries(currentModifiedItems)) {
+        const id = Number(idStr);
+        const snapData = snapshotModifiedItems[id];
+        if (!snapData || snapData.item_name !== data.item_name || snapData.unit_cost !== data.unit_cost) {
+          inflightItemEdits[id] = data;
+          hasInflightEdits = true;
+        }
+      }
+
+      // Check for in-flight tax edits
+      let inflightTax: number | null = null;
+      if (currentModifiedTax !== null && currentModifiedTax !== snapshotModifiedTax) {
+        inflightTax = currentModifiedTax;
+        hasInflightEdits = true;
+      }
+
+      // Check for in-flight share edits by comparing current bill items against snapshot
+      const inflightShareEdits = new Map<string, number>(); // "itemId:userId" → share_count
+      if (currentBill && currentBill !== snapshotBill) {
+        for (const currentItem of currentBill.items) {
+          // Only compare items that existed in the snapshot (not newly added during flight)
+          const snapItem = snapshotBill.items.find((si) => si.id === currentItem.id);
+          if (!snapItem) {
+            // Entirely new item added during save - mark as in-flight
+            hasInflightEdits = true;
+            continue;
+          }
+          for (const share of currentItem.shares) {
+            const snapShare = snapItem.shares.find((ss) => ss.user_id === share.user_id);
+            const snapCount = snapShare ? snapShare.share_count : 0;
+            if (share.share_count !== snapCount) {
+              inflightShareEdits.set(`${currentItem.id}:${share.user_id}`, share.share_count);
+              hasInflightEdits = true;
+            }
+          }
+          // Check for shares removed during flight
+          for (const snapShare of snapItem.shares) {
+            const currentShare = currentItem.shares.find((cs) => cs.user_id === snapShare.user_id);
+            if (!currentShare || currentShare.share_count === 0) {
+              const key = `${currentItem.id}:${snapShare.user_id}`;
+              if (!inflightShareEdits.has(key) && snapShare.share_count > 0) {
+                inflightShareEdits.set(key, 0);
+                hasInflightEdits = true;
+              }
+            }
+          }
+        }
+      }
+
+      if (hasInflightEdits) {
+        // Merge in-flight edits on top of the server response
+        let merged = { ...updated };
+
+        // Merge share edits
+        if (inflightShareEdits.size > 0) {
+          merged = {
+            ...merged,
+            items: merged.items.map((item) => {
+              let itemShares = [...item.shares];
+              let changed = false;
+              for (const [key, count] of inflightShareEdits) {
+                // Resolve temp IDs to server IDs
+                const [rawItemId, userIdStr] = key.split(':');
+                let itemId = Number(rawItemId);
+                if (itemId < 0) {
+                  itemId = tempIdToServerId.get(itemId) ?? itemId;
+                }
+                if (itemId !== item.id) continue;
+                const userId = Number(userIdStr);
+                changed = true;
+                const existing = itemShares.findIndex((s) => s.user_id === userId);
+                if (count === 0) {
+                  if (existing >= 0) itemShares.splice(existing, 1);
+                } else if (existing >= 0) {
+                  itemShares[existing] = { ...itemShares[existing], share_count: count };
+                } else {
+                  itemShares.push({ id: Date.now(), item_id: item.id, user_id: userId, share_count: count });
+                }
+              }
+              return changed ? { ...item, shares: itemShares } : item;
+            }),
+          };
+        }
+
+        // Merge item detail edits
+        if (Object.keys(inflightItemEdits).length > 0) {
+          merged = {
+            ...merged,
+            items: merged.items.map((item) => {
+              const edit = inflightItemEdits[item.id];
+              if (!edit) return item;
+              return {
+                ...item,
+                ...(edit.item_name !== undefined ? { item_name: edit.item_name } : {}),
+                ...(edit.unit_cost !== undefined ? { unit_cost: edit.unit_cost } : {}),
+              };
+            }),
+          };
+        }
+
+        // Merge new items added during flight (items in current that weren't in snapshot)
+        if (currentBill) {
+          const newDuringFlight = currentBill.items.filter(
+            (ci) => !snapshotBill.items.some((si) => si.id === ci.id)
+          );
+          if (newDuringFlight.length > 0) {
+            merged = { ...merged, items: [...merged.items, ...newDuringFlight] };
+          }
+        }
+
+        // Merge tax edit
+        if (inflightTax !== null) {
+          merged = { ...merged, total_tax: inflightTax };
+        }
+
+        setBill(merged);
+        setModifiedItems(inflightItemEdits);
+        setModifiedTax(inflightTax);
+        setHasUnsavedChanges(true);
+      } else {
+        setBill(updated);
+        setModifiedItems({});
+        setModifiedTax(null);
+        setHasUnsavedChanges(false);
+      }
     } catch (err: any) {
       const msg = err.response?.data?.detail || err.message || 'Failed to save';
       setError(typeof msg === 'string' ? msg : 'Failed to save');
